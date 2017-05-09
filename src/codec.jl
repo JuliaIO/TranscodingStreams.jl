@@ -72,7 +72,7 @@ malfomed data from `source`.  However, this method must not throw `EOFError`
 when reading data from `source`.  Also note that it is responsible for this
 method to release resources allocated by `codec` when an exception happens.
 """
-function process(::Type{Read}, codec::Codec, stream::IO, data::Ptr{UInt8}, nbytes::Int)
+function process(::Type{Read}, codec::Codec, source::IO, input::Ptr{UInt8}, nbytes::Int)
     error("codec $(codec) does not implement read mode")
 end
 
@@ -84,9 +84,12 @@ Transcode data using `codec` with write mode.
       <>    <-----(transcode)-----<  [.......]
      sink            codec             input
 
-This method reads some data from `input` and write the transcoded bytes to `sink`.
+This method reads some data from `input` and write the transcoded bytes to
+`sink` at most `nbytes`, and then returns the number of written bytes and an
+appropriate return code. It can assume `input` points to a valid memory position
+and `nbytes` is positive.
 """
-function process(::Type{Write}, codec::Codec, stream::IO, data::Ptr{UInt8}, nbytes::Int)
+function process(::Type{Write}, codec::Codec, sink::IO, input::Ptr{UInt8}, nbytes::Int)
     error("codec $(codec) does not implement write mode")
 end
 
