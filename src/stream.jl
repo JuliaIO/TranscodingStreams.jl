@@ -36,7 +36,7 @@ function Base.eof(stream::TranscodingStream)
     if state.mode == :init
         return eof(stream.stream)
     elseif state.mode == :read
-        return isemptybuf(state) && fillbuffer(stream) == 0 && eof(stream.stream)
+        return buffersize(state) == 0 && fillbuffer(stream) == 0 && eof(stream.stream)
     elseif state.mode == :write
         return eof(stream.stream)
     elseif state.mode == :closed
@@ -82,9 +82,8 @@ function Base.read(stream::TranscodingStream, ::Type{UInt8})
         throw(EOFError())
     end
     state = stream.state
-    #@assert state.position < state.fposition
-    b = state.data[state.position]
-    state.position += 1
+    b = state.data[state.bufferpos]
+    state.bufferpos += 1
     return b
 end
 
@@ -94,10 +93,10 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
     p = output
     p_end = output + nbytes
     while p < p_end && !eof(stream)
-        m = min(state.fposition - state.position, nbytes)
+        m = min(buffersize(state), nbytes)
         unsafe_copy!(p, bufferptr(state), m)
         p += m
-        state.position += m
+        state.bufferpos += m
     end
     if p < p_end && eof(stream)
         throw(EOFError())
@@ -107,7 +106,7 @@ end
 
 function Base.nb_available(stream::TranscodingStream)
     prepare(stream, :read)
-    return stream.state.fposition - stream.state.position
+    return buffersize(stream.state)
 end
 
 
@@ -117,11 +116,11 @@ end
 function Base.write(stream::TranscodingStream, b::UInt8)
     prepare(stream, :write)
     state = stream.state
-    if isfullbuf(state) && flushbuffer(stream) == 0
+    if marginsize(state) == 0 && flushbuffer(stream) == 0
         return 0
     end
-    state.data[state.position] = b
-    state.position += 1
+    state.data[state.marginpos] = b
+    state.marginpos += 1
     return 1
 end
 
@@ -131,13 +130,13 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
     p = input
     p_end = p + nbytes
     while p < p_end
-        if isfullbuf(state) && flushbuffer(stream) == 0
+        if marginsize(state) == 0 && flushbuffer(stream) == 0
             break
         end
-        m = min(endof(state.data) - (state.fposition - 1), p_end - p)
+        m = min(marginsize(state), p_end - p)
         unsafe_copy!(marginptr(state), p, m)
         p += m
-        state.fposition += m
+        state.marginpos += m
     end
     return Int(p - input)
 end
@@ -153,9 +152,9 @@ function fillbuffer(stream::TranscodingStream)::Int
     end
     nfilled = 0
     makemargin!(state, 1)
-    while !isfullbuf(state) && state.proc != PROC_FINISH
+    while marginsize(state) > 0 && state.proc != PROC_FINISH
         n, code = process(Read, stream.codec, stream.stream, marginptr(state), marginsize(state))
-        state.fposition += n
+        state.marginpos += n
         state.proc = code
         nfilled += n
     end
@@ -168,9 +167,9 @@ function flushbuffer(stream::TranscodingStream)::Int
         return 0
     end
     nflushed = 0
-    while !isemptybuf(state)
+    while buffersize(state) > 0
         n, code = process(Write, stream.codec, stream.stream, bufferptr(state), buffersize(state))
-        state.position += n
+        state.bufferpos += n
         state.proc = code
         nflushed += n
     end

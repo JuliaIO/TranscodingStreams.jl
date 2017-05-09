@@ -1,18 +1,31 @@
 # Transcoding State
 # =================
 
+
+# Data Layout
+# -----------
+#
+# Buffered data are stored in `data` and two position fields are used to keep
+# track of buffered data and margin.
+#
+#             buffered data     margin
+#            |<----------->||<----------->|
+#     |......XXXXXXXXXXXXXXX..............|
+#     ^      ^              ^             ^
+#     1      bufferpos      marginpos     endof(data)
+
 mutable struct State
     # current mode (:init, :read, :write, or :closed)
     mode::Symbol
 
-    # buffered data
+    # storage for buffering
     data::Vector{UInt8}
 
     # the starting position of the buffered data
-    position::Int
+    bufferpos::Int
 
-    # the ending position + 1 of the buffered data
-    fposition::Int
+    # the starting position of the margin
+    marginpos::Int
 
     # the last return code of `process`
     proc::ProcCode
@@ -24,41 +37,36 @@ mutable struct State
 end
 
 function bufferptr(state::State)
-    return pointer(state.data, state.position)
+    return pointer(state.data, state.bufferpos)
 end
 
 function buffersize(state::State)
-    return state.fposition - state.position
-end
-
-function isemptybuf(state::State)
-    return buffersize(state) == 0
+    return state.marginpos - state.bufferpos
 end
 
 function marginptr(state::State)
-    return pointer(state.data, state.fposition)
+    return pointer(state.data, state.marginpos)
 end
 
 function marginsize(state::State)
-    return endof(state.data) - state.fposition + 1
-end
-
-function isfullbuf(state::State)
-    return marginsize(state) == 0
+    return endof(state.data) - state.marginpos + 1
 end
 
 function makemargin!(state::State, minsize::Int)::Int
     if buffersize(state) == 0
-        state.position = state.fposition = 1
+        # reset positions
+        state.bufferpos = state.marginpos = 1
     end
-    if marginsize(state) < minsize && state.position > 0
+    if marginsize(state) < minsize && state.bufferpos > 0
+        # shift buffered data to left
         bufsize = buffersize(state)
-        copy!(state.data, 1, state.data, state.position, bufsize)
-        state.position = 1
-        state.fposition = 1 + bufsize
+        copy!(state.data, 1, state.data, state.bufferpos, bufsize)
+        state.bufferpos = 1
+        state.marginpos = 1 + bufsize
     end
     if marginsize(state) < minsize
-        resize!(state.data, state.fposition + minsize - 1)
+        # expand data buffer
+        resize!(state.data, state.marginpos + minsize - 1)
     end
     @assert marginsize(state) ≥ minsize
     return marginsize(state)
