@@ -73,7 +73,7 @@ when reading data from `source`.  Also note that it is responsible for this
 method to release resources allocated by `codec` when an exception happens.
 """
 function process(::Type{Read}, codec::Codec, source::IO, input::Ptr{UInt8}, nbytes::Int)
-    error("codec $(codec) does not implement read mode")
+    error("codec $(typeof(codec)) does not implement read mode")
 end
 
 """
@@ -90,7 +90,7 @@ appropriate return code. It can assume `input` points to a valid memory position
 and `nbytes` is positive.
 """
 function process(::Type{Write}, codec::Codec, sink::IO, input::Ptr{UInt8}, nbytes::Int)
-    error("codec $(codec) does not implement write mode")
+    error("codec $(typeof(codec)) does not implement write mode")
 end
 
 
