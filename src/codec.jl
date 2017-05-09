@@ -4,8 +4,8 @@
 abstract type Codec end
 
 abstract type Mode end
-struct ReadMode  <: Mode end
-struct WriteMode <: Mode end
+struct Read  <: Mode end
+struct Write <: Mode end
 
 primitive type ProcCode 8 end
 const PROC_INIT   = reinterpret(ProcCode, 0x00)
@@ -17,7 +17,7 @@ const PROC_FINISH = reinterpret(ProcCode, 0x02)
 # -----
 
 """
-    start(::Type{ReadMode}, codec::Codec, source::IO)::Void
+    start(::Type{Read}, codec::Codec, source::IO)::Void
 
 Start transcoding using `codec` with read mode.
 
@@ -25,12 +25,12 @@ This method will be called only once before calling `process` first time.
 
 Implementing this method is optional; there is a default method that does nothing.
 """
-function start(::Type{ReadMode}, ::Codec, ::IO)
+function start(::Type{Read}, ::Codec, ::IO)
     return nothing
 end
 
 """
-    start(::Type{WriteMode}, codec::Codec, sink::IO)::Void
+    start(::Type{Write}, codec::Codec, sink::IO)::Void
 
 Start transcoding using `codec` with write mode.
 
@@ -38,7 +38,7 @@ This method will be called only once before calling `process` first time.
 
 Implementing this method is optional; there is a default method that does nothing.
 """
-function start(::Type{WriteMode}, ::Codec, ::IO)
+function start(::Type{Write}, ::Codec, ::IO)
     return nothing
 end
 
@@ -47,7 +47,7 @@ end
 # -------
 
 """
-    process(::Type{ReadMode}, codec::Codec, source::IO, output::Ptr{UInt8}, nbytes::Int)::Tuple{Int,ProcCode}
+    process(::Type{Read}, codec::Codec, source::IO, output::Ptr{UInt8}, nbytes::Int)::Tuple{Int,ProcCode}
 
 Transcode data using `codec` with read mode.
 
@@ -72,12 +72,12 @@ malfomed data from `source`.  However, this method must not throw `EOFError`
 when reading data from `source`.  Also note that it is responsible for this
 method to release resources allocated by `codec` when an exception happens.
 """
-function process(::Type{ReadMode}, codec::Codec, stream::IO, data::Ptr{UInt8}, nbytes::Int)
+function process(::Type{Read}, codec::Codec, stream::IO, data::Ptr{UInt8}, nbytes::Int)
     error("codec $(codec) does not implement read mode")
 end
 
 """
-    process(::Type{WriteMode}, codec::Codec, sink::IO, input::Ptr{UInt8}, nbytes::Int)::Tuple{Int,ProcCode}
+    process(::Type{Write}, codec::Codec, sink::IO, input::Ptr{UInt8}, nbytes::Int)::Tuple{Int,ProcCode}
 
 Transcode data using `codec` with write mode.
 
@@ -86,7 +86,7 @@ Transcode data using `codec` with write mode.
 
 This method reads some data from `input` and write the transcoded bytes to `sink`.
 """
-function process(::Type{WriteMode}, codec::Codec, stream::IO, data::Ptr{UInt8}, nbytes::Int)
+function process(::Type{Write}, codec::Codec, stream::IO, data::Ptr{UInt8}, nbytes::Int)
     error("codec $(codec) does not implement write mode")
 end
 
@@ -95,7 +95,7 @@ end
 # ------
 
 """
-    finish(::Type{ReadMode}, codec::Codec, source::IO)::Void
+    finish(::Type{Read}, codec::Codec, source::IO)::Void
 
 Finish transcoding using `codec` with read mode.
 
@@ -103,12 +103,12 @@ This method will be called only once after calling `process` last time.
 
 Implementing this method is optional; there is a default method that does nothing.
 """
-function finish(::Type{ReadMode}, ::Codec, ::IO)
+function finish(::Type{Read}, ::Codec, ::IO)
     return nothing
 end
 
 """
-    finish(::Type{WriteMode}, codec::Codec, sink::IO)::Void
+    finish(::Type{Write}, codec::Codec, sink::IO)::Void
 
 Finish transcoding using `codec` with write mode.
 
@@ -116,6 +116,6 @@ This method will be called only once after calling `process` last time.
 
 Implementing this method is optional; there is a default method that does nothing.
 """
-function finish(::Type{WriteMode}, ::Codec, ::IO)
+function finish(::Type{Write}, ::Codec, ::IO)
     return nothing
 end

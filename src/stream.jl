@@ -52,10 +52,10 @@ function Base.close(stream::TranscodingStream)
         # pass
     elseif state.mode == :read
         flushbuffer(stream)
-        finish(ReadMode, stream.codec, stream.stream)
+        finish(Read, stream.codec, stream.stream)
     elseif state.mode == :write
         flushbuffer(stream)
-        finish(WriteMode, stream.codec, stream.stream)
+        finish(Write, stream.codec, stream.stream)
     elseif state.mode == :closed
         # pass
     else
@@ -154,7 +154,7 @@ function fillbuffer(stream::TranscodingStream)::Int
     nfilled = 0
     makemargin!(state, 1)
     while !isfullbuf(state) && state.proc != PROC_FINISH
-        n, code = process(ReadMode, stream.codec, stream.stream, marginptr(state), marginsize(state))
+        n, code = process(Read, stream.codec, stream.stream, marginptr(state), marginsize(state))
         state.fposition += n
         state.proc = code
         nfilled += n
@@ -169,7 +169,7 @@ function flushbuffer(stream::TranscodingStream)::Int
     end
     nflushed = 0
     while !isemptybuf(state)
-        n, code = process(WriteMode, stream.codec, stream.stream, bufferptr(state), buffersize(state))
+        n, code = process(Write, stream.codec, stream.stream, bufferptr(state), buffersize(state))
         state.position += n
         state.proc = code
         nflushed += n
@@ -191,18 +191,18 @@ function prepare(stream::TranscodingStream, mode::Symbol)
     flushbuffer(stream)
     if state.mode == :init
     elseif state.mode == :read
-        finish(ReadMode, stream.codec, stream.stream)
+        finish(Read, stream.codec, stream.stream)
     elseif state.mode == :write
-        finish(WriteMode, stream.codec, stream.stream)
+        finish(Write, stream.codec, stream.stream)
     else
         assert(false)
     end
 
     # start
     if mode == :read
-        start(ReadMode, stream.codec, stream.stream)
+        start(Read, stream.codec, stream.stream)
     elseif mode == :write
-        start(WriteMode, stream.codec, stream.stream)
+        start(Write, stream.codec, stream.stream)
     else
         assert(false)
     end
