@@ -27,3 +27,15 @@ function unsafe_read(input::IO, output::Ptr{UInt8}, nbytes::Int)::Int
     nread += n
     return nread
 end
+
+function unsafe_read(input::IO, mem::Memory)
+    return unsafe_read(input, mem.ptr, Int(mem.size))
+end
+
+function unsafe_write(output::IO, ptr::Ptr{UInt8}, nbytes::Int)::Int
+    return Base.unsafe_write(output, ptr, nbytes)
+end
+
+function unsafe_write(output::IO, mem::Memory)
+    return Base.unsafe_write(output, mem.ptr, mem.size)
+end

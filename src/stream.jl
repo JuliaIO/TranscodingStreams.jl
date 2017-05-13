@@ -10,36 +10,48 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
 
     # mutable state of the stream
     state::State
-end
 
-function TranscodingStream(codec::Codec, stream::IO)
-    if !isopen(stream)
-        throw(ArgumentError("closed stream"))
+    function TranscodingStream{C,S}(codec::C, stream::S, state::State) where {C<:Codec,S<:IO}
+        if !isopen(stream)
+            throw(ArgumentError("closed stream"))
+        elseif state.state != :idle
+            throw(ArgumentError("invalid initial state"))
+        end
+        initialize(codec)
+        return new(codec, stream, state)
     end
-    return TranscodingStream(codec, stream, State(16 * 1024))
 end
 
-function TranscodingStream(::Type{C}, stream::IO) where C <: Codec
-    return TranscodingStream(C(), stream)
+"""
+    TranscodingStream(codec::Codec, stream::IO)
+
+Create a transcoding stream with `codec` and `stream`.
+"""
+function TranscodingStream(codec::Codec, stream::IO)
+    return TranscodingStream{typeof(codec),typeof(stream)}(codec, stream, State(16 * 2^10))
 end
 
 function Base.show(io::IO, stream::TranscodingStream)
-    print(io, summary(stream), "(<mode=$(stream.state.mode)>)")
+    print(io, summary(stream), "(<state=$(stream.state.state)>)")
 end
 
+
+# Base IO Functions
+# -----------------
+
 function Base.isopen(stream::TranscodingStream)
-    return stream.state.mode != :closed
+    return stream.state.state != :close
 end
 
 function Base.eof(stream::TranscodingStream)
-    state = stream.state
-    if state.mode == :init
+    state = stream.state.state
+    if state == :idle
         return eof(stream.stream)
-    elseif state.mode == :read
-        return buffersize(state) == 0 && fillbuffer(stream) == 0 && eof(stream.stream)
-    elseif state.mode == :write
+    elseif state == :read
+        return buffersize(stream.state.buffer1) == 0 && fillbuffer(stream) == 0
+    elseif state == :write
         return eof(stream.stream)
-    elseif state.mode == :closed
+    elseif state == :close
         return true
     else
         assert(false)
@@ -47,28 +59,49 @@ function Base.eof(stream::TranscodingStream)
 end
 
 function Base.close(stream::TranscodingStream)
-    state = stream.state
-    if state.mode == :init
-        # pass
-    elseif state.mode == :read
-        flushbuffer(stream)
-        finish(Read, stream.codec, stream.stream)
-    elseif state.mode == :write
-        flushbuffer(stream)
-        finish(Write, stream.codec, stream.stream)
-    elseif state.mode == :closed
-        # pass
-    else
-        assert(false)
-    end
+    changestate!(stream, :close)
     close(stream.stream)
-    state.mode = :closed
-    return
+    return nothing
 end
 
-function Base.flush(stream::TranscodingStream)
-    flushbuffer(stream)
-    flush(stream.stream)
+function Base.ismarked(stream::TranscodingStream)
+    return stream.state.buffer1.markpos != 0
+end
+
+function Base.mark(stream::TranscodingStream)
+    return mark!(stream.state.buffer1)
+end
+
+function Base.unmark(stream::TranscodingStream)
+    return unmark!(stream.state.buffer1)
+end
+
+function Base.reset(stream::TranscodingStream)
+    return reset!(stream.state.buffer1)
+end
+
+function Base.skip(stream::TranscodingStream, offset::Integer)
+    if offset < 0
+        throw(ArgumentError("negative offset"))
+    end
+    state = stream.state.state
+    buffer1 = stream.state.buffer1
+    skipped = 0
+    if state == :read
+        while buffersize(buffer1) < offset - skipped && !eof(stream)
+            n = buffersize(buffer1)
+            emptybuffer!(buffer1)
+            skipped += n
+        end
+        if eof(stream)
+            emptybuffer!(buffer1)
+        else
+            skipbuffer!(buffer1, offset - skipped)
+        end
+    else
+        # TODO: support skip in write state
+        throw(ArgumentError("not in read state"))
+    end
     return
 end
 
@@ -77,26 +110,62 @@ end
 # --------------
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
-    prepare(stream, :read)
+    changestate!(stream, :read)
     if eof(stream)
         throw(EOFError())
     end
-    state = stream.state
-    b = state.data[state.bufferpos]
-    state.bufferpos += 1
-    return b
+    return readbyte!(stream.state.buffer1)
+end
+
+function Base.read(stream::TranscodingStream)
+    changestate!(stream, :read)
+    ret = Vector{UInt8}(16)
+    filled = 0
+    while !eof(stream)
+        filled += unsafe_read(stream, pointer(ret, filled+1), endof(ret) - filled)
+        if filled == length(ret)
+            resize!(ret, 2 * filled)
+        end
+    end
+    resize!(ret, filled)
+    return ret
+end
+
+function Base.readuntil(stream::TranscodingStream, delim::UInt8)
+    changestate!(stream, :read)
+    buffer1 = stream.state.buffer1
+    ret = Vector{UInt8}(0)
+    filled = 0
+    while !eof(stream)
+        pos = findbyte(buffer1, delim)
+        if pos == 0
+            sz = buffersize(buffer1)
+            if length(ret) < filled + sz
+                resize!(ret, filled + sz)
+            end
+        else
+            sz = pos - buffer1.bufferpos + 1
+            resize!(ret, filled + sz)
+        end
+        readdata!(buffer1, ret, filled+1, sz)
+        filled += sz
+        if pos > 0
+            break
+        end
+    end
+    return ret
 end
 
 function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes::UInt)
-    prepare(stream, :read)
-    state = stream.state
+    changestate!(stream, :read)
+    buffer = stream.state.buffer1
     p = output
     p_end = output + nbytes
     while p < p_end && !eof(stream)
-        m = min(buffersize(state), nbytes)
-        unsafe_copy!(p, bufferptr(state), m)
+        m = min(buffersize(buffer), p_end - p)
+        unsafe_copy!(p, bufferptr(buffer), m)
         p += m
-        state.bufferpos += m
+        buffer.bufferpos += m
     end
     if p < p_end && eof(stream)
         throw(EOFError())
@@ -104,9 +173,26 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
     return
 end
 
+function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=length(b))
+    changestate!(stream, :read)
+    filled = 0
+    resized = false
+    while filled < nb && !eof(stream)
+        if length(b) == filled
+            resize!(b, min(length(b) * 2, nb))
+            resized = true
+        end
+        filled += unsafe_read(stream, pointer(b, filled+1), min(length(b), nb)-filled)
+    end
+    if resized
+        resize!(b, filled)
+    end
+    return filled
+end
+
 function Base.nb_available(stream::TranscodingStream)
-    prepare(stream, :read)
-    return buffersize(stream.state)
+    changestate!(stream, :read)
+    return buffersize(stream.state.buffer1)
 end
 
 
@@ -114,97 +200,174 @@ end
 # ---------------
 
 function Base.write(stream::TranscodingStream, b::UInt8)
-    prepare(stream, :write)
-    state = stream.state
-    if marginsize(state) == 0 && flushbuffer(stream) == 0
+    changestate!(stream, :write)
+    if marginsize(stream.state.buffer1) == 0 && flushbuffer(stream) == 0
         return 0
     end
-    state.data[state.marginpos] = b
-    state.marginpos += 1
-    return 1
+    return writebyte!(stream.state.buffer1, b)
 end
 
 function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes::UInt)
-    prepare(stream, :write)
+    changestate!(stream, :write)
     state = stream.state
+    buffer1 = state.buffer1
     p = input
     p_end = p + nbytes
-    while p < p_end
-        if marginsize(state) == 0 && flushbuffer(stream) == 0
-            break
-        end
-        m = min(marginsize(state), p_end - p)
-        unsafe_copy!(marginptr(state), p, m)
+    while p < p_end && (marginsize(buffer1) > 0 || flushbuffer(stream) > 0)
+        m = min(marginsize(buffer1), p_end - p)
+        unsafe_copy!(marginptr(buffer1), p, m)
         p += m
-        state.marginpos += m
+        buffer1.marginpos += m
     end
     return Int(p - input)
+end
+
+function Base.flush(stream::TranscodingStream)
+    if stream.state.state == :write
+        flushbufferall(stream)
+        writebuffer!(stream.stream, stream.state.buffer2)
+    end
+    flush(stream.stream)
 end
 
 
 # Buffering
 # ---------
 
-function fillbuffer(stream::TranscodingStream)::Int
-    state = stream.state
-    if state.mode != :read
-        return 0
-    end
-    nfilled = 0
-    makemargin!(state, 1)
-    while marginsize(state) > 0 && state.proc != PROC_FINISH
-        n, code = process(Read, stream.codec, stream.stream, marginptr(state), marginsize(state))
-        state.marginpos += n
-        state.proc = code
-        nfilled += n
+function fillbuffer(stream::TranscodingStream)
+    @assert stream.state.state == :read
+    buffer1 = stream.state.buffer1
+    buffer2 = stream.state.buffer2
+    nfilled::Int = 0
+    while buffersize(buffer1) == 0
+        if stream.state.code == :end
+            if buffersize(buffer2) == 0 && eof(stream.stream)
+                break
+            end
+            # reset
+            stream.state.code = startproc(stream.codec, :read)
+            if stream.state.code != :ok
+                error("resetting codec failed")
+            end
+        end
+        makemargin!(buffer2, 1)
+        readdata!(stream.stream, buffer2)
+        makemargin!(buffer1, 1)
+        Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer2), marginmem(buffer1))
+        buffer2.bufferpos += Δin
+        buffer1.marginpos += Δout
+        nfilled += Δout
     end
     return nfilled
 end
 
-function flushbuffer(stream::TranscodingStream)::Int
-    state = stream.state
-    if state.mode != :write
-        return 0
+function flushbuffer(stream::TranscodingStream)
+    @assert stream.state.state == :write
+    nflushed::Int = 0
+    makemargin!(stream.state.buffer1, 0)
+    while marginsize(stream.state.buffer1) == 0
+        nflushed += process_to_write(stream)
     end
-    nflushed = 0
-    while buffersize(state) > 0
-        n, code = process(Write, stream.codec, stream.stream, bufferptr(state), buffersize(state))
-        state.bufferpos += n
-        state.proc = code
-        nflushed += n
-    end
-    makemargin!(state, 1)
     return nflushed
 end
 
-function prepare(stream::TranscodingStream, mode::Symbol)
-    state = stream.state
-    if state.mode == :closed
-        throw(ArgumentError("closed stream"))
+function flushbufferall(stream::TranscodingStream)
+    @assert stream.state.state == :write
+    nflushed::Int = 0
+    while buffersize(stream.state.buffer1) > 0
+        nflushed += process_to_write(stream)
     end
-    if state.mode == mode
+    return nflushed
+end
+
+function processall(stream::TranscodingStream)
+    @assert stream.state.state == :write
+    while buffersize(stream.state.buffer1) > 0 || stream.state.code != :end
+        process_to_write(stream)
+    end
+    writebuffer!(stream.stream, stream.state.buffer2)
+    @assert buffersize(stream.state.buffer1) == buffersize(stream.state.buffer2) == 0
+end
+
+function process_to_write(stream::TranscodingStream)
+    buffer1 = stream.state.buffer1
+    buffer2 = stream.state.buffer2
+    if buffersize(buffer1) > 0 && stream.state.code == :end
+        # reset
+        stream.state.code = startproc(stream.codec, :write)
+        if stream.state.code != :ok
+            error("failed to reset codec")
+        end
+    end
+    writebuffer!(stream.stream, buffer2)
+    makemargin!(buffer2, 1)
+    Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer1), marginmem(buffer2))
+    buffer1.bufferpos += Δin
+    buffer2.marginpos += Δout
+    makemargin!(buffer1, 0)
+    return Δin
+end
+
+
+# State Transition
+# ----------------
+
+immutable StateTransitionError <: Exception
+    message::String
+    states::Pair{Symbol,Symbol}
+end
+
+function changestate!(stream::TranscodingStream, newstate::Symbol)
+    state = stream.state.state
+    buffer1 = stream.state.buffer1
+    buffer2 = stream.state.buffer2
+    if state == newstate
+        # state does not change
         return
+    elseif state == :idle
+        if newstate == :read || newstate == :write
+            stream.state.code = startproc(stream.codec, newstate)
+            if stream.state.code != :ok
+                throw(StateTransitionError("startproc failed", state => newstate))
+            end
+            stream.state.state = newstate
+            return
+        elseif newstate == :close
+            finalize(stream.codec)
+            stream.state.state = newstate
+            return
+        end
+    elseif state == :read
+        if newstate == :idle
+            initbuffer!(buffer1)
+            initbuffer!(buffer2)
+            stream.state.state = newstate
+            return
+        elseif newstate == :write
+            changestate!(stream, :idle)
+            changestate!(stream, :write)
+            return
+        elseif newstate == :close
+            changestate!(stream, :idle)
+            changestate!(stream, :close)
+            return
+        end
+    elseif state == :write
+        if newstate == :idle
+            processall(stream)
+            initbuffer!(buffer1)
+            initbuffer!(buffer2)
+            stream.state.state = newstate
+            return
+        elseif newstate == :read
+            changestate!(stream, :idle)
+            changestate!(stream, :read)
+            return
+        elseif newstate == :close
+            changestate!(stream, :idle)
+            changestate!(stream, :close)
+            return
+        end
     end
-
-    # finish
-    flushbuffer(stream)
-    if state.mode == :init
-    elseif state.mode == :read
-        finish(Read, stream.codec, stream.stream)
-    elseif state.mode == :write
-        finish(Write, stream.codec, stream.stream)
-    else
-        assert(false)
-    end
-
-    # start
-    if mode == :read
-        start(Read, stream.codec, stream.stream)
-    elseif mode == :write
-        start(Write, stream.codec, stream.stream)
-    else
-        assert(false)
-    end
-    state.mode = mode
-    return
+    throw(StateTransitionError("undefined state transition", state => newstate))
 end
