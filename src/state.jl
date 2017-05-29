@@ -1,19 +1,6 @@
 # Transcoding State
 # =================
 
-# Data Layout
-# -----------
-#
-# Buffered data are stored in `data` and two position fields are used to keep
-# track of buffered data and margin.
-#
-#             buffered data     margin
-#            |<----------->||<----------->|
-#     |......XXXXXXXXXXXXXXX..............|
-#     ^      ^              ^             ^
-#     1      bufferpos      marginpos     endof(data)
-#
-#
 # Stream States
 # -------------
 #

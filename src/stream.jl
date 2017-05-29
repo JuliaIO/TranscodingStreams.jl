@@ -1,6 +1,15 @@
 # Transcoding Stream
 # ==================
 
+# Data Flow
+# ---------
+#
+# When reading data (`state.state == :read`):
+#   user <--- |state.buffer1| <--- <codec> <--- |state.buffer2| <--- stream
+#
+# When writing data (`state.state == :write`):
+#   user ---> |state.buffer1| ---> <codec> ---> |state.buffer2| ---> stream
+
 struct TranscodingStream{C<:Codec,S<:IO} <: IO
     # codec object
     codec::C

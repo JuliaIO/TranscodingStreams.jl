@@ -32,39 +32,39 @@ function Base.length(buf::Buffer)
     return length(buf.data)
 end
 
-function bufferptr(buf)
+function bufferptr(buf::Buffer)
     return pointer(buf.data, buf.bufferpos)
 end
 
-function buffersize(buf)
+function buffersize(buf::Buffer)
     return buf.marginpos - buf.bufferpos
 end
 
-function buffermem(buf)
+function buffermem(buf::Buffer)
     return Memory(bufferptr(buf), buffersize(buf))
 end
 
-function readbyte!(buf)
+function readbyte!(buf::Buffer)
     b = buf.data[buf.bufferpos]
     buf.bufferpos += 1
     return b
 end
 
-function writebyte!(buf, b::UInt8)
+function writebyte!(buf::Buffer, b::UInt8)
     buf.data[buf.marginpos] = b
     buf.marginpos += 1
     return 1
 end
 
-function marginptr(buf)
+function marginptr(buf::Buffer)
     return pointer(buf.data, buf.marginpos)
 end
 
-function marginsize(buf)
+function marginsize(buf::Buffer)
     return endof(buf.data) - buf.marginpos + 1
 end
 
-function marginmem(buf)
+function marginmem(buf::Buffer)
     return Memory(marginptr(buf), marginsize(buf))
 end
 
@@ -91,7 +91,8 @@ function reset!(buf::Buffer)
 end
 
 # Make margin with ≥`minsize`.
-function makemargin!(buf, minsize::Int)::Int
+function makemargin!(buf::Buffer, minsize::Integer)
+    @assert minsize ≥ 0
     if buffersize(buf) == 0
         if buf.markpos == 0
             buf.bufferpos = buf.marginpos = 1
@@ -120,6 +121,7 @@ function makemargin!(buf, minsize::Int)::Int
     return marginsize(buf)
 end
 
+# Remove all buffered data.
 function emptybuffer!(buf::Buffer)
     buf.marginpos = buf.bufferpos
     return buf
@@ -156,20 +158,22 @@ function readdata!(input::IO, output::Buffer)
     return nread
 end
 
+# Read data from `buf` to `dst`.
 function readdata!(buf::Buffer, dst::Vector{UInt8}, dpos::Integer, sz::Integer)
     copy!(dst, dpos, buf.data, buf.bufferpos, sz)
     buf.bufferpos += sz
     return dst
 end
 
-# Write as much data as possible to `output` from the buffer of `input`.
+# Write all data to `output` from the buffer of `input`.
 function writebuffer!(output::IO, input::Buffer)
     while buffersize(input) > 0
         input.bufferpos += Base.unsafe_write(output, bufferptr(input), buffersize(input))
     end
 end
 
-function findbyte(buf, byte::UInt8)
+# Find the first occurrence of a specific byte.
+function findbyte(buf::Buffer, byte::UInt8)
     ptr = ccall(:memchr, Ptr{Void}, (Ptr{Void}, Cint, Csize_t), pointer(buf.data, buf.bufferpos), byte, buffersize(buf))
     if ptr == C_NULL
         return 0
