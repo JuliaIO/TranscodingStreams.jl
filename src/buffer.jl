@@ -4,14 +4,17 @@
 # Data Layout
 # -----------
 #
-# Buffered data are stored in `data` and two position fields are used to keep
-# track of buffered data and margin.
+# Buffered data are stored in `data` and three position fields are used to keep
+# track of marked data, buffered data and margin.
 #
-#             buffered data     margin
-#            |<----------->||<----------->|
-#     |....xxxxxxxxxXXXXXXXXXXXXXXX..............|
-#     ^    ^        ^              ^             ^
-#     1    markpos  bufferpos      marginpos     endof(data)
+#             marked      buffer      margin
+#          |<-------->||<-------->||<-------->|
+#     |....xxxxxxxxxxxxXXXXXXXXXXXX...........|
+#     ^    ^           ^           ^          ^
+#     1    markpos     bufferpos   marginpos  endof(data)
+#
+# `markpos` is positive iff there are marked data; otherwise it is set to zero.
+# `markpos` ≤ `bufferpos` ≤ `marginpos` must hold whenever possible.
 
 mutable struct Buffer
     data::Vector{UInt8}
