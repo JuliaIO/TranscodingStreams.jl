@@ -26,11 +26,21 @@ The following snippet is an example of using CodecZlib.jl, which exports
 `TranscodingStream{GzipDecompression,S}` where `S<:IO`:
 
 ```julia
+# Read lines from a gzip-compressed file.
 using CodecZlib
 stream = GzipDecompressionStream(open("data.gzip"))
 for line in eachline(stream)
     # do something...
 end
+close(stream)
+
+# Compress a string using zstd.
+using CodecZstd
+using TranscodingStreams
+buf = IOBuffer()
+stream = ZstdCompressionStream(buf)
+write(stream, "foobarbaz"^100, TranscodingStreams.TOKEN_END)
+compressed = take!(buf)
 close(stream)
 ```
 

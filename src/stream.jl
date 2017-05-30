@@ -239,6 +239,23 @@ function Base.flush(stream::TranscodingStream)
     flush(stream.stream)
 end
 
+# A singleton type of end token.
+struct EndToken end
+
+"""
+A special token indicating the end of data.
+
+`TOKEN_END` may be written to a transcoding stream like `write(stream,
+TOKEN_END)`, which will terminate the current transcoding block.
+"""
+const TOKEN_END = EndToken()
+
+function Base.write(stream::TranscodingStream, ::EndToken)
+    changestate!(stream, :write)
+    processall(stream)
+    return 0
+end
+
 
 # Buffering
 # ---------
