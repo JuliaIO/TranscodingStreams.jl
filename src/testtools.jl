@@ -16,11 +16,10 @@ function test_roundtrip_write(encoder, decoder)
     srand(12345)
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
-        mktemp() do path, file
-            stream = encoder(decoder(file))
-            write(stream, data)
-            close(stream)
-            Base.Test.@test hash(read(path)) == hash(data)
-        end
+        file = IOBuffer()
+        stream = encoder(decoder(file))
+        write(stream, data, TOKEN_END); flush(stream)
+        Base.Test.@test hash(take!(file)) == hash(data)
+        close(stream)
     end
 end
