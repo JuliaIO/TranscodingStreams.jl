@@ -57,6 +57,15 @@ using Base.Test
     @test read(stream, UInt8) == data[3]
     skip(stream, 5)
     @test read(stream, UInt8) == data[9]
+
+    s = TranscodingStream(Identity(), IOBuffer(b"baz"))
+    @test endof(s.state.buffer1) == 0
+    read(s, UInt8)
+    @test endof(s.state.buffer1) == 2
+    @test s.state.buffer1[1] === UInt8('a')
+    @test s.state.buffer1[2] === UInt8('z')
+    @test_throws BoundsError s.state.buffer1[0]
+    @test_throws BoundsError s.state.buffer1[3]
 end
 
 Pkg.test("CodecZlib")

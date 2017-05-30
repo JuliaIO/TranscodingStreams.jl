@@ -32,6 +32,21 @@ function Base.length(buf::Buffer)
     return length(buf.data)
 end
 
+function Base.endof(buf::Buffer)
+    return buffersize(buf)
+end
+
+function Base.getindex(buf::Buffer, i::Integer)
+    @boundscheck checkbounds(buf, i)
+    @inbounds return buf.data[i+buf.bufferpos-1]
+end
+
+function Base.checkbounds(buf::Buffer, i::Integer)
+    if !(1 ≤ i ≤ endof(buf))
+        throw(BoundsError(buf, i))
+    end
+end
+
 function bufferptr(buf::Buffer)
     return pointer(buf.data, buf.bufferpos)
 end
