@@ -64,8 +64,10 @@ using Base.Test
     @test endof(s.state.buffer1) == 2
     @test s.state.buffer1[1] === UInt8('a')
     @test s.state.buffer1[2] === UInt8('z')
+    @test s.state.buffer1[1:2] == b"az"
     @test_throws BoundsError s.state.buffer1[0]
     @test_throws BoundsError s.state.buffer1[3]
+    @test_throws BoundsError s.state.buffer1[3:4]
 end
 
 Pkg.test("CodecZlib")

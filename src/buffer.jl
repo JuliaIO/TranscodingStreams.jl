@@ -47,6 +47,17 @@ function Base.checkbounds(buf::Buffer, i::Integer)
     end
 end
 
+function Base.getindex(buf::Buffer, r::UnitRange{<:Integer})
+    @boundscheck checkbounds(buf, r)
+    @inbounds return buf.data[r+buf.bufferpos-1]
+end
+
+function Base.checkbounds(buf::Buffer, r::UnitRange{<:Integer})
+    if !isempty(r) && !(1 ≤ first(r) && last(r) ≤ endof(buf))
+        throw(BoundsError(buf, r))
+    end
+end
+
 function bufferptr(buf::Buffer)
     return pointer(buf.data, buf.bufferpos)
 end
