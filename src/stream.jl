@@ -261,7 +261,7 @@ end
 # ---------
 
 function fillbuffer(stream::TranscodingStream)
-    @assert stream.state.state == :read
+    changestate!(stream, :read)
     buffer1 = stream.state.buffer1
     buffer2 = stream.state.buffer2
     nfilled::Int = 0
@@ -288,7 +288,7 @@ function fillbuffer(stream::TranscodingStream)
 end
 
 function flushbuffer(stream::TranscodingStream)
-    @assert stream.state.state == :write
+    changestate!(stream, :write)
     nflushed::Int = 0
     makemargin!(stream.state.buffer1, 0)
     while marginsize(stream.state.buffer1) == 0
