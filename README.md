@@ -20,6 +20,9 @@ listed below:
 - [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
     - `ZstdCompression` (`ZstdCompressionStream`)
     - `ZstdDecompression` (`ZstdDecompressionStream`)
+- [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
+    - `Bzip2Compression` (`Bzip2CompressionStream`)
+    - `Bzip2Decompression` (`Bzip2DecompressionStream`)
 
 The following snippet is an example of using CodecZlib.jl, which exports
 `GzipDecompressionStream` as an alias of

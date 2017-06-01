@@ -72,3 +72,4 @@ end
 
 Pkg.test("CodecZlib")
 Pkg.test("CodecZstd")
+Pkg.test("CodecBzip2")
