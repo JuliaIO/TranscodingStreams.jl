@@ -252,6 +252,11 @@ A special token indicating the end of data.
 
 `TOKEN_END` may be written to a transcoding stream like `write(stream,
 TOKEN_END)`, which will terminate the current transcoding block.
+
+!!! note
+
+    Call `flush(stream)` after `write(stream, TOKEN_END)` to make sure that all
+    data are written to the underlying stream.
 """
 const TOKEN_END = EndToken()
 
