@@ -282,8 +282,11 @@ Transcode `data` by applying `codec`.
 function Base.transcode(codec::Codec, data::Vector{UInt8})
     buffer2 = Buffer(length(data))
     mark!(buffer2)
-    write(TranscodingStream(codec, DevNull, State(Buffer(data), buffer2)), TOKEN_END)
-    return copymarked(buffer2)
+    stream = TranscodingStream(codec, DevNull, State(Buffer(data), buffer2))
+    write(stream, TOKEN_END)
+    transcoded = copymarked(buffer2)
+    changestate!(stream, :idle)
+    return transcoded
 end
 
 
