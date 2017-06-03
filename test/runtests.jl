@@ -79,6 +79,11 @@ using Base.Test
     mark(stream)
     @test hash(read(stream)) == hash(data)
     @test hash(stream.state.buffer1.data[1:length(data)]) == hash(data)
+
+    # transcode
+    @test transcode(Identity(), b"") == b""
+    @test transcode(Identity(), b"foo") == b"foo"
+    TranscodingStreams.test_roundtrip_transcode(Identity, Identity)
 end
 
 Pkg.test("CodecZlib")

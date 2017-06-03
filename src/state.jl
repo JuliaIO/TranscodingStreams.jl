@@ -23,4 +23,8 @@ mutable struct State
     function State(size::Integer)
         return new(:idle, :ok, Buffer(size), Buffer(size))
     end
+
+    function State(buffer1::Buffer, buffer2::Buffer)
+        return new(:idle, :ok, buffer1, buffer2)
+    end
 end

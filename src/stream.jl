@@ -45,6 +45,10 @@ function TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=DEFAULT_BU
     return TranscodingStream{typeof(codec),typeof(stream)}(codec, stream, State(bufsize))
 end
 
+function TranscodingStream(codec::Codec, stream::IO, state::State)
+    return TranscodingStream{typeof(codec),typeof(stream)}(codec, stream, state)
+end
+
 function Base.show(io::IO, stream::TranscodingStream)
     print(io, summary(stream), "(<state=$(stream.state.state)>)")
 end
@@ -264,6 +268,22 @@ function Base.write(stream::TranscodingStream, ::EndToken)
     changestate!(stream, :write)
     processall(stream)
     return 0
+end
+
+
+# Transcode
+# ---------
+
+"""
+    transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}
+
+Transcode `data` by applying `codec`.
+"""
+function Base.transcode(codec::Codec, data::Vector{UInt8})
+    buffer2 = Buffer(length(data))
+    mark!(buffer2)
+    write(TranscodingStream(codec, DevNull, State(Buffer(data), buffer2)), TOKEN_END)
+    return copymarked(buffer2)
 end
 
 

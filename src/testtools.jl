@@ -23,3 +23,11 @@ function test_roundtrip_write(encoder, decoder)
         close(stream)
     end
 end
+
+function test_roundtrip_transcode(encode, decode)
+    srand(12345)
+    for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
+        data = rand(alpha, n)
+        Base.Test.@test hash(transcode(decode(), transcode(encode(), data))) == hash(data)
+    end
+end

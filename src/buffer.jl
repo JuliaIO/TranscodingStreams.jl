@@ -23,8 +23,11 @@ mutable struct Buffer
     marginpos::Int
 
     function Buffer(size::Integer)
-        @assert size > 0
         return new(Vector{UInt8}(size), 0, 1, 1)
+    end
+
+    function Buffer(data::Vector{UInt8})
+        return new(data, 0, 1, length(data)+1)
     end
 end
 
@@ -165,6 +168,12 @@ function initbuffer!(buf::Buffer)
     buf.markpos = 0
     buf.bufferpos = buf.marginpos = 1
     return buf
+end
+
+# Copy marked data.
+function copymarked(buf::Buffer)
+    @assert buf.markpos > 0
+    return buf.data[buf.markpos:buf.marginpos-1]
 end
 
 # Read as much data as possbile from `input` to the margin of `output`.
