@@ -327,7 +327,6 @@ end
 
 function process_to_write(stream::TranscodingStream)
     buffer1 = stream.state.buffer1
-    buffer2 = stream.state.buffer2
     if buffersize(buffer1) > 0 && stream.state.code == :end
         # reset
         stream.state.code = startproc(stream.codec, :write)
@@ -335,6 +334,7 @@ function process_to_write(stream::TranscodingStream)
             error("failed to reset codec")
         end
     end
+    buffer2 = stream.state.buffer2
     writebuffer!(stream.stream, buffer2)
     makemargin!(buffer2, 1)
     Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer1), marginmem(buffer2))

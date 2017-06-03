@@ -119,12 +119,8 @@ end
 # Make margin with ≥`minsize`.
 function makemargin!(buf::Buffer, minsize::Integer)
     @assert minsize ≥ 0
-    if buffersize(buf) == 0
-        if buf.markpos == 0
-            buf.bufferpos = buf.marginpos = 1
-        else
-            buf.bufferpos = buf.marginpos = buf.markpos
-        end
+    if buffersize(buf) == 0 && buf.markpos == 0
+        buf.bufferpos = buf.marginpos = 1
     end
     if marginsize(buf) < minsize
         # shift data to left
@@ -133,11 +129,14 @@ function makemargin!(buf::Buffer, minsize::Integer)
             datasize = buffersize(buf)
         else
             datapos = buf.markpos
-            datasize = buffersize(buf) + buf.bufferpos - buf.markpos
+            datasize = buf.marginpos - buf.markpos
         end
         copy!(buf.data, 1, buf.data, datapos, datasize)
+        if buf.markpos > 0
+            buf.markpos -= datapos - 1
+        end
         buf.bufferpos -= datapos - 1
-        buf.marginpos = buf.bufferpos + datasize
+        buf.marginpos -= datapos - 1
     end
     if marginsize(buf) < minsize
         # expand data buffer

@@ -68,6 +68,17 @@ using Base.Test
     @test_throws BoundsError s.state.buffer1[0]
     @test_throws BoundsError s.state.buffer1[3]
     @test_throws BoundsError s.state.buffer1[3:4]
+
+    data = rand(UInt8, 1999)
+    # unmarked
+    stream = TranscodingStream(Identity(), IOBuffer(data), bufsize=7)
+    @test hash(read(stream)) == hash(data)
+    @test length(stream.state.buffer1) == 7
+    # marked
+    stream = TranscodingStream(Identity(), IOBuffer(data), bufsize=7)
+    mark(stream)
+    @test hash(read(stream)) == hash(data)
+    @test hash(stream.state.buffer1.data[1:length(data)]) == hash(data)
 end
 
 Pkg.test("CodecZlib")
