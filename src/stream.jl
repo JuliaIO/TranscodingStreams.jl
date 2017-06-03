@@ -31,6 +31,10 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
     end
 end
 
+function TranscodingStream(codec::C, stream::S, state::State) where {C<:Codec,S<:IO}
+    return TranscodingStream{C,S}(codec, stream, state)
+end
+
 const DEFAULT_BUFFER_SIZE = 16 * 2^10  # 16KiB
 
 """
@@ -42,11 +46,7 @@ function TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=DEFAULT_BU
     if bufsize ≤ 0
         throw(ArgumentError("non-positive buffer size"))
     end
-    return TranscodingStream{typeof(codec),typeof(stream)}(codec, stream, State(bufsize))
-end
-
-function TranscodingStream(codec::Codec, stream::IO, state::State)
-    return TranscodingStream{typeof(codec),typeof(stream)}(codec, stream, state)
+    return TranscodingStream(codec, stream, State(bufsize))
 end
 
 function Base.show(io::IO, stream::TranscodingStream)
