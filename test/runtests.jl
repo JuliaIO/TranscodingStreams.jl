@@ -88,7 +88,9 @@ end
 
 installed = keys(Pkg.installed())
 for pkg in ["CodecZlib", "CodecZstd", "CodecBzip2"]
-    if pkg in installed
-        Pkg.test(pkg)
+    if pkg ∉ installed
+        # TODO: ad-hoc fix
+        Pkg.clone("https://github.com/bicycle1885/$(pkg).jl")
     end
+    Pkg.test(pkg)
 end
