@@ -278,6 +278,23 @@ end
     transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}
 
 Transcode `data` by applying `codec`.
+
+Examples
+--------
+
+```jldoctest
+julia> using CodecZlib
+
+julia> data = Vector{UInt8}("abracadabra");
+
+julia> compressed = transcode(ZlibCompression(), data);
+
+julia> decompressed = transcode(ZlibDecompression(), compressed);
+
+julia> String(decompressed)
+"abracadabra"
+
+```
 """
 function Base.transcode(codec::Codec, data::Vector{UInt8})
     buffer2 = Buffer(length(data))
