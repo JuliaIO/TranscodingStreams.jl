@@ -41,6 +41,24 @@ const DEFAULT_BUFFER_SIZE = 16 * 2^10  # 16KiB
     TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=$(DEFAULT_BUFFER_SIZE))
 
 Create a transcoding stream with `codec` and `stream`.
+
+Examples
+--------
+
+```jldoctest
+julia> using TranscodingStreams
+
+julia> using CodecZlib
+
+julia> file = open(Pkg.dir("TranscodingStreams", "test", "abra.gzip"));
+
+julia> stream = TranscodingStream(GzipDecompression(), file)
+TranscodingStreams.TranscodingStream{CodecZlib.GzipDecompression,IOStream}(<state=idle>)
+
+julia> readstring(stream)
+"abracadabra"
+
+```
 """
 function TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=DEFAULT_BUFFER_SIZE)
     if bufsize ≤ 0
