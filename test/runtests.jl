@@ -86,8 +86,9 @@ using Base.Test
     TranscodingStreams.test_roundtrip_transcode(Identity, Identity)
 end
 
+installed = keys(Pkg.installed())
 for pkg in ["CodecZlib", "CodecZstd", "CodecBzip2"]
-    if Pkg.installed(pkg) !== nothing
+    if pkg in installed
         Pkg.test(pkg)
     end
 end
