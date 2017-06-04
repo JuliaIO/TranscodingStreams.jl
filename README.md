@@ -24,10 +24,10 @@ listed below:
     - `Bzip2Compression` (`Bzip2CompressionStream`)
     - `Bzip2Decompression` (`Bzip2DecompressionStream`)
 
-By convention, codec types have names that match `.*(De)?Compression` and I/O
-types have names with `Stream` suffix.  The following snippet is an example of
-using CodecZlib.jl, which exports `GzipDecompressionStream` as an alias of
-`TranscodingStream{GzipDecompression,S}` where `S<:IO`:
+By convention, codec types have a name that matches `.*(Co|Deco)mpression` and
+I/O types have a codec name with `Stream` suffix.  The following snippet is an
+example of using CodecZlib.jl, which exports `GzipDecompressionStream` as an
+alias of `TranscodingStream{GzipDecompression,S}` where `S<:IO`:
 ```julia
 # Read lines from a gzip-compressed file.
 using CodecZlib
