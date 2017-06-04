@@ -86,6 +86,8 @@ using Base.Test
     TranscodingStreams.test_roundtrip_transcode(Identity, Identity)
 end
 
-Pkg.test("CodecZlib")
-Pkg.test("CodecZstd")
-Pkg.test("CodecBzip2")
+for pkg in ["CodecZlib", "CodecZstd", "CodecBzip2"]
+    if Pkg.installed(pkg) !== nothing
+        Pkg.test(pkg)
+    end
+end
