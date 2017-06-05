@@ -87,7 +87,7 @@ using Base.Test
 end
 
 installed = keys(Pkg.installed())
-for pkg in ["CodecZlib", "CodecZstd", "CodecBzip2", "CodecFoobar"]
+for pkg in ["CodecZlib", "CodecZstd", "CodecBzip2"]
     if pkg ∈ installed
         Pkg.test(pkg)
     else
