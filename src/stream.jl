@@ -75,6 +75,17 @@ end
 # Base IO Functions
 # -----------------
 
+function Base.open(f::Function, ::Type{T}, args...) where T<:TranscodingStream
+    try
+        stream = T(open(args...))
+        f(stream)
+    catch
+        rethrow()
+    finally
+        close(stream)
+    end
+end
+
 function Base.isopen(stream::TranscodingStream)
     return stream.state.state != :close
 end
