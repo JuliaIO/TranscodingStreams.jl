@@ -87,10 +87,10 @@ using Base.Test
 end
 
 installed = keys(Pkg.installed())
-for pkg in ["CodecZlib", "CodecZstd", "CodecBzip2"]
-    if pkg ∉ installed
-        # TODO: ad-hoc fix
-        Pkg.clone("https://github.com/bicycle1885/$(pkg).jl")
+for pkg in ["CodecZlib", "CodecZstd", "CodecBzip2", "CodecFoobar"]
+    if pkg ∈ installed
+        Pkg.test(pkg)
+    else
+        info("Skip ", pkg)
     end
-    Pkg.test(pkg)
 end

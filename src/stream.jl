@@ -45,7 +45,7 @@ Create a transcoding stream with `codec` and `stream`.
 Examples
 --------
 
-```jldoctest
+```julia
 julia> using TranscodingStreams
 
 julia> using CodecZlib
@@ -300,7 +300,7 @@ Transcode `data` by applying `codec`.
 Examples
 --------
 
-```jldoctest
+```julia
 julia> using CodecZlib
 
 julia> data = Vector{UInt8}("abracadabra");
