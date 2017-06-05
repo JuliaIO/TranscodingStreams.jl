@@ -25,7 +25,7 @@ Codecs are defined in other packages listed below:
     - `ZlibDecompression` (`ZlibDecompressionStream`)
     - `DeflateCompression` (`DeflateCompressionStream`)
     - `DeflateDecompression` (`DeflateDecompressionStream`)
-- [CodecZngstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
+- [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
     - `ZstdCompression` (`ZstdCompressionStream`)
     - `ZstdDecompression` (`ZstdDecompressionStream`)
 - [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)

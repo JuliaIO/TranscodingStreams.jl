@@ -12,3 +12,10 @@ TranscodingStreams.jl
 [codecov-url]: http://codecov.io/github/bicycle1885/TranscodingStreams.jl?branch=master
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: https://bicycle1885.github.io/TranscodingStreams.jl/latest/
+
+TranscodingStreams.jl is a package for transcoding data streams. Transcoding can
+be any codec. For example, following packages define lossless compression and
+decompression codecs:
+- [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
+- [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
+- [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
