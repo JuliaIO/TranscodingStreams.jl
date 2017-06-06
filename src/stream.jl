@@ -357,7 +357,7 @@ function fillbuffer(stream::TranscodingStream)
         end
         makemargin!(buffer2, 1)
         readdata!(stream.stream, buffer2)
-        makemargin!(buffer1, 1)
+        makemargin!(buffer1, clamp(div(length(buffer1), 4), 1, DEFAULT_BUFFER_SIZE * 8))
         Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer2), marginmem(buffer1))
         buffer2.bufferpos += Δin
         buffer1.marginpos += Δout
@@ -405,7 +405,7 @@ function process_to_write(stream::TranscodingStream)
     end
     buffer2 = stream.state.buffer2
     writebuffer!(stream.stream, buffer2)
-    makemargin!(buffer2, 1)
+    makemargin!(buffer2, clamp(div(length(buffer2), 4), 1, DEFAULT_BUFFER_SIZE * 8))
     Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer1), marginmem(buffer2))
     buffer1.bufferpos += Δin
     buffer2.marginpos += Δout
