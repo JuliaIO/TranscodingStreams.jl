@@ -1,9 +1,8 @@
 using TranscodingStreams
+using TranscodingStreams.CodecIdentity
 using Base.Test
 
 @testset "Identity Codec" begin
-    Identity = TranscodingStreams.Identity
-
     source = IOBuffer("")
     stream = TranscodingStream(Identity(), source)
     @test eof(stream)
@@ -84,6 +83,9 @@ using Base.Test
     @test transcode(Identity(), b"") == b""
     @test transcode(Identity(), b"foo") == b"foo"
     TranscodingStreams.test_roundtrip_transcode(Identity, Identity)
+
+    TranscodingStreams.test_roundtrip_read(IdentityStream, IdentityStream)
+    TranscodingStreams.test_roundtrip_write(IdentityStream, IdentityStream)
 end
 
 installed = keys(Pkg.installed())

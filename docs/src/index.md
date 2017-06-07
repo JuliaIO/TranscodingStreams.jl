@@ -185,6 +185,33 @@ compressed = take!(buf)
 close(stream)
 ```
 
+### Use an identity (no-op) codec
+
+Sometimes, the `Identity` codec, which does nothing, may be useful. The
+following example creates a decompression stream based on the extension of a
+filepath:
+```julia
+using CodecZlib
+using CodecBzip2
+using TranscodingStreams
+using TranscodingStreams.CodecIdentity
+
+function makestream(filepath)
+    if endswith(filepath, ".gz")
+        codec = GzipDecompression()
+    elseif endswith(filepath, ".bz2")
+        codec = Bzip2Decompression()
+    else
+        codec = Identity()
+    end
+    return TranscodingStream(codec, open(filepath))
+end
+
+makestream("data.txt.gz")
+makestream("data.txt.bz2")
+makestream("data.txt")
+```
+
 ### Transcode data in one shot
 
 TranscodingStreams.jl extends the `transcode` function to transcode a data
