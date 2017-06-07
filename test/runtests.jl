@@ -89,10 +89,10 @@ using Base.Test
 end
 
 installed = keys(Pkg.installed())
-for pkg in ["CodecZlib", "CodecZstd", "CodecBzip2"]
+for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
     if pkg ∈ installed
         Pkg.test(pkg)
     else
-        info("Skip ", pkg)
+        info("Skip testing", pkg, ".jl because it is not installed.")
     end
 end

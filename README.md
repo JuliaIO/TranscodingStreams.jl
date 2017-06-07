@@ -22,4 +22,3 @@ Consult the [docs][docs-latest-url] for more details and examples.
 [codecov-url]: http://codecov.io/github/bicycle1885/TranscodingStreams.jl?branch=master
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: https://bicycle1885.github.io/TranscodingStreams.jl/latest/
-
