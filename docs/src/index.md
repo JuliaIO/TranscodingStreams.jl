@@ -104,13 +104,17 @@ Codecs are defined in other packages listed below:
     </tr>
 </table>
 
+Install packages you need by calling `Pkg.add(<package name>)` in a Julia
+session. For example, if you want to read gzip-compressed files, call
+`Pkg.add("CodecZlib")` to use `GzipDecompression` or `GzipDecompressionStream`.
 By convention, codec types have a name that matches `.*(Co|Deco)mpression` and
-I/O types have a codec name with `Stream` suffix.  An important thing is these
-packages depend on TranscodingStreams.jl and not *vice versa*. This means you
-can install any codec package you need without installing all codec packages.
-Also, if you want to define your own codec, it is totally feasible like these
-packages.  TranscodingStreams.jl requests a codec to implement some interface
-functions which will be described later.
+I/O types have a codec name with `Stream` suffix. All codecs are a subtype
+`TranscodingStreams.Codec` and streams are a subtype of `Base.IO`. An important
+thing is these packages depend on TranscodingStreams.jl and not *vice versa*.
+This means you can install any codec package you need without installing all
+codec packages.  Also, if you want to define your own codec, it is totally
+feasible like these packages.  TranscodingStreams.jl requests a codec to
+implement some interface functions which will be described later.
 
 
 Examples
