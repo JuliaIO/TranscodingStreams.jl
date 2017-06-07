@@ -2,7 +2,8 @@ using Documenter
 using TranscodingStreams
 
 makedocs(
-    format=:html,
+    # Documenter.jl doesn't support including HTML elements.
+    # format=:html,
     sitename="TranscodingStreams.jl",
     modules=[TranscodingStreams])
 

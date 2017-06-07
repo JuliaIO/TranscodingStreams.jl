@@ -18,22 +18,91 @@ lossless decompression type and `S` is a file, `TranscodingStream{C,S}` behaves
 like a data stream that incrementally decompresses data from the file.
 
 Codecs are defined in other packages listed below:
-- [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
-    - `GizipCompression` (`GzipCompressionStream`)
-    - `GzipDecompression` (`GzipDecompressionStream`)
-    - `ZlibCompression` (`ZlibCompressionStream`)
-    - `ZlibDecompression` (`ZlibDecompressionStream`)
-    - `DeflateCompression` (`DeflateCompressionStream`)
-    - `DeflateDecompression` (`DeflateDecompressionStream`)
-- [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
-    - `ZstdCompression` (`ZstdCompressionStream`)
-    - `ZstdDecompression` (`ZstdDecompressionStream`)
-- [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
-    - `Bzip2Compression` (`Bzip2CompressionStream`)
-    - `Bzip2Decompression` (`Bzip2DecompressionStream`)
-- [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
-    - `XzCompression` (`XzCompressionStream`)
-    - `XzDecompression` (`XzDecompressionStream`)
+
+<table>
+    <tr>
+        <th>Package</th>
+        <th>Library</th>
+        <th>Format</th>
+        <th>Codec</th>
+        <th>Stream</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td rowspan="6"><a href="https://github.com/bicycle1885/CodecZlib.jl">CodecZlib.jl</a></td>
+        <td rowspan="6"><a href="http://zlib.net/">zlib</a></td>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1952">RFC1952</a></td>
+        <td><code>GzipCompression</code></td>
+        <td><code>GzipCompressionStream</code></td>
+        <td>Compress data in gzip (.gz) format.</td>
+    </tr>
+    <tr>
+        <td><code>GzipDecompression</code></td>
+        <td><code>GzipDecompressionStream</code></td>
+        <td>Decompress data in gzip (.gz) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1950">RFC1950</a></td>
+        <td><code>ZlibCompression</code></td>
+        <td><code>ZlibCompressionStream</code></td>
+        <td>Compress data in zlib format.</td>
+    </tr>
+    <tr>
+        <td><code>ZlibDecompression</code></td>
+        <td><code>ZlibDecompressionStream</code></td>
+        <td>Decompress data in zlib format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1951">RFC1951</a></td>
+        <td><code>DeflateCompression</code></td>
+        <td><code>DeflateCompressionStream</code></td>
+        <td>Compress data in zlib format.</td>
+    </tr>
+    <tr>
+        <td><code>DeflateDecompression</code></td>
+        <td><code>DeflateDecompressionStream</code></td>
+        <td>Decompress data in zlib format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
+        <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
+        <td rowspan="2"></td>
+        <td><code>Bzip2Compression</code></td>
+        <td><code>Bzip2CompressionStream</code></td>
+        <td>Compress data in bzip2 (.bz2) format.</td>
+    </tr>
+    <tr>
+        <td><code>Bzip2Decompression</code></td>
+        <td><code>Bzip2DecompressionStream</code></td>
+        <td>Decompress data in bzip2 (.bz2) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecXz.jl">CodecXz.jl</a></td>
+        <td rowspan="2"><a href="https://tukaani.org/xz/">xz</a></td>
+        <td rowspan="2"><a href="https://tukaani.org/xz/xz-file-format.txt">The .xz File Format</a></td>
+        <td><code>XzCompression</code></td>
+        <td><code>XzCompressionStream</code></td>
+        <td>Compress data in xz (.xz) format.</td>
+    </tr>
+    <tr>
+        <td><code>XzDecompression</code></td>
+        <td><code>XzDecompressionStream</code></td>
+        <td>Decompress data in xz (.xz) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecZstd.jl">CodecZstd.jl</a></td>
+        <td rowspan="2"><a href="http://facebook.github.io/zstd/">zstd</a></td>
+        <td rowspan="2"><a href="https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md">Zstandard Compression Format</a></td>
+        <td><code>ZstdCompression</code></td>
+        <td><code>ZstdCompressionStream</code></td>
+        <td>Compress data in zstd (.zst) format.</td>
+    </tr>
+    <tr>
+        <td><code>ZstdDecompression</code></td>
+        <td><code>ZstdDecompressionStream</code></td>
+        <td>Decompress data in zstd (.zst) format.</td>
+    </tr>
+</table>
 
 By convention, codec types have a name that matches `.*(Co|Deco)mpression` and
 I/O types have a codec name with `Stream` suffix.  An important thing is these
