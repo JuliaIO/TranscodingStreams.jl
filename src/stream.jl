@@ -76,8 +76,8 @@ end
 # -----------------
 
 function Base.open(f::Function, ::Type{T}, args...) where T<:TranscodingStream
+    stream = T(open(args...))
     try
-        stream = T(open(args...))
         f(stream)
     catch
         rethrow()
