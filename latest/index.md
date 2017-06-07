@@ -109,6 +109,37 @@ close(stream)
 ```
 
 
+<a id='Use-an-identity-(no-op)-codec-1'></a>
+
+### Use an identity (no-op) codec
+
+
+Sometimes, the `Identity` codec, which does nothing, may be useful. The following example creates a decompression stream based on the extension of a filepath:
+
+
+```julia
+using CodecZlib
+using CodecBzip2
+using TranscodingStreams
+using TranscodingStreams.CodecIdentity
+
+function makestream(filepath)
+    if endswith(filepath, ".gz")
+        codec = GzipDecompression()
+    elseif endswith(filepath, ".bz2")
+        codec = Bzip2Decompression()
+    else
+        codec = Identity()
+    end
+    return TranscodingStream(codec, open(filepath))
+end
+
+makestream("data.txt.gz")
+makestream("data.txt.bz2")
+makestream("data.txt")
+```
+
+
 <a id='Transcode-data-in-one-shot-1'></a>
 
 ### Transcode data in one shot
@@ -159,7 +190,7 @@ julia> readstring(stream)
 ```
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/ace32c382a91b2715a560afc51b80fc502539544/src/stream.jl#L40-L62' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/b439edfedcafb81759fff96dc6b048b76174951c/src/stream.jl#L40-L62' class='documenter-source'>source</a><br>
 
 <a id='Base.transcode-Tuple{TranscodingStreams.Codec,Array{UInt8,1}}' href='#Base.transcode-Tuple{TranscodingStreams.Codec,Array{UInt8,1}}'>#</a>
 **`Base.transcode`** &mdash; *Method*.
@@ -189,7 +220,7 @@ julia> String(decompressed)
 ```
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/ace32c382a91b2715a560afc51b80fc502539544/src/stream.jl#L306-L327' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/b439edfedcafb81759fff96dc6b048b76174951c/src/stream.jl#L306-L327' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.TOKEN_END' href='#TranscodingStreams.TOKEN_END'>#</a>
 **`TranscodingStreams.TOKEN_END`** &mdash; *Constant*.
@@ -205,7 +236,7 @@ A special token indicating the end of data.
 
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/ace32c382a91b2715a560afc51b80fc502539544/src/stream.jl#L283-L293' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/b439edfedcafb81759fff96dc6b048b76174951c/src/stream.jl#L283-L293' class='documenter-source'>source</a><br>
 
 
 <a id='Defining-a-new-codec-1'></a>
@@ -222,7 +253,7 @@ An abstract codec type.
 Any codec supporting transcoding interfaces must be a subtype of this type.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/ace32c382a91b2715a560afc51b80fc502539544/src/codec.jl#L4-L8' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/b439edfedcafb81759fff96dc6b048b76174951c/src/codec.jl#L4-L8' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.initialize' href='#TranscodingStreams.initialize'>#</a>
 **`TranscodingStreams.initialize`** &mdash; *Function*.
@@ -236,7 +267,7 @@ initialize(codec::Codec)::Void
 Initialize `codec`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/ace32c382a91b2715a560afc51b80fc502539544/src/codec.jl#L15-L19' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/b439edfedcafb81759fff96dc6b048b76174951c/src/codec.jl#L15-L19' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.finalize' href='#TranscodingStreams.finalize'>#</a>
 **`TranscodingStreams.finalize`** &mdash; *Function*.
@@ -250,7 +281,7 @@ finalize(codec::Codec)::Void
 Finalize `codec`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/ace32c382a91b2715a560afc51b80fc502539544/src/codec.jl#L24-L28' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/b439edfedcafb81759fff96dc6b048b76174951c/src/codec.jl#L24-L28' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.startproc' href='#TranscodingStreams.startproc'>#</a>
 **`TranscodingStreams.startproc`** &mdash; *Function*.
@@ -264,7 +295,7 @@ startproc(codec::Codec, state::Symbol)::Symbol
 Start data processing with `codec` of `state`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/ace32c382a91b2715a560afc51b80fc502539544/src/codec.jl#L33-L37' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/b439edfedcafb81759fff96dc6b048b76174951c/src/codec.jl#L33-L37' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.process' href='#TranscodingStreams.process'>#</a>
 **`TranscodingStreams.process`** &mdash; *Function*.
@@ -278,5 +309,5 @@ process(codec::Codec, input::Memory, output::Memory)::Tuple{Int,Int,Symbol}
 Do data processing with `codec`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/ace32c382a91b2715a560afc51b80fc502539544/src/codec.jl#L42-L46' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/b439edfedcafb81759fff96dc6b048b76174951c/src/codec.jl#L42-L46' class='documenter-source'>source</a><br>
 
