@@ -19,3 +19,4 @@ decompression codecs:
 - [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
 - [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
 - [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
+- [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)

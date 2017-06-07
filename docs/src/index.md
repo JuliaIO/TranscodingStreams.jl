@@ -31,6 +31,9 @@ Codecs are defined in other packages listed below:
 - [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
     - `Bzip2Compression` (`Bzip2CompressionStream`)
     - `Bzip2Decompression` (`Bzip2DecompressionStream`)
+- [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
+    - `XzCompression` (`XzCompressionStream`)
+    - `XzDecompression` (`XzDecompressionStream`)
 
 By convention, codec types have a name that matches `.*(Co|Deco)mpression` and
 I/O types have a codec name with `Stream` suffix.  An important thing is these
