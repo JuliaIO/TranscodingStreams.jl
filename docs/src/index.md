@@ -56,12 +56,12 @@ Codecs are defined in other packages listed below:
         <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1951">RFC1951</a></td>
         <td><code>DeflateCompression</code></td>
         <td><code>DeflateCompressionStream</code></td>
-        <td>Compress data in zlib format.</td>
+        <td>Compress data in deflate format.</td>
     </tr>
     <tr>
         <td><code>DeflateDecompression</code></td>
         <td><code>DeflateDecompressionStream</code></td>
-        <td>Decompress data in zlib format.</td>
+        <td>Decompress data in deflate format.</td>
     </tr>
     <tr>
         <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
