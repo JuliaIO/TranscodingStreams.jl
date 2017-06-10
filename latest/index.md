@@ -190,7 +190,7 @@ julia> readstring(stream)
 ```
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/44a3095093f9a0d7ba2ff0bb3c9312747d9faf6e/src/stream.jl#L40-L62' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/3240eb290afbfebab8c67125ef57a1853fbd4c66/src/stream.jl#L40-L62' class='documenter-source'>source</a><br>
 
 <a id='Base.transcode-Tuple{TranscodingStreams.Codec,Array{UInt8,1}}' href='#Base.transcode-Tuple{TranscodingStreams.Codec,Array{UInt8,1}}'>#</a>
 **`Base.transcode`** &mdash; *Method*.
@@ -220,7 +220,7 @@ julia> String(decompressed)
 ```
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/44a3095093f9a0d7ba2ff0bb3c9312747d9faf6e/src/stream.jl#L306-L327' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/3240eb290afbfebab8c67125ef57a1853fbd4c66/src/stream.jl#L306-L327' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.TOKEN_END' href='#TranscodingStreams.TOKEN_END'>#</a>
 **`TranscodingStreams.TOKEN_END`** &mdash; *Constant*.
@@ -236,7 +236,7 @@ A special token indicating the end of data.
 
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/44a3095093f9a0d7ba2ff0bb3c9312747d9faf6e/src/stream.jl#L283-L293' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/3240eb290afbfebab8c67125ef57a1853fbd4c66/src/stream.jl#L283-L293' class='documenter-source'>source</a><br>
 
 
 <a id='Defining-a-new-codec-1'></a>
@@ -253,7 +253,7 @@ An abstract codec type.
 Any codec supporting transcoding interfaces must be a subtype of this type.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/44a3095093f9a0d7ba2ff0bb3c9312747d9faf6e/src/codec.jl#L4-L8' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/3240eb290afbfebab8c67125ef57a1853fbd4c66/src/codec.jl#L4-L8' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.initialize' href='#TranscodingStreams.initialize'>#</a>
 **`TranscodingStreams.initialize`** &mdash; *Function*.
@@ -267,7 +267,7 @@ initialize(codec::Codec)::Void
 Initialize `codec`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/44a3095093f9a0d7ba2ff0bb3c9312747d9faf6e/src/codec.jl#L15-L19' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/3240eb290afbfebab8c67125ef57a1853fbd4c66/src/codec.jl#L15-L19' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.finalize' href='#TranscodingStreams.finalize'>#</a>
 **`TranscodingStreams.finalize`** &mdash; *Function*.
@@ -281,7 +281,7 @@ finalize(codec::Codec)::Void
 Finalize `codec`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/44a3095093f9a0d7ba2ff0bb3c9312747d9faf6e/src/codec.jl#L24-L28' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/3240eb290afbfebab8c67125ef57a1853fbd4c66/src/codec.jl#L24-L28' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.startproc' href='#TranscodingStreams.startproc'>#</a>
 **`TranscodingStreams.startproc`** &mdash; *Function*.
@@ -295,7 +295,7 @@ startproc(codec::Codec, state::Symbol)::Symbol
 Start data processing with `codec` of `state`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/44a3095093f9a0d7ba2ff0bb3c9312747d9faf6e/src/codec.jl#L33-L37' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/3240eb290afbfebab8c67125ef57a1853fbd4c66/src/codec.jl#L33-L37' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.process' href='#TranscodingStreams.process'>#</a>
 **`TranscodingStreams.process`** &mdash; *Function*.
@@ -309,5 +309,5 @@ process(codec::Codec, input::Memory, output::Memory)::Tuple{Int,Int,Symbol}
 Do data processing with `codec`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/44a3095093f9a0d7ba2ff0bb3c9312747d9faf6e/src/codec.jl#L42-L46' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/tree/3240eb290afbfebab8c67125ef57a1853fbd4c66/src/codec.jl#L42-L46' class='documenter-source'>source</a><br>
 
