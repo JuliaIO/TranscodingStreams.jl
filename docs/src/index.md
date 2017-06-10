@@ -19,6 +19,7 @@ like a data stream that incrementally decompresses data from the file.
 
 Codecs are defined in other packages listed below:
 
+```@raw html
 <table>
     <tr>
         <th>Package</th>
@@ -103,6 +104,7 @@ Codecs are defined in other packages listed below:
         <td>Decompress data in zstd (.zst) format.</td>
     </tr>
 </table>
+```
 
 Install packages you need by calling `Pkg.add(<package name>)` in a Julia
 session. For example, if you want to read gzip-compressed files, call
@@ -235,6 +237,11 @@ CurrentModule = TranscodingStreams
 TranscodingStream(codec::Codec, stream::IO)
 transcode(codec::Codec, data::Vector{UInt8})
 TranscodingStreams.TOKEN_END
+```
+
+```@docs
+TranscodingStreams.CodecIdentity.Identity
+TranscodingStreams.CodecIdentity.IdentityStream
 ```
 
 

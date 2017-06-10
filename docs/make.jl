@@ -3,9 +3,10 @@ using TranscodingStreams
 
 makedocs(
     # Documenter.jl doesn't support including HTML elements.
-    # format=:html,
+    format=:html,
     sitename="TranscodingStreams.jl",
-    modules=[TranscodingStreams])
+    modules=[TranscodingStreams],
+    assets=["assets/custom.css"])
 
 deploydocs(
     repo="github.com/bicycle1885/TranscodingStreams.jl.git",
