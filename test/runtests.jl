@@ -89,5 +89,5 @@ using Base.Test
 end
 
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
-    Pkt.test(pkg)
+    Pkg.test(pkg)
 end
