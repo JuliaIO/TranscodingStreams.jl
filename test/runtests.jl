@@ -7,6 +7,7 @@ using Base.Test
     stream = TranscodingStream(Identity(), source)
     @test eof(stream)
     @test read(stream) == UInt8[]
+    @test contains(repr(stream), "state=read")
     close(stream)
 
     source = IOBuffer("foo")
@@ -25,6 +26,7 @@ using Base.Test
     sink = IOBuffer()
     stream = TranscodingStream(Identity(), sink)
     @test write(stream, "foo") === 3
+    @test contains(repr(stream), "state=write")
     flush(stream)
     @test take!(sink) == b"foo"
     close(stream)
