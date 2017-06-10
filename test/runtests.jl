@@ -88,11 +88,6 @@ using Base.Test
     TranscodingStreams.test_roundtrip_write(IdentityStream, IdentityStream)
 end
 
-installed = keys(Pkg.installed())
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
-    if pkg ∈ installed
-        Pkg.test(pkg)
-    else
-        info("Skip testing", pkg, ".jl because it is not installed.")
-    end
+    Pkt.test(pkg)
 end
