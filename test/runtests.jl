@@ -86,6 +86,7 @@ using Base.Test
 
     TranscodingStreams.test_roundtrip_read(IdentityStream, IdentityStream)
     TranscodingStreams.test_roundtrip_write(IdentityStream, IdentityStream)
+    TranscodingStreams.test_roundtrip_lines(IdentityStream, IdentityStream)
 end
 
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]

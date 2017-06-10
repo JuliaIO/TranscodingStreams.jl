@@ -31,3 +31,19 @@ function test_roundtrip_transcode(encode, decode)
         Base.Test.@test hash(transcode(decode(), transcode(encode(), data))) == hash(data)
     end
 end
+
+function test_roundtrip_lines(encoder, decoder)
+    srand(12345)
+    lines = String[]
+    buf = IOBuffer()
+    stream = encoder(buf)
+    for i in 1:100_000
+        line = randstring(rand(0:1000))
+        println(stream, line)
+        push!(lines, line)
+    end
+    write(stream, TOKEN_END)
+    flush(stream)
+    seekstart(buf)
+    Base.Test.@test hash(lines) == hash(readlines(decoder(buf)))
+end
