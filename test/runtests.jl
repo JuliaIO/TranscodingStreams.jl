@@ -48,6 +48,11 @@ using Base.Test
     reset(stream)
     @test !ismarked(stream)
     @test [read(stream, UInt8) for _ in 1:3] == data[1:3]
+    mark(stream)
+    @test ismarked(stream)
+    unmark(stream)
+    @test !ismarked(stream)
+    close(stream)
 
     data = collect(0x00:0x0f)
     stream = TranscodingStream(Identity(), IOBuffer(data))
