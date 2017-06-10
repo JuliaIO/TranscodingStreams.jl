@@ -164,20 +164,6 @@ function Base.read(stream::TranscodingStream, ::Type{UInt8})
     return readbyte!(stream.state.buffer1)
 end
 
-function Base.read(stream::TranscodingStream)
-    changestate!(stream, :read)
-    ret = Vector{UInt8}(16)
-    filled = 0
-    while !eof(stream)
-        filled += unsafe_read(stream, pointer(ret, filled+1), endof(ret) - filled)
-        if filled == length(ret)
-            resize!(ret, 2 * filled)
-        end
-    end
-    resize!(ret, filled)
-    return ret
-end
-
 function Base.readuntil(stream::TranscodingStream, delim::UInt8)
     changestate!(stream, :read)
     buffer1 = stream.state.buffer1
