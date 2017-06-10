@@ -24,7 +24,7 @@ const IdentityStream{S} = TranscodingStream{Identity,S}
 """
     IdentityStream(stream::IO)
 
-Create an identity (no-op) codec.
+Create an identity (no-op) stream.
 """
 function IdentityStream(stream::IO)
     return TranscodingStream(Identity(), stream)
