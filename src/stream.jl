@@ -135,7 +135,7 @@ function Base.skip(stream::TranscodingStream, offset::Integer)
     buffer1 = stream.state.buffer1
     skipped = 0
     if state == :read
-        while buffersize(buffer1) < offset - skipped && !eof(stream)
+        while !eof(stream) && buffersize(buffer1) < offset - skipped
             n = buffersize(buffer1)
             emptybuffer!(buffer1)
             skipped += n

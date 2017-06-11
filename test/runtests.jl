@@ -63,6 +63,21 @@ using Base.Test
     @test read(stream, UInt8) == data[3]
     skip(stream, 5)
     @test read(stream, UInt8) == data[9]
+    skip(stream, 7)
+    @test eof(stream)
+    close(stream)
+
+    # skip offset > bufsize
+    data = collect(0x00:0x0f)
+    stream = TranscodingStream(Identity(), IOBuffer(data), bufsize=2)
+    @test read(stream, UInt8) == data[1]
+    skip(stream, 4)
+    @test read(stream, UInt8) == data[6]
+    skip(stream, 3)
+    @test read(stream, UInt8) == data[10]
+    skip(stream, 6)
+    @test eof(stream)
+    close(stream)
 
     s = TranscodingStream(Identity(), IOBuffer(b"baz"))
     @test endof(s.state.buffer1) == 0
@@ -94,6 +109,8 @@ using Base.Test
     TranscodingStreams.test_roundtrip_read(IdentityStream, IdentityStream)
     TranscodingStreams.test_roundtrip_write(IdentityStream, IdentityStream)
     TranscodingStreams.test_roundtrip_lines(IdentityStream, IdentityStream)
+
+    @test_throws ArgumentError TranscodingStream(Identity(), IOBuffer(), bufsize=0)
 end
 
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
