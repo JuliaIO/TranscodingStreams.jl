@@ -120,6 +120,13 @@ using Base.Test
     @test_throws ArgumentError TranscodingStream(Identity(), IOBuffer(), bufsize=0)
 end
 
+# This does not implement necessary interface methods.
+struct InvalidCodec <: TranscodingStreams.Codec end
+
+@testset "Invalid Codec" begin
+    @test_throws MethodError read(TranscodingStream(InvalidCodec(), IOBuffer()))
+end
+
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
     Pkg.test(pkg)
 end
