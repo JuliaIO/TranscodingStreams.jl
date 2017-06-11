@@ -79,6 +79,13 @@ using Base.Test
     @test eof(stream)
     close(stream)
 
+    stream = TranscodingStream(Identity(), IOBuffer("foo"))
+    out = zeros(UInt8, 3)
+    @test nb_available(stream) == 0
+    @test TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
+    @test out == b"foo"
+    close(stream)
+
     s = TranscodingStream(Identity(), IOBuffer(b"baz"))
     @test endof(s.state.buffer1) == 0
     read(s, UInt8)

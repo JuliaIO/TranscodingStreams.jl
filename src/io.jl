@@ -12,18 +12,17 @@ This function is similar to `Base.unsafe_read` but is different in some points:
 - It does not block if there are buffered data in `input`.
 """
 function unsafe_read(input::IO, output::Ptr{UInt8}, nbytes::Int)::Int
-    nread = 0
+    p = output
     navail = nb_available(input)
     if navail == 0 && nbytes > 0 && !eof(input)
         b = read(input, UInt8)
-        unsafe_store!(output, b)
-        output += 1
+        unsafe_store!(p, b)
+        p += 1
         nbytes -= 1
-        nread += 1
         navail = nb_available(input)
     end
     n = min(navail, nbytes)
-    Base.unsafe_read(input, output, n)
-    nread += n
-    return nread
+    Base.unsafe_read(input, p, n)
+    p += n
+    return Int(p - output)
 end
