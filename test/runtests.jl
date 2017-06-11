@@ -23,6 +23,11 @@ using Base.Test
     @test read(stream) == data
     close(stream)
 
+    stream = TranscodingStream(Identity(), IOBuffer())
+    @test_throws EOFError read(stream, UInt8)
+    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(3)), 3)
+    close(stream)
+
     sink = IOBuffer()
     stream = TranscodingStream(Identity(), sink)
     @test write(stream, "foo") === 3
