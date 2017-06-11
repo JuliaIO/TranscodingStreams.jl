@@ -28,6 +28,14 @@ using Base.Test
     @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(3)), 3)
     close(stream)
 
+    # switch write => read
+    buf = IOBuffer(b"foobar", true, true)
+    stream = TranscodingStream(Identity(), buf)
+    @test write(stream, b"xyz") == 3
+    @test read(stream, 3) == b"bar"
+    @test take!(buf) == b"xyzbar"
+    close(stream)
+
     sink = IOBuffer()
     stream = TranscodingStream(Identity(), sink)
     @test write(stream, "foo") === 3
