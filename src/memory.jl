@@ -1,7 +1,7 @@
 # Memory
 # ======
 
-immutable Memory
+struct Memory
     ptr::Ptr{UInt8}
     size::UInt
 end

@@ -403,7 +403,7 @@ end
 # State Transition
 # ----------------
 
-immutable StateTransitionError <: Exception
+struct StateTransitionError <: Exception
     message::String
     states::Pair{Symbol,Symbol}
 end
