@@ -17,17 +17,21 @@
 # `markpos` ≤ `bufferpos` ≤ `marginpos` must hold whenever possible.
 
 mutable struct Buffer
+    # data and positions (see above)
     data::Vector{UInt8}
     markpos::Int
     bufferpos::Int
     marginpos::Int
 
+    # the number of total bytes passed through this buffer
+    total::Int64
+
     function Buffer(size::Integer)
-        return new(Vector{UInt8}(size), 0, 1, 1)
+        return new(Vector{UInt8}(size), 0, 1, 1, 0)
     end
 
     function Buffer(data::Vector{UInt8})
-        return new(data, 0, 1, length(data)+1)
+        return new(data, 0, 1, length(data)+1, 0)
     end
 end
 
@@ -82,6 +86,7 @@ end
 function writebyte!(buf::Buffer, b::UInt8)
     buf.data[buf.marginpos] = b
     buf.marginpos += 1
+    buf.total += 1
     return 1
 end
 
@@ -167,6 +172,7 @@ end
 function initbuffer!(buf::Buffer)
     buf.markpos = 0
     buf.bufferpos = buf.marginpos = 1
+    buf.total = 0
     return buf
 end
 
@@ -189,6 +195,7 @@ function readdata!(input::IO, output::Buffer)
     Base.unsafe_read(input, marginptr(output), n)
     output.marginpos += n
     nread += n
+    output.total += nread
     return nread
 end
 

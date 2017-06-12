@@ -121,6 +121,21 @@ using Base.Test
     @test hash(read(stream)) == hash(data)
     @test hash(stream.state.buffer1.data[1:length(data)]) == hash(data)
 
+    stream = TranscodingStream(Identity(), IOBuffer(b"foobar"))
+    @test TranscodingStreams.total_in(stream) === Int64(0)
+    @test TranscodingStreams.total_out(stream) === Int64(0)
+    read(stream)
+    @test TranscodingStreams.total_in(stream) === Int64(6)
+    @test TranscodingStreams.total_out(stream) === Int64(6)
+
+    stream = TranscodingStream(Identity(), IOBuffer())
+    @test TranscodingStreams.total_in(stream) === Int64(0)
+    @test TranscodingStreams.total_out(stream) === Int64(0)
+    write(stream, b"foobar")
+    flush(stream)
+    @test TranscodingStreams.total_in(stream) === Int64(6)
+    @test TranscodingStreams.total_out(stream) === Int64(6)
+
     # transcode
     @test transcode(Identity(), b"") == b""
     @test transcode(Identity(), b"foo") == b"foo"

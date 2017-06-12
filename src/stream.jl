@@ -251,6 +251,7 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
         unsafe_copy!(marginptr(buffer1), p, m)
         p += m
         buffer1.marginpos += m
+        buffer1.total += m
     end
     return Int(p - input)
 end
@@ -322,6 +323,32 @@ function Base.transcode(codec::Codec, data::Vector{UInt8})
 end
 
 
+# Utils
+# -----
+
+function total_in(stream::TranscodingStream)::Int64
+    state = stream.state
+    if state.state == :read
+        return state.buffer2.total
+    elseif state.state == :write
+        return state.buffer1.total
+    else
+        return zero(Int64)
+    end
+end
+
+function total_out(stream::TranscodingStream)::Int64
+    state = stream.state
+    if state.state == :read
+        return state.buffer1.total
+    elseif state.state == :write
+        return state.buffer2.total
+    else
+        return zero(Int64)
+    end
+end
+
+
 # Buffering
 # ---------
 
@@ -347,6 +374,7 @@ function fillbuffer(stream::TranscodingStream)
         Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer2), marginmem(buffer1))
         buffer2.bufferpos += Δin
         buffer1.marginpos += Δout
+        buffer1.total += Δout
         nfilled += Δout
     end
     return nfilled
@@ -395,6 +423,7 @@ function process_to_write(stream::TranscodingStream)
     Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer1), marginmem(buffer2))
     buffer1.bufferpos += Δin
     buffer2.marginpos += Δout
+    buffer2.total += Δout
     makemargin!(buffer1, 0)
     return Δin
 end
