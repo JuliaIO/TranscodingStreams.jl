@@ -2,6 +2,29 @@ using TranscodingStreams
 using TranscodingStreams.CodecIdentity
 using Base.Test
 
+@testset "Memory" begin
+    data = b"foobar"
+    mem = TranscodingStreams.Memory(pointer(data), sizeof(data))
+    @test mem isa TranscodingStreams.Memory
+    @test mem.ptr === pointer(data)
+    @test mem.size === length(mem) === UInt(sizeof(data))
+    @test endof(mem) === 6
+    @test mem[1] === UInt8('f')
+    @test mem[2] === UInt8('o')
+    @test mem[3] === UInt8('o')
+    @test mem[4] === UInt8('b')
+    @test mem[5] === UInt8('a')
+    @test mem[6] === UInt8('r')
+    @test_throws BoundsError mem[7]
+    @test_throws BoundsError mem[0]
+    mem[1] = UInt8('z')
+    @test mem[1] === UInt8('z')
+    mem[3] = UInt8('!')
+    @test mem[3] === UInt8('!')
+    @test_throws BoundsError mem[7] = 0x00
+    @test_throws BoundsError mem[0] = 0x00
+end
+
 @testset "Identity Codec" begin
     source = IOBuffer("")
     stream = TranscodingStream(Identity(), source)

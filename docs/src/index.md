@@ -255,3 +255,7 @@ TranscodingStreams.finalize
 TranscodingStreams.startproc
 TranscodingStreams.process
 ```
+
+```@docs
+TranscodingStreams.Memory
+```
