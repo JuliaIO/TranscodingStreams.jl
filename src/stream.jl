@@ -453,8 +453,11 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
             stream.state.state = newstate
             return
         elseif newstate == :close
-            finalize(stream.codec)
+            # Set the new state before calling `finalize` because it may throw
+            # an exception. This is undesirable but would be better than keeping
+            # it in the open state.
             stream.state.state = newstate
+            finalize(stream.codec)
             return
         end
     elseif state == :read
