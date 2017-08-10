@@ -89,6 +89,7 @@ function flushbuffer(stream::NoopStream)
         buffer.bufferpos += n
         nflushed += n
     end
+    makemargin!(buffer, 0)
     return nflushed
 end
 

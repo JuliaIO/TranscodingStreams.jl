@@ -179,8 +179,7 @@ end
     TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
     TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
     TranscodingStreams.test_roundtrip_write(NoopStream, NoopStream)
-    # FIXME!
-    #TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
+    TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
 end
 
 # This does not implement necessary interface methods.
