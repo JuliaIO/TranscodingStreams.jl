@@ -187,16 +187,14 @@ compressed = take!(buf)
 close(stream)
 ```
 
-### Use an identity (no-op) codec
+### Use a noop codec
 
-Sometimes, the `Identity` codec, which does nothing, may be useful. The
-following example creates a decompression stream based on the extension of a
-filepath:
+Sometimes, the `Noop` codec, which does nothing, may be useful. The following
+example creates a decompression stream based on the extension of a filepath:
 ```julia
 using CodecZlib
 using CodecBzip2
 using TranscodingStreams
-using TranscodingStreams.CodecIdentity
 
 function makestream(filepath)
     if endswith(filepath, ".gz")
@@ -204,7 +202,7 @@ function makestream(filepath)
     elseif endswith(filepath, ".bz2")
         codec = Bzip2Decompression()
     else
-        codec = Identity()
+        codec = Noop()
     end
     return TranscodingStream(codec, open(filepath))
 end
@@ -237,6 +235,11 @@ CurrentModule = TranscodingStreams
 TranscodingStream(codec::Codec, stream::IO)
 transcode(codec::Codec, data::Vector{UInt8})
 TranscodingStreams.TOKEN_END
+```
+
+```@docs
+TranscodingStreams.Noop
+TranscodingStreams.NoopStream
 ```
 
 ```@docs

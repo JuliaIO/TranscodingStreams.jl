@@ -171,6 +171,15 @@ end
     @test_throws ArgumentError TranscodingStream(Identity(), IOBuffer(), bufsize=0)
 end
 
+@testset "Noop Codec" begin
+    data = b"foo"
+    @test transcode(Noop(), data) !== data
+    TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
+    TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
+    TranscodingStreams.test_roundtrip_write(NoopStream, NoopStream)
+    TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
+end
+
 # This does not implement necessary interface methods.
 struct InvalidCodec <: TranscodingStreams.Codec end
 
