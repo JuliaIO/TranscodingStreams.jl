@@ -2,7 +2,10 @@ __precompile__()
 
 module TranscodingStreams
 
-export TranscodingStream
+export
+    TranscodingStream,
+    Noop,
+    NoopStream
 
 include("memory.jl")
 include("buffer.jl")

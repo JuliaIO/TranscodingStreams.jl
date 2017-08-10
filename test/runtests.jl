@@ -172,8 +172,6 @@ end
 end
 
 @testset "Noop Codec" begin
-    Noop = TranscodingStreams.Noop
-    NoopStream = TranscodingStreams.NoopStream
     data = b"foo"
     @test transcode(Noop(), data) !== data
     TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
