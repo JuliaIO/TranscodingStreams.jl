@@ -57,11 +57,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Use-an-identity-(no-op)-codec-1",
+    "location": "index.html#Use-a-noop-codec-1",
     "page": "TranscodingStreams.jl",
-    "title": "Use an identity (no-op) codec",
+    "title": "Use a noop codec",
     "category": "section",
-    "text": "Sometimes, the Identity codec, which does nothing, may be useful. The following example creates a decompression stream based on the extension of a filepath:using CodecZlib\nusing CodecBzip2\nusing TranscodingStreams\nusing TranscodingStreams.CodecIdentity\n\nfunction makestream(filepath)\n    if endswith(filepath, \".gz\")\n        codec = GzipDecompression()\n    elseif endswith(filepath, \".bz2\")\n        codec = Bzip2Decompression()\n    else\n        codec = Identity()\n    end\n    return TranscodingStream(codec, open(filepath))\nend\n\nmakestream(\"data.txt.gz\")\nmakestream(\"data.txt.bz2\")\nmakestream(\"data.txt\")"
+    "text": "Sometimes, the Noop codec, which does nothing, may be useful. The following example creates a decompression stream based on the extension of a filepath:using CodecZlib\nusing CodecBzip2\nusing TranscodingStreams\n\nfunction makestream(filepath)\n    if endswith(filepath, \".gz\")\n        codec = GzipDecompression()\n    elseif endswith(filepath, \".bz2\")\n        codec = Bzip2Decompression()\n    else\n        codec = Noop()\n    end\n    return TranscodingStream(codec, open(filepath))\nend\n\nmakestream(\"data.txt.gz\")\nmakestream(\"data.txt.bz2\")\nmakestream(\"data.txt\")"
 },
 
 {
@@ -97,6 +97,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#TranscodingStreams.Noop",
+    "page": "TranscodingStreams.jl",
+    "title": "TranscodingStreams.Noop",
+    "category": "Type",
+    "text": "Noop()\n\nCreate a noop codec.\n\nNoop (no operation) is a codec that does nothing. The data read from or written to the stream are kept as-is without any modification. This is often useful as a buffered stream or an identity element of a composition of streams.\n\nThe implementations are specialized for this codec. For example, a Noop stream uses only one buffer rather than a pair of buffers, which avoids copying data between two buffers and the throughput will be larger than a naive implementation.\n\n\n\n"
+},
+
+{
+    "location": "index.html#TranscodingStreams.NoopStream",
+    "page": "TranscodingStreams.jl",
+    "title": "TranscodingStreams.NoopStream",
+    "category": "Type",
+    "text": "NoopStream(stream::IO)\n\nCreate a noop stream.\n\n\n\n"
+},
+
+{
     "location": "index.html#TranscodingStreams.CodecIdentity.Identity",
     "page": "TranscodingStreams.jl",
     "title": "TranscodingStreams.CodecIdentity.Identity",
@@ -117,7 +133,7 @@ var documenterSearchIndex = {"docs": [
     "page": "TranscodingStreams.jl",
     "title": "API",
     "category": "section",
-    "text": "CurrentModule = TranscodingStreamsTranscodingStream(codec::Codec, stream::IO)\ntranscode(codec::Codec, data::Vector{UInt8})\nTranscodingStreams.TOKEN_ENDTranscodingStreams.CodecIdentity.Identity\nTranscodingStreams.CodecIdentity.IdentityStream"
+    "text": "CurrentModule = TranscodingStreamsTranscodingStream(codec::Codec, stream::IO)\ntranscode(codec::Codec, data::Vector{UInt8})\nTranscodingStreams.TOKEN_ENDTranscodingStreams.Noop\nTranscodingStreams.NoopStreamTranscodingStreams.CodecIdentity.Identity\nTranscodingStreams.CodecIdentity.IdentityStream"
 },
 
 {
