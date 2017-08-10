@@ -16,5 +16,5 @@ after_success:
     # push coverage results to Codecov
     - julia -e 'cd(Pkg.dir("TranscodingStreams")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
     # deploy docs
-    - julia -e 'Pkg.clone("git@github.com:bicycle1885/Documenter.jl.git"); Pkg.checkout("Documenter", branch="concise-design");'
+    - julia -e 'Pkg.clone("git@github.com:bicycle1885/Documenter.jl.git"); Pkg.checkout("Documenter", "concise-design");'
     - julia -e 'cd(Pkg.dir("TranscodingStreams")); include(joinpath("docs", "make.jl"))'
