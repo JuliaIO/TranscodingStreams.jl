@@ -116,27 +116,27 @@ function Base.eof(stream::TranscodingStream)
 end
 
 function Base.ismarked(stream::TranscodingStream)
-    check_state(stream)
+    checkstate(stream)
     return stream.state.buffer1.markpos != 0
 end
 
 function Base.mark(stream::TranscodingStream)
-    check_state(stream)
+    checkstate(stream)
     return mark!(stream.state.buffer1)
 end
 
 function Base.unmark(stream::TranscodingStream)
-    check_state(stream)
+    checkstate(stream)
     return unmark!(stream.state.buffer1)
 end
 
 function Base.reset(stream::TranscodingStream)
-    check_state(stream)
+    checkstate(stream)
     return reset!(stream.state.buffer1)
 end
 
 function Base.skip(stream::TranscodingStream, offset::Integer)
-    check_state(stream)
+    checkstate(stream)
     if offset < 0
         throw(ArgumentError("negative offset"))
     end
@@ -266,7 +266,7 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
 end
 
 function Base.flush(stream::TranscodingStream)
-    check_state(stream)
+    checkstate(stream)
     if stream.state.state == :write
         flushbufferall(stream)
         writebuffer!(stream.stream, stream.state.buffer2)
@@ -337,7 +337,7 @@ end
 # -----
 
 function total_in(stream::TranscodingStream)::Int64
-    check_state(stream)
+    checkstate(stream)
     state = stream.state
     if state.state == :read
         return state.buffer2.total
@@ -349,7 +349,7 @@ function total_in(stream::TranscodingStream)::Int64
 end
 
 function total_out(stream::TranscodingStream)::Int64
-    check_state(stream)
+    checkstate(stream)
     state = stream.state
     if state.state == :read
         return state.buffer1.total
@@ -512,7 +512,7 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
 end
 
 # Check the current state and throw an exception if needed.
-function check_state(stream::TranscodingStream)
+function checkstate(stream::TranscodingStream)
     if stream.state.state == :panic
         throw_panic_error()
     end
