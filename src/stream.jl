@@ -87,7 +87,15 @@ function Base.open(f::Function, ::Type{T}, args...) where T<:TranscodingStream
 end
 
 function Base.isopen(stream::TranscodingStream)
-    return stream.state.state != :close
+    return stream.state.state != :close && stream.state.state != :panic
+end
+
+function Base.close(stream::TranscodingStream)
+    if stream.state.state != :panic
+        changestate!(stream, :close)
+    end
+    close(stream.stream)
+    return nothing
 end
 
 function Base.eof(stream::TranscodingStream)
@@ -103,12 +111,6 @@ function Base.eof(stream::TranscodingStream)
     else
         assert(false)
     end
-end
-
-function Base.close(stream::TranscodingStream)
-    changestate!(stream, :close)
-    close(stream.stream)
-    return nothing
 end
 
 function Base.ismarked(stream::TranscodingStream)
@@ -363,19 +365,23 @@ function fillbuffer(stream::TranscodingStream)
                 break
             end
             # reset
-            stream.state.code = startproc(stream.codec, :read)
-            if stream.state.code != :ok
-                error("resetting codec failed")
+            stream.state.code = startproc(stream.codec, :read, stream.state.error)
+            if stream.state.code == :error
+                handle_error(stream)
             end
         end
         makemargin!(buffer2, 1)
         readdata!(stream.stream, buffer2)
         makemargin!(buffer1, clamp(div(length(buffer1), 4), 1, DEFAULT_BUFFER_SIZE * 8))
-        Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer2), marginmem(buffer1))
+        Δin, Δout, stream.state.code = process(
+            stream.codec, buffermem(buffer2), marginmem(buffer1), stream.state.error)
         buffer2.bufferpos += Δin
         buffer1.marginpos += Δout
         buffer1.total += Δout
         nfilled += Δout
+        if stream.state.code == :error
+            handle_error(stream)
+        end
     end
     return nfilled
 end
@@ -412,30 +418,56 @@ function process_to_write(stream::TranscodingStream)
     buffer1 = stream.state.buffer1
     if buffersize(buffer1) > 0 && stream.state.code == :end
         # reset
-        stream.state.code = startproc(stream.codec, :write)
-        if stream.state.code != :ok
-            error("failed to reset codec")
+        stream.state.code = startproc(stream.codec, :write, stream.state.error)
+        if stream.state.code == :error
+            handle_error(stream)
         end
     end
     buffer2 = stream.state.buffer2
     writebuffer!(stream.stream, buffer2)
     makemargin!(buffer2, clamp(div(length(buffer2), 4), 1, DEFAULT_BUFFER_SIZE * 8))
-    Δin, Δout, stream.state.code = process(stream.codec, buffermem(buffer1), marginmem(buffer2))
+    Δin, Δout, stream.state.code = process(
+        stream.codec, buffermem(buffer1), marginmem(buffer2), stream.state.error)
     buffer1.bufferpos += Δin
     buffer2.marginpos += Δout
     buffer2.total += Δout
+    if stream.state.code == :error
+        handle_error(stream)
+    end
     makemargin!(buffer1, 0)
     return Δin
+end
+
+# Handle an error happened while transcoding data.
+function handle_error(stream::TranscodingStream)
+    if !haserror(stream.state.error)
+        # set a generic error
+        stream.state.error[] = ErrorException("unknown error happened while processing data")
+    end
+    finalize_codec(stream, :panic)
+    throw(stream.state.error[])
+end
+
+# Call the finalize method of the codec.
+function finalize_codec(stream::TranscodingStream, newstate::Symbol)
+    @assert newstate ∈ (:close, :panic)
+    try
+        finalize(stream.codec)
+    catch
+        if stream.state.state == :error && haserror(stream.state.error)
+            # throw an exception that happended before
+            throw(stream.state.error[])
+        else
+            rethrow()
+        end
+    finally
+        stream.state.state = newstate
+    end
 end
 
 
 # State Transition
 # ----------------
-
-struct StateTransitionError <: Exception
-    message::String
-    states::Pair{Symbol,Symbol}
-end
 
 function changestate!(stream::TranscodingStream, newstate::Symbol)
     state = stream.state.state
@@ -446,18 +478,14 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
         return
     elseif state == :idle
         if newstate == :read || newstate == :write
-            stream.state.code = startproc(stream.codec, newstate)
-            if stream.state.code != :ok
-                throw(StateTransitionError("startproc failed", state => newstate))
+            stream.state.code = startproc(stream.codec, newstate, stream.state.error)
+            if stream.state.code == :error
+                handle_error(stream)
             end
             stream.state.state = newstate
             return
         elseif newstate == :close
-            # Set the new state before calling `finalize` because it may throw
-            # an exception. This is undesirable but would be better than keeping
-            # it in the open state.
-            stream.state.state = newstate
-            finalize(stream.codec)
+            finalize_codec(stream, :close)
             return
         end
     elseif state == :read
@@ -491,6 +519,10 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
             changestate!(stream, :close)
             return
         end
+    elseif state == :panic
+        throw(ArgumentError("stream is in unrecoverable error; only isopen and close are callable"))
+    else
+        # unreachable
+        @assert false
     end
-    throw(StateTransitionError("undefined state transition", state => newstate))
 end

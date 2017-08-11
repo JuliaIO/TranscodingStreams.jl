@@ -187,6 +187,7 @@ struct InvalidCodec <: TranscodingStreams.Codec end
     @test_throws MethodError read(TranscodingStream(InvalidCodec(), IOBuffer()))
 end
 
-for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
+#for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
+for pkg in ["CodecZlib"]
     Pkg.test(pkg)
 end
