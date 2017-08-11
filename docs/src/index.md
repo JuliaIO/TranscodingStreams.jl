@@ -1,10 +1,17 @@
 TranscodingStreams.jl
 =====================
 
+Overview
+--------
+
 TranscodingStreams.jl is a package for transcoding (e.g. compression) data
-streams. This package exports a type `TranscodingStream`, which
-is a subtype of `IO` and supports various I/O operations like other usual I/O
-streams in the standard library.
+streams. It exports a type `TranscodingStream`, which is a subtype of `IO` and
+supports various I/O operations like other usual I/O streams in the standard
+library. Operations are quick, simple, and consistent.
+
+In this page, we intorduce the basic concepts of TranscodingStreams.jl and
+available packages. The [Examples](@ref) page demonstrates common usage. The
+[References](@ref) page offers a comprehensive API document.
 
 
 Introduction
@@ -119,146 +126,14 @@ feasible like these packages.  TranscodingStreams.jl requests a codec to
 implement some interface functions which will be described later.
 
 
-Examples
---------
+Error handling
+--------------
 
-### Read lines from a gzip-compressed file
-
-The following snippet is an example of using CodecZlib.jl, which exports
-`GzipDecompressionStream{S}` as an alias of
-`TranscodingStream{GzipDecompression,S} where S<:IO`:
-```julia
-using CodecZlib
-stream = GzipDecompressionStream(open("data.txt.gz"))
-for line in eachline(stream)
-    # do something...
-end
-close(stream)
-```
-
-Note that the last `close` call will close the file as well.  Alternatively,
-`open(<stream type>, <filepath>) do ... end` syntax will close the file at the
-end:
-```julia
-using CodecZlib
-open(GzipDecompressionStream, "data.txt.gz") do stream
-    for line in eachline(stream)
-        # do something...
-    end
-end
-```
-
-### Save a data matrix with Zstd compression
-
-Writing compressed data is easy. One thing you need to keep in mind is to call
-`close` after writing data; otherwise, the output file will be incomplete:
-```julia
-using CodecZstd
-mat = randn(100, 100)
-stream = ZstdCompressionStream(open("data.mat.zst", "w"))
-writedlm(stream, mat)
-close(stream)
-```
-
-Of course, `open(<stream type>, ...) do ... end` works well:
-```julia
-using CodecZstd
-mat = randn(100, 100)
-open(ZstdCompressionStream, "data.mat.zst", "w") do stream
-    writedlm(stream, mat)
-end
-```
-
-### Explicitly finish transcoding by writing `TOKEN_END`
-
-When writing data, the end of a data stream is indicated by calling `close`,
-which may write an epilogue if necessary and flush all buffered data to the
-underlying I/O stream. If you want to explicitly specify the end position of a
-stream for some reason, you can write `TranscodingStreams.TOKEN_END` to the
-transcoding stream as follows:
-```julia
-using CodecZstd
-using TranscodingStreams
-buf = IOBuffer()
-stream = ZstdCompressionStream(buf)
-write(stream, "foobarbaz"^100, TranscodingStreams.TOKEN_END)
-flush(stream)
-compressed = take!(buf)
-close(stream)
-```
-
-### Use a noop codec
-
-Sometimes, the `Noop` codec, which does nothing, may be useful. The following
-example creates a decompression stream based on the extension of a filepath:
-```julia
-using CodecZlib
-using CodecBzip2
-using TranscodingStreams
-
-function makestream(filepath)
-    if endswith(filepath, ".gz")
-        codec = GzipDecompression()
-    elseif endswith(filepath, ".bz2")
-        codec = Bzip2Decompression()
-    else
-        codec = Noop()
-    end
-    return TranscodingStream(codec, open(filepath))
-end
-
-makestream("data.txt.gz")
-makestream("data.txt.bz2")
-makestream("data.txt")
-```
-
-### Transcode data in one shot
-
-TranscodingStreams.jl extends the `transcode` function to transcode a data
-in one shot. `transcode` takes a codec object as its first argument and a data
-vector as its second argument:
-```julia
-using CodecZlib
-decompressed = transcode(ZlibDecompression(), b"x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U")
-String(decompressed)
-```
-
-
-API
----
-
-```@meta
-CurrentModule = TranscodingStreams
-```
-
-```@docs
-TranscodingStream(codec::Codec, stream::IO)
-transcode(codec::Codec, data::Vector{UInt8})
-TranscodingStreams.TOKEN_END
-```
-
-```@docs
-TranscodingStreams.Noop
-TranscodingStreams.NoopStream
-```
-
-```@docs
-TranscodingStreams.CodecIdentity.Identity
-TranscodingStreams.CodecIdentity.IdentityStream
-```
-
-
-Defining a new codec
---------------------
-
-```@docs
-TranscodingStreams.Codec
-TranscodingStreams.initialize
-TranscodingStreams.finalize
-TranscodingStreams.startproc
-TranscodingStreams.process
-```
-
-```@docs
-TranscodingStreams.Memory
-```
+You may encounter an error while processing data with this package. For example,
+your compressed data may be corrupted or truncated and the decompression codec
+cannot handle it properly. In this case, the codec informs the stream of the
+error and the stream goes to an unrecoverable state. In this state, the only
+possible operations are `isopen` and `close`. Other operations, such as `read`
+or `write`, will result in an argument error exception. Resources allocated in
+the codec will be released by the stream and hence you must not call the
+finalizer of a codec that is once passed to a transcoding stream object.

@@ -188,5 +188,6 @@ struct InvalidCodec <: TranscodingStreams.Codec end
 end
 
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
+    Pkg.checkout(pkg, "new-protocol")
     Pkg.test(pkg)
 end

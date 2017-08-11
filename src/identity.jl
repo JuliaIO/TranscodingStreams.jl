@@ -10,7 +10,8 @@ export
 import TranscodingStreams:
     TranscodingStreams,
     TranscodingStream,
-    Memory
+    Memory,
+    Error
 
 """
     Identity()
@@ -30,7 +31,7 @@ function IdentityStream(stream::IO)
     return TranscodingStream(Identity(), stream)
 end
 
-function TranscodingStreams.process(::Identity, input::Memory, output::Memory)
+function TranscodingStreams.process(::Identity, input::Memory, output::Memory, error::Error)
     n = Int(min(input.size, output.size))
     unsafe_copy!(output.ptr, input.ptr, n)
     return n, n, ifelse(input.size == 0, :end, :ok)

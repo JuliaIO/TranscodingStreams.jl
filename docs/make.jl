@@ -5,6 +5,7 @@ makedocs(
     format=:html,
     sitename="TranscodingStreams.jl",
     modules=[TranscodingStreams],
+    pages=["index.md", "examples.md", "references.md"],
     assets=["assets/custom.css"])
 
 deploydocs(
