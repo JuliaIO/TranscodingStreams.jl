@@ -108,28 +108,35 @@ function Base.eof(stream::TranscodingStream)
         return eof(stream.stream)
     elseif state == :close
         return true
+    elseif state == :panic
+        throw_panic_error()
     else
         assert(false)
     end
 end
 
 function Base.ismarked(stream::TranscodingStream)
+    check_state(stream)
     return stream.state.buffer1.markpos != 0
 end
 
 function Base.mark(stream::TranscodingStream)
+    check_state(stream)
     return mark!(stream.state.buffer1)
 end
 
 function Base.unmark(stream::TranscodingStream)
+    check_state(stream)
     return unmark!(stream.state.buffer1)
 end
 
 function Base.reset(stream::TranscodingStream)
+    check_state(stream)
     return reset!(stream.state.buffer1)
 end
 
 function Base.skip(stream::TranscodingStream, offset::Integer)
+    check_state(stream)
     if offset < 0
         throw(ArgumentError("negative offset"))
     end
@@ -259,6 +266,7 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
 end
 
 function Base.flush(stream::TranscodingStream)
+    check_state(stream)
     if stream.state.state == :write
         flushbufferall(stream)
         writebuffer!(stream.stream, stream.state.buffer2)
@@ -329,6 +337,7 @@ end
 # -----
 
 function total_in(stream::TranscodingStream)::Int64
+    check_state(stream)
     state = stream.state
     if state.state == :read
         return state.buffer2.total
@@ -340,6 +349,7 @@ function total_in(stream::TranscodingStream)::Int64
 end
 
 function total_out(stream::TranscodingStream)::Int64
+    check_state(stream)
     state = stream.state
     if state.state == :read
         return state.buffer1.total
@@ -438,37 +448,11 @@ function process_to_write(stream::TranscodingStream)
     return Δin
 end
 
-# Handle an error happened while transcoding data.
-function handle_error(stream::TranscodingStream)
-    if !haserror(stream.state.error)
-        # set a generic error
-        stream.state.error[] = ErrorException("unknown error happened while processing data")
-    end
-    finalize_codec(stream, :panic)
-    throw(stream.state.error[])
-end
-
-# Call the finalize method of the codec.
-function finalize_codec(stream::TranscodingStream, newstate::Symbol)
-    @assert newstate ∈ (:close, :panic)
-    try
-        finalize(stream.codec)
-    catch
-        if stream.state.state == :error && haserror(stream.state.error)
-            # throw an exception that happended before
-            throw(stream.state.error[])
-        else
-            rethrow()
-        end
-    finally
-        stream.state.state = newstate
-    end
-end
-
 
 # State Transition
 # ----------------
 
+# Change the current state.
 function changestate!(stream::TranscodingStream, newstate::Symbol)
     state = stream.state.state
     buffer1 = stream.state.buffer1
@@ -520,9 +504,52 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
             return
         end
     elseif state == :panic
-        throw(ArgumentError("stream is in unrecoverable error; only isopen and close are callable"))
+        throw_panic_error()
     else
         # unreachable
         @assert false
+    end
+end
+
+# Check the current state and throw an exception if needed.
+function check_state(stream::TranscodingStream)
+    if stream.state.state == :panic
+        throw_panic_error()
+    end
+end
+
+# Throw an argument error (must be called only when the state is panic).
+function throw_panic_error()
+    throw(ArgumentError("stream is in unrecoverable error; only isopen and close are callable"))
+end
+
+
+# Error Handler
+# -------------
+
+# Handle an error happened while transcoding data.
+function handle_error(stream::TranscodingStream)
+    if !haserror(stream.state.error)
+        # set a generic error
+        stream.state.error[] = ErrorException("unknown error happened while processing data")
+    end
+    finalize_codec(stream, :panic)
+    throw(stream.state.error[])
+end
+
+# Call the finalize method of the codec.
+function finalize_codec(stream::TranscodingStream, newstate::Symbol)
+    @assert newstate ∈ (:close, :panic)
+    try
+        finalize(stream.codec)
+    catch
+        if stream.state.state == :error && haserror(stream.state.error)
+            # throw an exception that happended before
+            throw(stream.state.error[])
+        else
+            rethrow()
+        end
+    finally
+        stream.state.state = newstate
     end
 end

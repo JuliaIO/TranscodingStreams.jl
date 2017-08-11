@@ -51,7 +51,7 @@ function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
         else
             # directly read data from the underlying stream
             m = p_end - p
-            unsafe_read(stream.stream, p, m)
+            Base.unsafe_read(stream.stream, p, m)
         end
         p += m
     end

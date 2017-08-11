@@ -53,28 +53,30 @@ the stream will become the close state for safety.
 
 ### `startproc`
 
-The `startproc(codec::C, state::Symbol, error)::Symbol` method takes `codec` and
-`state`, and returns a status code. This is called just before the stream starts
-reading or writing data. `state` is either `:read` or `:write` and then the
-stream starts reading or writing, respectively. The return code must be `:ok` if
-`codec` is ready to read or write data. Otherwise, it should be `:fail` and then
-the stream throws an exception.
+The `startproc(codec::C, state::Symbol, error::Error)::Symbol` method takes
+`codec`, `state` and `error`, and returns a status code. This is called just
+before the stream starts reading or writing data. `state` is either `:read` or
+`:write` and then the stream starts reading or writing, respectively.  The
+return code must be `:ok` if `codec` is ready to read or write data.  Otherwise,
+it must be `:error` and the `error` argument must be set to an exception object.
 
 ### `process`
 
-The `process(codec::C, input::Memory, output::Memory)::Tuple{Int,Int,Symbol}`
-method takes `codec`, `input` and `output`, and returns a consumed data size, a
-produced data size and a status code. This is called repeatedly while processing
-data. The input (`input`) and output (`output`) data are a `Memory` object,
-which is a pointer to a contiguous memory region with size. You must read input
-data from `input`, transcode the bytes, and then write the output data to
-`output`.  Finally you need to return the size of read data, the size of written
-data, and `:ok` status code so that the caller can know how many bytes are
-consumed and produced in the method.  When transcoding reaches the end of a data
-stream, it is notified to this method by empty input. In that case, the method
-need to write the buffered data (if any) to `output`. If there is no data to
-write, the status code must be set to `:end`. The `process` method will be
-called repeatedly until it returns `:end` status code.
+The `process(codec::C, input::Memory, output::Memory,
+error::Error)::Tuple{Int,Int,Symbol}` method takes `codec`, `input`, `output`
+and `error`, and returns a consumed data size, a produced data size and a status
+code. This is called repeatedly while processing data. The input (`input`) and
+output (`output`) data are a `Memory` object, which is a pointer to a contiguous
+memory region with size. You must read input data from `input`, transcode the
+bytes, and then write the output data to `output`.  Finally you need to return
+the size of read data, the size of written data, and `:ok` status code so that
+the caller can know how many bytes are consumed and produced in the method.
+When transcoding reaches the end of a data stream, it is notified to this method
+by empty input. In that case, the method need to write the buffered data (if
+any) to `output`. If there is no data to write, the status code must be set to
+`:end`. The `process` method will be called repeatedly until it returns `:end`
+status code. If an error happens while processing data, the `error` argument
+must be set to an exception object and the return code must be `:error`.
 """
 abstract type Codec end
 

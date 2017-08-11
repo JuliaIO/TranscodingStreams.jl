@@ -1,10 +1,17 @@
 TranscodingStreams.jl
 =====================
 
+Overview
+--------
+
 TranscodingStreams.jl is a package for transcoding (e.g. compression) data
-streams. This package exports a type `TranscodingStream`, which
-is a subtype of `IO` and supports various I/O operations like other usual I/O
-streams in the standard library.
+streams. It exports a type `TranscodingStream`, which is a subtype of `IO` and
+supports various I/O operations like other usual I/O streams in the standard
+library. Operations are quick, simple, and consistent.
+
+In this page, we intorduce the basic concepts of TranscodingStreams.jl and
+available packages. The [Examples](@ref) page demonstrates common usage. The
+[References](@ref) page offers a comprehensive API document.
 
 
 Introduction
@@ -119,3 +126,14 @@ feasible like these packages.  TranscodingStreams.jl requests a codec to
 implement some interface functions which will be described later.
 
 
+Error handling
+--------------
+
+You may encounter an error while processing data with this package. For example,
+your compressed data may be corrupted or truncated and the decompression codec
+cannot handle it properly. In this case, the codec informs the stream of the
+error and the stream goes to an unrecoverable state. In this state, the only
+possible operations are `isopen` and `close`. Other operations, such as `read`
+or `write`, will result in an argument error exception. Resources allocated in
+the codec will be released by the stream and hence you must not call the
+finalizer of a codec that is once passed to a transcoding stream object.
