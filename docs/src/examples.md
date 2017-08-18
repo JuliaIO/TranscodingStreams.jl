@@ -28,6 +28,21 @@ open(GzipDecompressionStream, "data.txt.gz") do stream
 end
 ```
 
+Read compressed data from a pipe
+--------------------------------
+
+The input is not limited to usual files. You can read data from a pipe
+(actually, any `IO` object that implements basic I/O methods) as follows:
+```julia
+using CodecZlib
+pipe, proc = open(`cat some.data.gz`)
+stream = GzipDecompressionStream(pipe)
+for line in eachline(stream)
+    # do something...
+end
+close(stream)  # This will finish the process as well.
+```
+
 Save a data matrix with Zstd compression
 ----------------------------------------
 
