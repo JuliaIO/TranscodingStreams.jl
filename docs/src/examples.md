@@ -110,6 +110,28 @@ makestream("data.txt.bz2")
 makestream("data.txt")
 ```
 
+Change the codec of a file
+--------------------------
+
+`TranscodingStream`s are composable: a stream can be an input/output of another
+stream. You can use this to chage the codec of a file by composing different
+codecs as below:
+```julia
+using CodecZlib
+using CodecZstd
+
+input  = open("data.txt.gz",  "r")
+output = open("data.txt.zst", "w")
+
+stream = GzipDecompressionStream(ZstdCompressionStream(output))
+write(stream, input)
+close(stream)
+```
+
+Effectively, this is equivalent to the following pipeline:
+
+    cat data.txt.gz | gzip -d | zstd >data.txt.zst
+
 Transcode data in one shot
 --------------------------
 
