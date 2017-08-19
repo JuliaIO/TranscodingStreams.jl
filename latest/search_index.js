@@ -97,6 +97,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "examples.html#Change-the-codec-of-a-file-1",
+    "page": "Examples",
+    "title": "Change the codec of a file",
+    "category": "section",
+    "text": "TranscodingStreams are composable: a stream can be an input/output of another stream. You can use this to chage the codec of a file by composing different codecs as below:using CodecZlib\nusing CodecZstd\n\ninput  = open(\"data.txt.gz\",  \"r\")\noutput = open(\"data.txt.zst\", \"w\")\n\nstream = GzipDecompressionStream(ZstdCompressionStream(output))\nwrite(stream, input)\nclose(stream)Effectively, this is equivalent to the following pipeline:cat data.txt.gz | gzip -d | zstd >data.txt.zst"
+},
+
+{
     "location": "examples.html#Transcode-data-in-one-shot-1",
     "page": "Examples",
     "title": "Transcode data in one shot",
