@@ -187,6 +187,29 @@ struct InvalidCodec <: TranscodingStreams.Codec end
     @test_throws MethodError read(TranscodingStream(InvalidCodec(), IOBuffer()))
 end
 
+struct QuadrupleCodec <: TranscodingStreams.Codec end
+
+function TranscodingStreams.process(
+        codec  :: QuadrupleCodec,
+        input  :: TranscodingStreams.Memory,
+        output :: TranscodingStreams.Memory,
+        error  :: TranscodingStreams.Error)
+    i = j = 0
+    while i + 1 ≤ endof(input) && j + 4 ≤ endof(output)
+        b = input[i+1]
+        i += 1
+        output[j+1] = output[j+2] = output[j+3] = output[j+4] = b
+        j += 4
+    end
+    return i, j, input.size == 0 ? (:end) : (:ok)
+end
+
+@testset "QuadrupleCodec" begin
+    @test transcode(QuadrupleCodec(), b"") == b""
+    @test transcode(QuadrupleCodec(), b"a") == b"aaaa"
+    @test transcode(QuadrupleCodec(), b"ab") == b"aaaabbbb"
+end
+
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
     Pkg.test(pkg)
 end

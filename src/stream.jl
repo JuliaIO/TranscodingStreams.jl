@@ -392,6 +392,9 @@ function fillbuffer(stream::TranscodingStream)
         if stream.state.code == :error
             handle_error(stream)
         end
+        if stream.state.code == :ok && Δin == Δout == 0
+            makemargin!(buffer1, max(16, marginsize(buffer1) * 2))
+        end
     end
     return nfilled
 end
@@ -443,6 +446,8 @@ function process_to_write(stream::TranscodingStream)
     buffer2.total += Δout
     if stream.state.code == :error
         handle_error(stream)
+    elseif stream.state.code == :ok && Δin == Δout == 0
+        makemargin!(buffer2, max(16, marginsize(buffer2) * 2))
     end
     makemargin!(buffer1, 0)
     return Δin
