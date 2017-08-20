@@ -8,12 +8,12 @@ TranscodingStreams.jl
 [![codecov.io][codecov-img]][codecov-url]
 
 TranscodingStreams.jl is a package for transcoding data streams. Transcoding can
-be any codec. For example, following packages define lossless compression and
-decompression codecs:
+be any codec. The following packages support the interfaces of this package:
 - [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
 - [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
 - [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
 - [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
+- [CodecBase.jl](https://github.com/bicycle1885/CodecBase.jl)
 
 Consult the [docs][docs-latest-url] for more details and examples.
 
