@@ -110,6 +110,39 @@ Codecs are defined in other packages listed below:
         <td><code>ZstdDecompressionStream</code></td>
         <td>Decompress data in zstd (.zst) format.</td>
     </tr>
+    <tr>
+        <td rowspan="6"><a href="https://github.com/bicycle1885/CodecBase.jl">CodecBase.jl</a></td>
+        <td rowspan="6">native</td>
+        <td rowspan="6"><a href="https://tools.ietf.org/html/rfc4648">RFC4648</a></td>
+        <td><code>Base16Encoder</code></td>
+        <td><code>Base16EncoderStream</code></td>
+        <td>Encode binary in base16 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base16Decoder</code></td>
+        <td><code>Base16DecoderStream</code></td>
+        <td>Decode binary in base16 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base32Encoder</code></td>
+        <td><code>Base32EncoderStream</code></td>
+        <td>Encode binary in base32 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base32Decoder</code></td>
+        <td><code>Base32DecoderStream</code></td>
+        <td>Decode binary in base32 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base64Encoder</code></td>
+        <td><code>Base64EncoderStream</code></td>
+        <td>Encode binary in base64 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base64Decoder</code></td>
+        <td><code>Base64DecoderStream</code></td>
+        <td>Decode binary in base64 format.</td>
+    </tr>
 </table>
 ```
 
