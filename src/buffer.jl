@@ -182,6 +182,15 @@ function copymarked(buf::Buffer)
     return buf.data[buf.markpos:buf.marginpos-1]
 end
 
+# Take the ownership of the marked data.
+function takemarked!(buf::Buffer)
+    @assert buf.markpos > 0
+    sz = buf.marginpos - buf.markpos
+    copy!(buf.data, 1, buf.data, buf.markpos, sz)
+    initbuffer!(buf)
+    return resize!(buf.data, sz)
+end
+
 # Read as much data as possbile from `input` to the margin of `output`.
 # This function will not block if `input` has buffered data.
 function readdata!(input::IO, output::Buffer)
