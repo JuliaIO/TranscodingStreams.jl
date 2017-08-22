@@ -7,6 +7,8 @@ TranscodingStreams.jl
 [![TravisCI Status][travisci-img]][travisci-url]
 [![codecov.io][codecov-img]][codecov-url]
 
+![TranscodingStream](/docs/src/assets/transcodingstream.png)
+
 TranscodingStreams.jl is a package for transcoding data streams. Transcoding can
 be any codec. The following packages support the interfaces of this package:
 - [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
