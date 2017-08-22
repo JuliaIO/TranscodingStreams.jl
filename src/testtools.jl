@@ -26,9 +26,11 @@ end
 
 function test_roundtrip_transcode(encode, decode)
     srand(12345)
+    encoder = encode()
+    decoder = decode()
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
-        Base.Test.@test hash(transcode(decode(), transcode(encode(), data))) == hash(data)
+        Base.Test.@test hash(transcode(decoder, transcode(encoder, data))) == hash(data)
     end
 end
 
