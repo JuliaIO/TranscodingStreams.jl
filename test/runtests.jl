@@ -172,6 +172,14 @@ end
 end
 
 @testset "Noop Codec" begin
+    stream = NoopStream(IOBuffer("foobar"))
+    @test nb_available(stream) === 0
+    @test readavailable(stream) == b""
+    @test read(stream, UInt8) === UInt8('f')
+    @test nb_available(stream) === 5
+    @test readavailable(stream) == b"oobar"
+    close(stream)
+
     data = b"foo"
     @test transcode(Noop(), data) !== data
     TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
