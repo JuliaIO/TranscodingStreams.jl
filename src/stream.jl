@@ -327,7 +327,7 @@ function Base.transcode(codec::Codec, data::Vector{UInt8})
     mark!(buffer2)
     stream = TranscodingStream(codec, DevNull, State(Buffer(data), buffer2))
     write(stream, TOKEN_END)
-    transcoded = copymarked(buffer2)
+    transcoded = takemarked!(buffer2)
     changestate!(stream, :idle)
     return transcoded
 end
