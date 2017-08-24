@@ -237,6 +237,13 @@ function Base.nb_available(stream::TranscodingStream)
     return buffersize(stream.state.buffer1)
 end
 
+function Base.readavailable(stream::TranscodingStream)
+    n = nb_available(stream)
+    data = Vector{UInt8}(n)
+    unsafe_read(stream, pointer(data), n)
+    return data
+end
+
 
 # Write Functions
 # ---------------
