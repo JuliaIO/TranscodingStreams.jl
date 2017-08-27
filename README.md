@@ -9,8 +9,24 @@ TranscodingStreams.jl
 
 ![TranscodingStream](/docs/src/assets/transcodingstream.png)
 
-TranscodingStreams.jl is a package for transcoding data streams. There are two
-kinds of APIs:
+TranscodingStreams.jl is a package for transcoding data streams, which is:
+- **fast**: small overhead and specialized methods,
+- **consistent**: basic I/O operations you already know will work as you expect,
+- **generic**: support any I/O objects like files, buffers, pipes, etc., and
+- **extensible**: you can define a new codec to transcode data.
+
+## Installation
+
+```julia
+Pkg.add("TranscodingStreams")
+```
+
+Installing a [codec package](#codec-packages) will install
+TranscodingStreams.jl as well, and so in general you don't need to explicitly
+install it.
+
+## Usage
+
 ```julia
 using TranscodingStreams, CodecZlib
 
@@ -40,10 +56,12 @@ array = transcode(GzipDecompression(), array)
 @assert text == String(array)
 ```
 
-Each codec has an alias for its transcoding stream type. For example,
-`GzipCompressionStream{S} = TranscodingStream{GzipCompression,S} where S<:IO`.
+Each codec has an alias to its transcoding stream type for ease of use. For
+example, `GzipCompressionStream{S} = TranscodingStream{GzipCompression,S} where
+S<:IO`.
 
-The following packages support the interfaces of TranscodingStreams.jl:
+## Codec packages
+
 - [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
 - [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
 - [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
