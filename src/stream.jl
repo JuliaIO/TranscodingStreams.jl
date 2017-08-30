@@ -389,19 +389,8 @@ function fillbuffer(stream::TranscodingStream)
         end
         makemargin!(buffer2, 1)
         readdata!(stream.stream, buffer2)
-        makemargin!(buffer1, clamp(div(length(buffer1), 4), 1, DEFAULT_BUFFER_SIZE * 8))
-        Δin, Δout, stream.state.code = process(
-            stream.codec, buffermem(buffer2), marginmem(buffer1), stream.state.error)
-        buffer2.bufferpos += Δin
-        buffer1.marginpos += Δout
-        buffer1.total += Δout
+        _, Δout = call_process(stream.codec, stream.state, buffer2, buffer1)
         nfilled += Δout
-        if stream.state.code == :error
-            handle_error(stream)
-        end
-        if stream.state.code == :ok && Δin == Δout == 0
-            makemargin!(buffer1, max(16, marginsize(buffer1) * 2))
-        end
     end
     return nfilled
 end
@@ -445,19 +434,24 @@ function process_to_write(stream::TranscodingStream)
     end
     buffer2 = stream.state.buffer2
     writebuffer!(stream.stream, buffer2)
-    makemargin!(buffer2, clamp(div(length(buffer2), 4), 1, DEFAULT_BUFFER_SIZE * 8))
-    Δin, Δout, stream.state.code = process(
-        stream.codec, buffermem(buffer1), marginmem(buffer2), stream.state.error)
-    buffer1.bufferpos += Δin
-    buffer2.marginpos += Δout
-    buffer2.total += Δout
-    if stream.state.code == :error
-        handle_error(stream)
-    elseif stream.state.code == :ok && Δin == Δout == 0
-        makemargin!(buffer2, max(16, marginsize(buffer2) * 2))
-    end
+    Δin, _ = call_process(stream.codec, stream.state, buffer1, buffer2)
     makemargin!(buffer1, 0)
     return Δin
+end
+
+function call_process(codec::Codec, state::State, inbuf::Buffer, outbuf::Buffer)
+    makemargin!(outbuf, clamp(div(length(outbuf), 4), 1, DEFAULT_BUFFER_SIZE * 8))
+    Δin, Δout, state.code = process(codec, buffermem(inbuf), marginmem(outbuf), state.error)
+    inbuf.bufferpos += Δin
+    outbuf.marginpos += Δout
+    outbuf.total += Δout
+    if state.code == :error
+        handle_error(codec, state)
+    elseif state.code == :ok && Δin == Δout == 0
+        # When no progress, expand the output buffer.
+        makemargin!(outbuf, max(16, marginsize(outbuf) * 2))
+    end
+    return Δin, Δout
 end
 
 
@@ -541,27 +535,35 @@ end
 
 # Handle an error happened while transcoding data.
 function handle_error(stream::TranscodingStream)
-    if !haserror(stream.state.error)
+    handle_error(stream.codec, stream.state)
+end
+
+function handle_error(codec::Codec, state::State)
+    if !haserror(state.error)
         # set a generic error
-        stream.state.error[] = ErrorException("unknown error happened while processing data")
+        state.error[] = ErrorException("unknown error happened while processing data")
     end
-    finalize_codec(stream, :panic)
-    throw(stream.state.error[])
+    finalize_codec(codec, state, :panic)
+    throw(state.error[])
 end
 
 # Call the finalize method of the codec.
 function finalize_codec(stream::TranscodingStream, newstate::Symbol)
+    finalize_codec(stream.codec, stream.state, newstate)
+end
+
+function finalize_codec(codec::Codec, state::State, newstate::Symbol)
     @assert newstate ∈ (:close, :panic)
     try
-        finalize(stream.codec)
+        finalize(codec)
     catch
-        if stream.state.state == :error && haserror(stream.state.error)
+        if state.state == :error && haserror(state.error)
             # throw an exception that happended before
-            throw(stream.state.error[])
+            throw(state.error[])
         else
             rethrow()
         end
     finally
-        stream.state.state = newstate
+        state.state = newstate
     end
 end
