@@ -85,6 +85,31 @@ abstract type Codec end
 # -------
 
 """
+    expectedsize(codec::Codec, input::Memory)::Int
+
+Return the expected size of the transcoded `input` with `codec`.
+
+`transcode(codec, data)` will allocate an array of this size to store the
+transcoded result. If it is not sufficient, `transcode` will expand the array.
+
+The default method returns `input.size`.
+"""
+function expectedsize(codec::Codec, input::Memory)::Int
+    return input.size
+end
+
+"""
+    minoutsize(codec::Codec, input::Memory)::Int
+
+Return the minimum output size to be ensured when calling `process`.
+
+The default method returns `max(1, div(input.size, 4))`.
+"""
+function minoutsize(codec::Codec, input::Memory)::Int
+    return max(1, div(input.size, 4))
+end
+
+"""
     initialize(codec::Codec)::Void
 
 Initialize `codec`.

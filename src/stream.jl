@@ -330,7 +330,7 @@ julia> String(decompressed)
 ```
 """
 function Base.transcode(codec::Codec, data::Vector{UInt8})
-    buffer2 = Buffer(length(data))
+    buffer2 = Buffer(expectedsize(codec, Memory(data)))
     mark!(buffer2)
     stream = TranscodingStream(codec, DevNull, State(Buffer(data), buffer2))
     write(stream, TOKEN_END)
@@ -440,8 +440,9 @@ function process_to_write(stream::TranscodingStream)
 end
 
 function call_process(codec::Codec, state::State, inbuf::Buffer, outbuf::Buffer)
-    makemargin!(outbuf, clamp(div(length(outbuf), 4), 1, DEFAULT_BUFFER_SIZE * 8))
-    Δin, Δout, state.code = process(codec, buffermem(inbuf), marginmem(outbuf), state.error)
+    input = buffermem(inbuf)
+    makemargin!(outbuf, minoutsize(codec, input))
+    Δin, Δout, state.code = process(codec, input, marginmem(outbuf), state.error)
     inbuf.bufferpos += Δin
     outbuf.marginpos += Δout
     outbuf.total += Δout
