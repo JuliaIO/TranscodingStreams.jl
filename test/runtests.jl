@@ -23,6 +23,12 @@ using Base.Test
     @test mem[3] === UInt8('!')
     @test_throws BoundsError mem[7] = 0x00
     @test_throws BoundsError mem[0] = 0x00
+
+    data = b"foobar"
+    mem = TranscodingStreams.Memory(data)
+    @test mem isa TranscodingStreams.Memory
+    @test mem.ptr == pointer(data)
+    @test mem.size == sizeof(data)
 end
 
 @testset "Identity Codec" begin
