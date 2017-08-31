@@ -244,6 +244,35 @@ function Base.readavailable(stream::TranscodingStream)
     return data
 end
 
+"""
+    unread(stream::TranscodingStream, data::Vector{UInt8})
+
+Insert `data` to the current reading position of `stream`.
+
+The next `read(stream, sizeof(data))` call will read data that are just
+inserted.
+"""
+function unread(stream::TranscodingStream, data::Vector{UInt8})
+    unsafe_unread(stream, pointer(data), sizeof(data))
+end
+
+"""
+    unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
+
+Insert `nbytes` pointed by `data` to the current reading position of `stream`.
+
+The data are copied into the internal buffer and hence `data` can be safely used
+after the operation without interfering the stream.
+"""
+function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
+    if nbytes < 0
+        throw(ArgumentError("negative nbytes"))
+    end
+    changestate!(stream, :read)
+    insertdata!(stream.state.buffer1, convert(Ptr{UInt8}, data), nbytes)
+    return nothing
+end
+
 
 # Write Functions
 # ---------------
