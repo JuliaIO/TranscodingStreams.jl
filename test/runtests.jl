@@ -224,6 +224,6 @@ end
     @test transcode(QuadrupleCodec(), b"ab") == b"aaaabbbb"
 end
 
-for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
+for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd", "CodecBase"]
     Pkg.test(pkg)
 end
