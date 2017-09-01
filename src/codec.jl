@@ -12,7 +12,9 @@ Transcoding protocol
 Transcoding proceeds by calling some functions in a specific way. We call this
 "transcoding protocol" and any codec must implement it as described below.
 
-There are four functions for a codec to implement:
+There are six functions for a codec to implement:
+- `expectedsize`: return the expected size of transcoded data
+- `minoutsize`: return the minimum output size of `process`
 - `initialize`: initialize the codec
 - `finalize`: finalize the codec
 - `startproc`: start processing with the codec
@@ -20,14 +22,29 @@ There are four functions for a codec to implement:
 
 These are defined in the `TranscodingStreams` and a new codec type must extend
 these methods if necessary.  Implementing a `process` method is mandatory but
-other three are optional.  `initialize`, `finalize`, and `startproc` have a
-default implementation that does nothing.
+others are optional.  `expectedsize`, `minoutsize`, `initialize`, `finalize`,
+and `startproc` have a default implementation.
 
 Your codec type is denoted by `C` and its object by `codec`.
 
 Errors that occur in these methods are supposed to be unrecoverable and the
 stream will go to the panic state. Only `Base.isopen` and `Base.close` are
 available in that state.
+
+### `expectedsize`
+
+The `expectedsize(codec::C, input::Memory)::Int` method takes `codec` and
+`input`, and returns the expected size of transcoded data. This method will be
+used as a hint to determine the size of a data buffer when `transcode` is
+called. A good hint will reduce the number of buffer resizing and hence result
+in better performance.
+
+### `minoutsize`
+
+The `minoutsize(codec::C, input::Memory)::Int` method takes `codec` and `input`,
+and returns the minimum required size of the output memory when `process` is
+called.  For example, an encoder of base64 will write at least four bytes to the
+output and hence it is reasonable to return 4 with this method.
 
 ### `initialize`
 
@@ -89,9 +106,6 @@ abstract type Codec end
 
 Return the expected size of the transcoded `input` with `codec`.
 
-`transcode(codec, data)` will allocate an array of this size to store the
-transcoded result. If it is not sufficient, `transcode` will expand the array.
-
 The default method returns `input.size`.
 """
 function expectedsize(codec::Codec, input::Memory)::Int
@@ -113,6 +127,8 @@ end
     initialize(codec::Codec)::Void
 
 Initialize `codec`.
+
+The default method does nothing.
 """
 function initialize(codec::Codec)
     return nothing
@@ -122,6 +138,8 @@ end
     finalize(codec::Codec)::Void
 
 Finalize `codec`.
+
+The default method does nothing.
 """
 function finalize(codec::Codec)::Void
     return nothing
@@ -131,6 +149,8 @@ end
     startproc(codec::Codec, state::Symbol, error::Error)::Symbol
 
 Start data processing with `codec` of `state`.
+
+The default method does nothing and returns `:ok`.
 """
 function startproc(codec::Codec, state::Symbol, error::Error)::Symbol
     return :ok
@@ -140,6 +160,8 @@ end
     process(codec::Codec, input::Memory, output::Memory, error::Error)::Tuple{Int,Int,Symbol}
 
 Do data processing with `codec`.
+
+There is no default method.
 """
 function process(codec::Codec, input::Memory, output::Memory, error::Error)::Tuple{Int,Int,Symbol}
     # no default method
