@@ -257,9 +257,13 @@ end
 
 # Write all data to `output` from the buffer of `input`.
 function writebuffer!(output::IO, input::Buffer)
+    nwritten = 0
     while buffersize(input) > 0
-        input.bufferpos += Base.unsafe_write(output, bufferptr(input), buffersize(input))
+        n = Base.unsafe_write(output, bufferptr(input), buffersize(input))
+        input.bufferpos += n
+        nwritten += n
     end
+    return nwritten
 end
 
 # Find the first occurrence of a specific byte.

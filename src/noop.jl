@@ -46,8 +46,7 @@ function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
     while p < p_end && !eof(stream)
         if buffersize(buffer) > 0
             m = min(buffersize(buffer), p_end - p)
-            unsafe_copy!(p, bufferptr(buffer), m)
-            buffer.bufferpos += m
+            copydata!(p, buffer, m)
         else
             # directly read data from the underlying stream
             m = p_end - p
@@ -65,8 +64,7 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :write)
     buffer = stream.state.buffer1
     if marginsize(buffer) ≥ nbytes
-        unsafe_copy!(marginptr(buffer), input, nbytes)
-        buffer.marginpos += nbytes
+        copydata!(buffer, input, nbytes)
         return Int(nbytes)
     else
         flushbuffer(stream)
@@ -95,9 +93,7 @@ function fillbuffer(stream::NoopStream)
     nfilled::Int = 0
     while buffersize(buffer) == 0 && !eof(stream.stream)
         makemargin!(buffer, 1)
-        n = unsafe_read(stream.stream, marginptr(buffer), marginsize(buffer))
-        buffer.marginpos += n
-        nfilled += n
+        nfilled += readdata!(stream.stream, buffer)
     end
     return nfilled
 end
@@ -106,12 +102,7 @@ function flushbuffer(stream::NoopStream)
     changemode!(stream, :write)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
-    nflushed::Int = 0
-    while buffersize(buffer) > 0
-        n = unsafe_write(stream.stream, bufferptr(buffer), buffersize(buffer))
-        buffer.bufferpos += n
-        nflushed += n
-    end
+    nflushed = writebuffer!(stream.stream, buffer)
     makemargin!(buffer, 0)
     return nflushed
 end
