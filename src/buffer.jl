@@ -102,6 +102,10 @@ function marginmem(buf::Buffer)
     return Memory(marginptr(buf), marginsize(buf))
 end
 
+function ismarked(buf::Buffer)
+    return buf.markpos != 0
+end
+
 function mark!(buf::Buffer)
     return buf.markpos = buf.bufferpos
 end

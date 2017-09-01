@@ -124,7 +124,7 @@ end
 
 function Base.ismarked(stream::TranscodingStream)
     checkmode(stream)
-    return stream.state.buffer1.markpos != 0
+    return ismarked(stream.state.buffer1)
 end
 
 function Base.mark(stream::TranscodingStream)
