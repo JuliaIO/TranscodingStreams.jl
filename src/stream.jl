@@ -386,12 +386,12 @@ function fillbuffer(stream::TranscodingStream)
             # reset
             stream.state.code = startproc(stream.codec, :read, stream.state.error)
             if stream.state.code == :error
-                handle_error(stream)
+                changestate!(stream, :panic)
             end
         end
         makemargin!(buffer2, 1)
         readdata!(stream.stream, buffer2)
-        _, Δout = call_process(stream.codec, stream.state, buffer2, buffer1)
+        _, Δout = call_process(stream, buffer2, buffer1)
         nfilled += Δout
     end
     return nfilled
@@ -431,25 +431,26 @@ function process_to_write(stream::TranscodingStream)
         # reset
         stream.state.code = startproc(stream.codec, :write, stream.state.error)
         if stream.state.code == :error
-            handle_error(stream)
+            changestate!(stream, :panic)
         end
     end
     buffer2 = stream.state.buffer2
     writebuffer!(stream.stream, buffer2)
-    Δin, _ = call_process(stream.codec, stream.state, buffer1, buffer2)
+    Δin, _ = call_process(stream, buffer1, buffer2)
     makemargin!(buffer1, 0)
     return Δin
 end
 
-function call_process(codec::Codec, state::State, inbuf::Buffer, outbuf::Buffer)
+function call_process(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
+    state = stream.state
     input = buffermem(inbuf)
-    makemargin!(outbuf, minoutsize(codec, input))
-    Δin, Δout, state.code = process(codec, input, marginmem(outbuf), state.error)
+    makemargin!(outbuf, minoutsize(stream.codec, input))
+    Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
     inbuf.bufferpos += Δin
     outbuf.marginpos += Δout
     outbuf.total += Δout
     if state.code == :error
-        handle_error(codec, state)
+        changestate!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
         # When no progress, expand the output buffer.
         makemargin!(outbuf, max(16, marginsize(outbuf) * 2))
@@ -471,16 +472,25 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
     if state == newstate
         # state does not change
         return
+    elseif newstate == :panic
+        if !haserror(stream.state.error)
+            # set a default error
+            stream.state.error[] = ErrorException("unknown error happened while processing data")
+        end
+        stream.state.state = newstate
+        finalize_codec(stream.codec, stream.state.error)
+        throw(stream.state.error[])
     elseif state == :idle
         if newstate == :read || newstate == :write
             stream.state.code = startproc(stream.codec, newstate, stream.state.error)
             if stream.state.code == :error
-                handle_error(stream)
+                changestate!(stream, :panic)
             end
             stream.state.state = newstate
             return
         elseif newstate == :close
-            finalize_codec(stream, :close)
+            stream.state.state = newstate
+            finalize_codec(stream.codec, stream.state.error)
             return
         end
     elseif state == :read
@@ -530,41 +540,15 @@ function throw_panic_error()
     throw(ArgumentError("stream is in unrecoverable error; only isopen and close are callable"))
 end
 
-
-# Error Handler
-# -------------
-
-# Handle an error happened while transcoding data.
-function handle_error(stream::TranscodingStream)
-    handle_error(stream.codec, stream.state)
-end
-
-function handle_error(codec::Codec, state::State)
-    if !haserror(state.error)
-        # set a generic error
-        state.error[] = ErrorException("unknown error happened while processing data")
-    end
-    finalize_codec(codec, state, :panic)
-    throw(state.error[])
-end
-
 # Call the finalize method of the codec.
-function finalize_codec(stream::TranscodingStream, newstate::Symbol)
-    finalize_codec(stream.codec, stream.state, newstate)
-end
-
-function finalize_codec(codec::Codec, state::State, newstate::Symbol)
-    @assert newstate ∈ (:close, :panic)
+function finalize_codec(codec::Codec, error::Error)
     try
         finalize(codec)
     catch
-        if state.state == :error && haserror(state.error)
-            # throw an exception that happended before
-            throw(state.error[])
+        if haserror(error)
+            throw(error[])
         else
             rethrow()
         end
-    finally
-        state.state = newstate
     end
 end
