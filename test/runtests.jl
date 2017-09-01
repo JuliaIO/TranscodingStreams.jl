@@ -199,6 +199,17 @@ end
         write(stream, b"xyz")
     end
 
+    stream = NoopStream(IOBuffer(""))
+    @test TranscodingStreams.unread(stream, b"foo") === nothing
+    @test read(stream, 3) == b"foo"
+    close(stream)
+
+    stream = NoopStream(IOBuffer("foo"))
+    @test read(stream, 3) == b"foo"
+    @test TranscodingStreams.unread(stream, b"bar") === nothing
+    @test read(stream, 3) == b"bar"
+    close(stream)
+
     stream = NoopStream(IOBuffer("foobar"))
     @test TranscodingStreams.unread(stream, b"baz") === nothing
     @test read(stream, 3) == b"baz"
