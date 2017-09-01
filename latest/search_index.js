@@ -113,6 +113,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "examples.html#Unread-data-1",
+    "page": "Examples",
+    "title": "Unread data",
+    "category": "section",
+    "text": "TranscodingStream supports unread operation, which inserts data into the current reading position. This is useful when you want to peek from the stream. TranscodingStreams.unread and TranscodingStreams.unsafe_unread functions are provided:using TranscodingStreams\nstream = NoopStream(open(\"data.txt\"))\ndata1 = read(stream, 8)\nTranscodingStreams.unread(stream, data1)\ndata2 = read(stream, 8)\n@assert data1 == data2The unread operaion is different from the write operation in that the unreaded data are not written to the wrapped stream. The unreaded data are stored in the internal buffer of a transcoding stream.Unfortunately, unwrite operation is not provided because there is no way to cancel write operations that are already commited to the wrapped stream."
+},
+
+{
     "location": "references.html#",
     "page": "References",
     "title": "References",
@@ -161,11 +169,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "references.html#TranscodingStreams.unread",
+    "page": "References",
+    "title": "TranscodingStreams.unread",
+    "category": "Function",
+    "text": "unread(stream::TranscodingStream, data::Vector{UInt8})\n\nInsert data to the current reading position of stream.\n\nThe next read(stream, sizeof(data)) call will read data that are just inserted.\n\n\n\n"
+},
+
+{
+    "location": "references.html#TranscodingStreams.unsafe_unread",
+    "page": "References",
+    "title": "TranscodingStreams.unsafe_unread",
+    "category": "Function",
+    "text": "unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)\n\nInsert nbytes pointed by data to the current reading position of stream.\n\nThe data are copied into the internal buffer and hence data can be safely used after the operation without interfering the stream.\n\n\n\n"
+},
+
+{
     "location": "references.html#TranscodingStream-1",
     "page": "References",
     "title": "TranscodingStream",
     "category": "section",
-    "text": "TranscodingStream(codec::Codec, stream::IO)\ntranscode(codec::Codec, data::Vector{UInt8})\nTranscodingStreams.TOKEN_END\nTranscodingStreams.unsafe_read"
+    "text": "TranscodingStream(codec::Codec, stream::IO)\ntranscode(codec::Codec, data::Vector{UInt8})\nTranscodingStreams.TOKEN_END\nTranscodingStreams.unsafe_read\nTranscodingStreams.unread\nTranscodingStreams.unsafe_unread"
 },
 
 {
