@@ -39,7 +39,7 @@ function TranscodingStream(codec::Noop, stream::IO; bufsize::Integer=DEFAULT_BUF
 end
 
 function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     buffer = stream.state.buffer1
     p = output
     p_end = output + nbytes
@@ -62,7 +62,7 @@ function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
 end
 
 function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
-    changestate!(stream, :write)
+    changemode!(stream, :write)
     buffer = stream.state.buffer1
     if marginsize(buffer) ≥ nbytes
         unsafe_copy!(marginptr(buffer), input, nbytes)
@@ -89,7 +89,7 @@ end
 # buffer for efficiency.
 
 function fillbuffer(stream::NoopStream)
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
     nfilled::Int = 0
@@ -103,7 +103,7 @@ function fillbuffer(stream::NoopStream)
 end
 
 function flushbuffer(stream::NoopStream)
-    changestate!(stream, :write)
+    changemode!(stream, :write)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
     nflushed::Int = 0
@@ -117,7 +117,7 @@ function flushbuffer(stream::NoopStream)
 end
 
 function flushbufferall(stream::NoopStream)
-    @assert stream.state.state == :write
+    @assert stream.state.mode == :write
     buffer = stream.state.buffer1
     bufsize = buffersize(buffer)
     while buffersize(buffer) > 0
