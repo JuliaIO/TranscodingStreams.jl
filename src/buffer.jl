@@ -195,11 +195,21 @@ function takemarked!(buf::Buffer)
     return resize!(buf.data, sz)
 end
 
+# Copy data from `data` to `buf`.
 function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
     unsafe_copy!(marginptr(buf), data, nbytes)
     buf.marginpos += nbytes
     return buf
+end
+
+function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
+    # NOTE: It's caller's responsibility to ensure that the buffer has at least
+    # nbytes.
+    @assert buffersize(buf) ≥ nbytes
+    unsafe_copy!(data, bufferptr(buf), nbytes)
+    buf.bufferpos += nbytes
+    return data
 end
 
 # Insert data to the current buffer.

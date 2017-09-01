@@ -212,9 +212,8 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
     p_end = output + nbytes
     while p < p_end && !eof(stream)
         m = min(buffersize(buffer), p_end - p)
-        unsafe_copy!(p, bufferptr(buffer), m)
+        copydata!(p, buffer, m)
         p += m
-        buffer.bufferpos += m
     end
     if p < p_end && eof(stream)
         throw(EOFError())
