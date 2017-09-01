@@ -148,9 +148,9 @@ Unread data
 -----------
 
 `TranscodingStream` supports *unread* operation, which inserts data into the
-current reading position. This is useful when you want to peek some bytes from
-the stream. `TranscodingStreams.unread` and `TranscodingStreams.unsafe_unread`
-functions are provided:
+current reading position. This is useful when you want to peek from the stream.
+`TranscodingStreams.unread` and `TranscodingStreams.unsafe_unread` functions are
+provided:
 ```julia
 using TranscodingStreams
 stream = NoopStream(open("data.txt"))
