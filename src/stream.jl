@@ -330,7 +330,9 @@ julia> String(decompressed)
 ```
 """
 function Base.transcode(codec::Codec, data::Vector{UInt8})
-    buffer2 = Buffer(expectedsize(codec, Memory(data)))
+    # Add `minoutsize` because `transcode` will be called at least two times.
+    buffer2 = Buffer(
+        expectedsize(codec, Memory(data)) + minoutsize(codec, Memory(C_NULL, 0)))
     mark!(buffer2)
     stream = TranscodingStream(codec, DevNull, State(Buffer(data), buffer2))
     write(stream, TOKEN_END)

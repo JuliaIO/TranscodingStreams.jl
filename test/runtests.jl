@@ -203,10 +203,11 @@ end
 
 struct QuadrupleCodec <: TranscodingStreams.Codec end
 
+const Memory = TranscodingStreams.Memory
 function TranscodingStreams.process(
         codec  :: QuadrupleCodec,
-        input  :: TranscodingStreams.Memory,
-        output :: TranscodingStreams.Memory,
+        input  :: Memory,
+        output :: Memory,
         error  :: TranscodingStreams.Error)
     i = j = 0
     while i + 1 ≤ endof(input) && j + 4 ≤ endof(output)
@@ -218,10 +219,16 @@ function TranscodingStreams.process(
     return i, j, input.size == 0 ? (:end) : (:ok)
 end
 
+TranscodingStreams.expectedsize(::QuadrupleCodec, input::Memory) = input.size * 4
+TranscodingStreams.minoutsize(::QuadrupleCodec, ::Memory) = 4
+
 @testset "QuadrupleCodec" begin
     @test transcode(QuadrupleCodec(), b"") == b""
     @test transcode(QuadrupleCodec(), b"a") == b"aaaa"
     @test transcode(QuadrupleCodec(), b"ab") == b"aaaabbbb"
+    data = "x"^1024
+    transcode(QuadrupleCodec(), data)
+    @test (@allocated transcode(QuadrupleCodec(), data)) < sizeof(data) * 5
 end
 
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd"]
