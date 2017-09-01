@@ -165,7 +165,7 @@ Error handling
 You may encounter an error while processing data with this package. For example,
 your compressed data may be corrupted or truncated and the decompression codec
 cannot handle it properly. In this case, the codec informs the stream of the
-error and the stream goes to an unrecoverable state. In this state, the only
+error and the stream goes to an unrecoverable mode. In this mode, the only
 possible operations are `isopen` and `close`. Other operations, such as `read`
 or `write`, will result in an argument error exception. Resources allocated in
 the codec will be released by the stream and hence you must not call the

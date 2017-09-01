@@ -28,8 +28,8 @@ and `startproc` have a default implementation.
 Your codec type is denoted by `C` and its object by `codec`.
 
 Errors that occur in these methods are supposed to be unrecoverable and the
-stream will go to the panic state. Only `Base.isopen` and `Base.close` are
-available in that state.
+stream will go to the panic mode. Only `Base.isopen` and `Base.close` are
+available in that mode.
 
 ### `expectedsize`
 
@@ -59,20 +59,20 @@ you need to release the memory before throwing an exception.
 
 The `finalize(codec::C)::Void` method takes `codec` and returns `nothing`.  This
 is called once and only only once just before the transcoding stream goes to the
-close state (i.e. when `Base.close` is called) or just after `startproc` or
+close mode (i.e. when `Base.close` is called) or just after `startproc` or
 `process` throws an exception. Other errors that happen inside the stream (e.g.
 `EOFError`) will not call this method. Therefore, you may finalize `codec` (e.g.
 freeing memory) with this method. If finalization fails for some reason, it may
 throw an exception. You should release the allocated memory in codec before
 returning or throwing an exception in `finalize` because otherwise nobody cannot
 release the memory. Even when an exception is thrown while finalizing a stream,
-the stream will become the close state for safety.
+the stream will become the close mode for safety.
 
 ### `startproc`
 
-The `startproc(codec::C, state::Symbol, error::Error)::Symbol` method takes
-`codec`, `state` and `error`, and returns a status code. This is called just
-before the stream starts reading or writing data. `state` is either `:read` or
+The `startproc(codec::C, mode::Symbol, error::Error)::Symbol` method takes
+`codec`, `mode` and `error`, and returns a status code. This is called just
+before the stream starts reading or writing data. `mode` is either `:read` or
 `:write` and then the stream starts reading or writing, respectively.  The
 return code must be `:ok` if `codec` is ready to read or write data.  Otherwise,
 it must be `:error` and the `error` argument must be set to an exception object.
@@ -146,13 +146,13 @@ function finalize(codec::Codec)::Void
 end
 
 """
-    startproc(codec::Codec, state::Symbol, error::Error)::Symbol
+    startproc(codec::Codec, mode::Symbol, error::Error)::Symbol
 
-Start data processing with `codec` of `state`.
+Start data processing with `codec` of `mode`.
 
 The default method does nothing and returns `:ok`.
 """
-function startproc(codec::Codec, state::Symbol, error::Error)::Symbol
+function startproc(codec::Codec, mode::Symbol, error::Error)::Symbol
     return :ok
 end
 

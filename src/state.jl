@@ -4,9 +4,9 @@
 """
 Stream state.
 
-A state will be one of the following states:
+A state will be one of the following modes:
 
-- `:idle` : initial and intermediate state, no buffered data.
+- `:idle` : initial and intermediate mode, no buffered data.
 - `:read` : ready to read data, data may be buffered.
 - `:write`: ready to write data, data may be buffered.
 - `:close`: closed, no buffered data.
@@ -14,8 +14,8 @@ A state will be one of the following states:
             cannot do anything.
 """
 mutable struct State
-    # current stream state
-    state::Symbol
+    # current stream mode
+    mode::Symbol
 
     # return code of the last method call (:ok or :end)
     code::Symbol

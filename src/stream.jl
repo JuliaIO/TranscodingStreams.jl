@@ -4,10 +4,10 @@
 # Data Flow
 # ---------
 #
-# When reading data (`state.state == :read`):
+# When reading data (`state.mode == :read`):
 #   user <--- |state.buffer1| <--- <codec> <--- |state.buffer2| <--- stream
 #
-# When writing data (`state.state == :write`):
+# When writing data (`state.mode == :write`):
 #   user ---> |state.buffer1| ---> <codec> ---> |state.buffer2| ---> stream
 
 struct TranscodingStream{C<:Codec,S<:IO} <: IO
@@ -23,8 +23,8 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
     function TranscodingStream{C,S}(codec::C, stream::S, state::State) where {C<:Codec,S<:IO}
         if !isopen(stream)
             throw(ArgumentError("closed stream"))
-        elseif state.state != :idle
-            throw(ArgumentError("invalid initial state"))
+        elseif state.mode != :idle
+            throw(ArgumentError("invalid initial mode"))
         end
         initialize(codec)
         return new(codec, stream, state)
@@ -53,7 +53,7 @@ julia> using CodecZlib
 julia> file = open(Pkg.dir("TranscodingStreams", "test", "abra.gzip"));
 
 julia> stream = TranscodingStream(GzipDecompression(), file)
-TranscodingStreams.TranscodingStream{CodecZlib.GzipDecompression,IOStream}(<state=idle>)
+TranscodingStreams.TranscodingStream{CodecZlib.GzipDecompression,IOStream}(<mode=idle>)
 
 julia> readstring(stream)
 "abracadabra"
@@ -68,7 +68,7 @@ function TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=DEFAULT_BU
 end
 
 function Base.show(io::IO, stream::TranscodingStream)
-    print(io, summary(stream), "(<state=$(stream.state.state)>)")
+    print(io, summary(stream), "(<mode=$(stream.state.mode)>)")
 end
 
 
@@ -87,28 +87,28 @@ function Base.open(f::Function, ::Type{T}, args...) where T<:TranscodingStream
 end
 
 function Base.isopen(stream::TranscodingStream)
-    return stream.state.state != :close && stream.state.state != :panic
+    return stream.state.mode != :close && stream.state.mode != :panic
 end
 
 function Base.close(stream::TranscodingStream)
-    if stream.state.state != :panic
-        changestate!(stream, :close)
+    if stream.state.mode != :panic
+        changemode!(stream, :close)
     end
     close(stream.stream)
     return nothing
 end
 
 function Base.eof(stream::TranscodingStream)
-    state = stream.state.state
-    if state == :idle
+    mode = stream.state.mode
+    if mode == :idle
         return eof(stream.stream)
-    elseif state == :read
+    elseif mode == :read
         return buffersize(stream.state.buffer1) == 0 && fillbuffer(stream) == 0
-    elseif state == :write
+    elseif mode == :write
         return eof(stream.stream)
-    elseif state == :close
+    elseif mode == :close
         return true
-    elseif state == :panic
+    elseif mode == :panic
         throw_panic_error()
     else
         assert(false)
@@ -116,34 +116,34 @@ function Base.eof(stream::TranscodingStream)
 end
 
 function Base.ismarked(stream::TranscodingStream)
-    checkstate(stream)
+    checkmode(stream)
     return stream.state.buffer1.markpos != 0
 end
 
 function Base.mark(stream::TranscodingStream)
-    checkstate(stream)
+    checkmode(stream)
     return mark!(stream.state.buffer1)
 end
 
 function Base.unmark(stream::TranscodingStream)
-    checkstate(stream)
+    checkmode(stream)
     return unmark!(stream.state.buffer1)
 end
 
 function Base.reset(stream::TranscodingStream)
-    checkstate(stream)
+    checkmode(stream)
     return reset!(stream.state.buffer1)
 end
 
 function Base.skip(stream::TranscodingStream, offset::Integer)
-    checkstate(stream)
+    checkmode(stream)
     if offset < 0
         throw(ArgumentError("negative offset"))
     end
-    state = stream.state.state
+    mode = stream.state.mode
     buffer1 = stream.state.buffer1
     skipped = 0
-    if state == :read
+    if mode == :read
         while !eof(stream) && buffersize(buffer1) < offset - skipped
             n = buffersize(buffer1)
             emptybuffer!(buffer1)
@@ -155,8 +155,8 @@ function Base.skip(stream::TranscodingStream, offset::Integer)
             skipbuffer!(buffer1, offset - skipped)
         end
     else
-        # TODO: support skip in write state
-        throw(ArgumentError("not in read state"))
+        # TODO: support skip in write mode
+        throw(ArgumentError("not in read mode"))
     end
     return
 end
@@ -166,7 +166,7 @@ end
 # --------------
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     if eof(stream)
         throw(EOFError())
     end
@@ -174,7 +174,7 @@ function Base.read(stream::TranscodingStream, ::Type{UInt8})
 end
 
 function Base.readuntil(stream::TranscodingStream, delim::UInt8)
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     buffer1 = stream.state.buffer1
     ret = Vector{UInt8}(0)
     filled = 0
@@ -199,7 +199,7 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8)
 end
 
 function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes::UInt)
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     buffer = stream.state.buffer1
     p = output
     p_end = output + nbytes
@@ -216,7 +216,7 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
 end
 
 function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=length(b))
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     filled = 0
     resized = false
     while filled < nb && !eof(stream)
@@ -233,7 +233,7 @@ function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=
 end
 
 function Base.nb_available(stream::TranscodingStream)
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     return buffersize(stream.state.buffer1)
 end
 
@@ -268,7 +268,7 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     if nbytes < 0
         throw(ArgumentError("negative nbytes"))
     end
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     insertdata!(stream.state.buffer1, convert(Ptr{UInt8}, data), nbytes)
     return nothing
 end
@@ -278,7 +278,7 @@ end
 # ---------------
 
 function Base.write(stream::TranscodingStream, b::UInt8)
-    changestate!(stream, :write)
+    changemode!(stream, :write)
     if marginsize(stream.state.buffer1) == 0 && flushbuffer(stream) == 0
         return 0
     end
@@ -286,7 +286,7 @@ function Base.write(stream::TranscodingStream, b::UInt8)
 end
 
 function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes::UInt)
-    changestate!(stream, :write)
+    changemode!(stream, :write)
     state = stream.state
     buffer1 = state.buffer1
     p = input
@@ -302,8 +302,8 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
 end
 
 function Base.flush(stream::TranscodingStream)
-    checkstate(stream)
-    if stream.state.state == :write
+    checkmode(stream)
+    if stream.state.mode == :write
         flushbufferall(stream)
         writebuffer!(stream.stream, stream.state.buffer2)
     end
@@ -327,7 +327,7 @@ TOKEN_END)`, which will terminate the current transcoding block.
 const TOKEN_END = EndToken()
 
 function Base.write(stream::TranscodingStream, ::EndToken)
-    changestate!(stream, :write)
+    changemode!(stream, :write)
     processall(stream)
     return 0
 end
@@ -366,7 +366,7 @@ function Base.transcode(codec::Codec, data::Vector{UInt8})
     stream = TranscodingStream(codec, DevNull, State(Buffer(data), buffer2))
     write(stream, TOKEN_END)
     transcoded = takemarked!(buffer2)
-    changestate!(stream, :idle)
+    changemode!(stream, :idle)
     return transcoded
 end
 
@@ -375,11 +375,11 @@ end
 # -----
 
 function total_in(stream::TranscodingStream)::Int64
-    checkstate(stream)
+    checkmode(stream)
     state = stream.state
-    if state.state == :read
+    if state.mode == :read
         return state.buffer2.total
-    elseif state.state == :write
+    elseif state.mode == :write
         return state.buffer1.total
     else
         return zero(Int64)
@@ -387,11 +387,11 @@ function total_in(stream::TranscodingStream)::Int64
 end
 
 function total_out(stream::TranscodingStream)::Int64
-    checkstate(stream)
+    checkmode(stream)
     state = stream.state
-    if state.state == :read
+    if state.mode == :read
         return state.buffer1.total
-    elseif state.state == :write
+    elseif state.mode == :write
         return state.buffer2.total
     else
         return zero(Int64)
@@ -403,7 +403,7 @@ end
 # ---------
 
 function fillbuffer(stream::TranscodingStream)
-    changestate!(stream, :read)
+    changemode!(stream, :read)
     buffer1 = stream.state.buffer1
     buffer2 = stream.state.buffer2
     nfilled::Int = 0
@@ -415,7 +415,7 @@ function fillbuffer(stream::TranscodingStream)
             # reset
             stream.state.code = startproc(stream.codec, :read, stream.state.error)
             if stream.state.code == :error
-                changestate!(stream, :panic)
+                changemode!(stream, :panic)
             end
         end
         makemargin!(buffer2, 1)
@@ -427,7 +427,7 @@ function fillbuffer(stream::TranscodingStream)
 end
 
 function flushbuffer(stream::TranscodingStream)
-    changestate!(stream, :write)
+    changemode!(stream, :write)
     nflushed::Int = 0
     makemargin!(stream.state.buffer1, 0)
     while marginsize(stream.state.buffer1) == 0
@@ -437,7 +437,7 @@ function flushbuffer(stream::TranscodingStream)
 end
 
 function flushbufferall(stream::TranscodingStream)
-    @assert stream.state.state == :write
+    @assert stream.state.mode == :write
     nflushed::Int = 0
     while buffersize(stream.state.buffer1) > 0
         nflushed += process_to_write(stream)
@@ -446,7 +446,7 @@ function flushbufferall(stream::TranscodingStream)
 end
 
 function processall(stream::TranscodingStream)
-    @assert stream.state.state == :write
+    @assert stream.state.mode == :write
     while buffersize(stream.state.buffer1) > 0 || stream.state.code != :end
         process_to_write(stream)
     end
@@ -460,7 +460,7 @@ function process_to_write(stream::TranscodingStream)
         # reset
         stream.state.code = startproc(stream.codec, :write, stream.state.error)
         if stream.state.code == :error
-            changestate!(stream, :panic)
+            changemode!(stream, :panic)
         end
     end
     buffer2 = stream.state.buffer2
@@ -479,7 +479,7 @@ function call_process(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     outbuf.marginpos += Δout
     outbuf.total += Δout
     if state.code == :error
-        changestate!(stream, :panic)
+        changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
         # When no progress, expand the output buffer.
         makemargin!(outbuf, max(16, marginsize(outbuf) * 2))
@@ -491,65 +491,65 @@ end
 # State Transition
 # ----------------
 
-# Change the current state.
-function changestate!(stream::TranscodingStream, newstate::Symbol)
-    state = stream.state.state
+# Change the current mode.
+function changemode!(stream::TranscodingStream, newmode::Symbol)
+    mode = stream.state.mode
     buffer1 = stream.state.buffer1
     buffer2 = stream.state.buffer2
     transition_error() =
-        throw(ArgumentError("cannot change the mode from $(state) to $(newstate)"))
-    if state == newstate
-        # state does not change
+        throw(ArgumentError("cannot change the mode from $(mode) to $(newmode)"))
+    if mode == newmode
+        # mode does not change
         return
-    elseif newstate == :panic
+    elseif newmode == :panic
         if !haserror(stream.state.error)
             # set a default error
             stream.state.error[] = ErrorException("unknown error happened while processing data")
         end
-        stream.state.state = newstate
+        stream.state.mode = newmode
         finalize_codec(stream.codec, stream.state.error)
         throw(stream.state.error[])
-    elseif state == :idle
-        if newstate == :read || newstate == :write
-            stream.state.code = startproc(stream.codec, newstate, stream.state.error)
+    elseif mode == :idle
+        if newmode == :read || newmode == :write
+            stream.state.code = startproc(stream.codec, newmode, stream.state.error)
             if stream.state.code == :error
-                changestate!(stream, :panic)
+                changemode!(stream, :panic)
             end
-            stream.state.state = newstate
+            stream.state.mode = newmode
             return
-        elseif newstate == :close
-            stream.state.state = newstate
+        elseif newmode == :close
+            stream.state.mode = newmode
             finalize_codec(stream.codec, stream.state.error)
             return
         end
-    elseif state == :read
-        if newstate == :idle
+    elseif mode == :read
+        if newmode == :idle
             initbuffer!(buffer1)
             initbuffer!(buffer2)
-            stream.state.state = newstate
+            stream.state.mode = newmode
             return
-        elseif newstate == :write
+        elseif newmode == :write
             transition_error()
-        elseif newstate == :close
-            changestate!(stream, :idle)
-            changestate!(stream, :close)
+        elseif newmode == :close
+            changemode!(stream, :idle)
+            changemode!(stream, :close)
             return
         end
-    elseif state == :write
-        if newstate == :idle
+    elseif mode == :write
+        if newmode == :idle
             processall(stream)
             initbuffer!(buffer1)
             initbuffer!(buffer2)
-            stream.state.state = newstate
+            stream.state.mode = newmode
             return
-        elseif newstate == :read
+        elseif newmode == :read
             transition_error()
-        elseif newstate == :close
-            changestate!(stream, :idle)
-            changestate!(stream, :close)
+        elseif newmode == :close
+            changemode!(stream, :idle)
+            changemode!(stream, :close)
             return
         end
-    elseif state == :panic
+    elseif mode == :panic
         throw_panic_error()
     else
         # unreachable
@@ -557,14 +557,14 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
     end
 end
 
-# Check the current state and throw an exception if needed.
-function checkstate(stream::TranscodingStream)
-    if stream.state.state == :panic
+# Check the current mode and throw an exception if needed.
+function checkmode(stream::TranscodingStream)
+    if stream.state.mode == :panic
         throw_panic_error()
     end
 end
 
-# Throw an argument error (must be called only when the state is panic).
+# Throw an argument error (must be called only when the mode is panic).
 function throw_panic_error()
     throw(ArgumentError("stream is in unrecoverable error; only isopen and close are callable"))
 end
