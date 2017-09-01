@@ -2,3 +2,4 @@ CodecZlib 0.3
 CodecBzip2 0.3
 CodecXz 0.3
 CodecZstd 0.3
+CodecBase 0.1
