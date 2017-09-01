@@ -31,6 +31,8 @@ TranscodingStreams.CodecIdentity.IdentityStream
 
 ```@docs
 TranscodingStreams.Codec
+TranscodingStreams.expectedsize
+TranscodingStreams.minoutsize
 TranscodingStreams.initialize
 TranscodingStreams.finalize
 TranscodingStreams.startproc
