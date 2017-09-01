@@ -57,14 +57,6 @@ end
     @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(3)), 3)
     close(stream)
 
-    # switch write => read
-    buf = IOBuffer(b"foobar", true, true)
-    stream = TranscodingStream(Identity(), buf)
-    @test write(stream, b"xyz") == 3
-    @test read(stream, 3) == b"bar"
-    @test take!(buf) == b"xyzbar"
-    close(stream)
-
     sink = IOBuffer()
     stream = TranscodingStream(Identity(), sink)
     @test write(stream, "foo") === 3
@@ -192,6 +184,20 @@ end
     TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
     TranscodingStreams.test_roundtrip_write(NoopStream, NoopStream)
     TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
+
+    # switch write => read
+    stream = NoopStream(IOBuffer(b"foobar", true, true))
+    @test_throws ArgumentError begin
+        write(stream, b"xyz")
+        read(stream, 3)
+    end
+
+    # switch read => write
+    stream = NoopStream(IOBuffer(b"foobar", true, true))
+    @test_throws ArgumentError begin
+        read(stream, 3)
+        write(stream, b"xyz")
+    end
 end
 
 # This does not implement necessary interface methods.
