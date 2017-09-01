@@ -24,8 +24,8 @@ const NoopStream{S} = TranscodingStream{Noop,S} where S<:IO
 
 Create a noop stream.
 """
-function NoopStream(stream::IO)
-    return TranscodingStream(Noop(), stream)
+function NoopStream(stream::IO; kwargs...)
+    return TranscodingStream(Noop(), stream; kwargs...)
 end
 
 function TranscodingStream(codec::Noop, stream::IO; bufsize::Integer=DEFAULT_BUFFER_SIZE)
