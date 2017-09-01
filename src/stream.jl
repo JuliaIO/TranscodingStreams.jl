@@ -300,10 +300,8 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
     p_end = p + nbytes
     while p < p_end && (marginsize(buffer1) > 0 || flushbuffer(stream) > 0)
         m = min(marginsize(buffer1), p_end - p)
-        unsafe_copy!(marginptr(buffer1), p, m)
+        copydata!(buffer1, p, m)
         p += m
-        buffer1.marginpos += m
-        buffer1.total += m
     end
     return Int(p - input)
 end

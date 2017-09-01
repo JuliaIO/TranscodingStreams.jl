@@ -191,6 +191,13 @@ function takemarked!(buf::Buffer)
     return resize!(buf.data, sz)
 end
 
+function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
+    makemargin!(buf, nbytes)
+    unsafe_copy!(marginptr(buf), data, nbytes)
+    buf.marginpos += nbytes
+    return buf
+end
+
 # Insert data to the current buffer.
 function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
