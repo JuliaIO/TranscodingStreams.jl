@@ -466,6 +466,8 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
     state = stream.state.state
     buffer1 = stream.state.buffer1
     buffer2 = stream.state.buffer2
+    transition_error() =
+        throw(ArgumentError("cannot change the mode from $(state) to $(newstate)"))
     if state == newstate
         # state does not change
         return
@@ -488,9 +490,7 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
             stream.state.state = newstate
             return
         elseif newstate == :write
-            changestate!(stream, :idle)
-            changestate!(stream, :write)
-            return
+            transition_error()
         elseif newstate == :close
             changestate!(stream, :idle)
             changestate!(stream, :close)
@@ -504,9 +504,7 @@ function changestate!(stream::TranscodingStream, newstate::Symbol)
             stream.state.state = newstate
             return
         elseif newstate == :read
-            changestate!(stream, :idle)
-            changestate!(stream, :read)
-            return
+            transition_error()
         elseif newstate == :close
             changestate!(stream, :idle)
             changestate!(stream, :close)
