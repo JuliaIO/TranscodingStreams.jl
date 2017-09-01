@@ -143,3 +143,26 @@ using CodecZlib
 decompressed = transcode(ZlibDecompression(), b"x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U")
 String(decompressed)
 ```
+
+Unread data
+-----------
+
+`TranscodingStream` supports *unread* operation, which inserts data into the
+current reading position. This is useful when you want to peek some bytes from
+the stream. `TranscodingStreams.unread` and `TranscodingStreams.unsafe_unread`
+functions are provided:
+```julia
+using TranscodingStreams
+stream = NoopStream(open("data.txt"))
+data1 = read(stream, 8)
+TranscodingStreams.unread(stream, data1)
+data2 = read(stream, 8)
+@assert data1 == data2
+```
+
+The unread operaion is different from the write operation in that the unreaded
+data are not written to the wrapped stream. The unreaded data are stored in the
+internal buffer of a transcoding stream.
+
+Unfortunately, *unwrite* operation is not provided because there is no way to
+cancel write operations that are already commited to the wrapped stream.
