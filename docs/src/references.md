@@ -25,12 +25,6 @@ TranscodingStreams.Noop
 TranscodingStreams.NoopStream
 ```
 
-**This type is deprecated**. Use [`Noop`](@ref) instead.
-```@docs
-TranscodingStreams.CodecIdentity.Identity
-TranscodingStreams.CodecIdentity.IdentityStream
-```
-
 ```@docs
 TranscodingStreams.Codec
 TranscodingStreams.expectedsize

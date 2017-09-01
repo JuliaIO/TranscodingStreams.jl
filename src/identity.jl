@@ -18,7 +18,12 @@ import TranscodingStreams:
 
 Create an identity (no-op) codec.
 """
-struct Identity <: TranscodingStreams.Codec end
+struct Identity <: TranscodingStreams.Codec
+    function Identity()
+        warn("`Identity` is deprecated, use `Noop` instead", once=true, key=Identity)
+        return new()
+    end
+end
 
 const IdentityStream{S} = TranscodingStream{Identity,S}
 
@@ -28,6 +33,7 @@ const IdentityStream{S} = TranscodingStream{Identity,S}
 Create an identity (no-op) stream.
 """
 function IdentityStream(stream::IO)
+    warn("`IdentityStream` is deprecated, use `NoopStream` instead", once=true, key=IdentityStream)
     return TranscodingStream(Identity(), stream)
 end
 

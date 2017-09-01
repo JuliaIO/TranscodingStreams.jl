@@ -1,5 +1,4 @@
 using TranscodingStreams
-using TranscodingStreams.CodecIdentity
 using Base.Test
 
 @testset "Memory" begin
@@ -29,13 +28,6 @@ using Base.Test
     @test mem isa TranscodingStreams.Memory
     @test mem.ptr == pointer(data)
     @test mem.size == sizeof(data)
-end
-
-@testset "Identity Codec" begin
-    TranscodingStreams.test_roundtrip_transcode(Identity, Identity)
-    TranscodingStreams.test_roundtrip_read(IdentityStream, IdentityStream)
-    TranscodingStreams.test_roundtrip_write(IdentityStream, IdentityStream)
-    TranscodingStreams.test_roundtrip_lines(IdentityStream, IdentityStream)
 end
 
 @testset "Noop Codec" begin
@@ -150,7 +142,7 @@ end
     @test hash(stream.state.buffer1.data[1:length(data)]) == hash(data)
     close(stream)
 
-    #=
+    #= FIXME: restore these tests
     stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
     @test TranscodingStreams.total_in(stream) === Int64(0)
     @test TranscodingStreams.total_out(stream) === Int64(0)
@@ -281,6 +273,15 @@ TranscodingStreams.minoutsize(::QuadrupleCodec, ::Memory) = 4
     data = "x"^1024
     transcode(QuadrupleCodec(), data)
     @test (@allocated transcode(QuadrupleCodec(), data)) < sizeof(data) * 5
+end
+
+# TODO: Remove this in the future.
+using TranscodingStreams.CodecIdentity
+@testset "Identity Codec (deprecated)" begin
+    TranscodingStreams.test_roundtrip_transcode(Identity, Identity)
+    TranscodingStreams.test_roundtrip_read(IdentityStream, IdentityStream)
+    TranscodingStreams.test_roundtrip_write(IdentityStream, IdentityStream)
+    TranscodingStreams.test_roundtrip_lines(IdentityStream, IdentityStream)
 end
 
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd", "CodecBase"]
