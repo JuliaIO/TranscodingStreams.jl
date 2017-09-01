@@ -191,6 +191,15 @@ function takemarked!(buf::Buffer)
     return resize!(buf.data, sz)
 end
 
+# Insert data to the current buffer.
+function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
+    makemargin!(buf, nbytes)
+    copy!(buf.data, buf.bufferpos + nbytes, buf.data, buf.bufferpos, buffersize(buf))
+    unsafe_copy!(bufferptr(buf), data, nbytes)
+    buf.marginpos += nbytes
+    return buf
+end
+
 # Read as much data as possbile from `input` to the margin of `output`.
 # This function will not block if `input` has buffered data.
 function readdata!(input::IO, output::Buffer)

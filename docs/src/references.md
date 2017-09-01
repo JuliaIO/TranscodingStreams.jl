@@ -13,6 +13,8 @@ TranscodingStream(codec::Codec, stream::IO)
 transcode(codec::Codec, data::Vector{UInt8})
 TranscodingStreams.TOKEN_END
 TranscodingStreams.unsafe_read
+TranscodingStreams.unread
+TranscodingStreams.unsafe_unread
 ```
 
 Codec

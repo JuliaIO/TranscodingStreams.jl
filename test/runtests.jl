@@ -198,6 +198,45 @@ end
         read(stream, 3)
         write(stream, b"xyz")
     end
+
+    stream = NoopStream(IOBuffer(""))
+    @test TranscodingStreams.unread(stream, b"foo") === nothing
+    @test read(stream, 3) == b"foo"
+    close(stream)
+
+    stream = NoopStream(IOBuffer("foo"))
+    @test read(stream, 3) == b"foo"
+    @test TranscodingStreams.unread(stream, b"bar") === nothing
+    @test read(stream, 3) == b"bar"
+    close(stream)
+
+    stream = NoopStream(IOBuffer("foobar"))
+    @test TranscodingStreams.unread(stream, b"baz") === nothing
+    @test read(stream, 3) == b"baz"
+    @test read(stream, 3) == b"foo"
+    @test read(stream, 3) == b"bar"
+    @test eof(stream)
+    close(stream)
+
+    stream = NoopStream(IOBuffer("foobar"))
+    @test read(stream, 3) == b"foo"
+    @test TranscodingStreams.unread(stream, b"baz") === nothing
+    @test read(stream, 3) == b"baz"
+    @test read(stream, 3) == b"bar"
+    @test eof(stream)
+    close(stream)
+
+    stream = NoopStream(IOBuffer("foobar"))
+    @test read(stream, 3) == b"foo"
+    @test read(stream, 3) == b"bar"
+    @test TranscodingStreams.unread(stream, b"baz") === nothing
+    @test read(stream, 3) == b"baz"
+    @test eof(stream)
+    close(stream)
+
+    stream = NoopStream(IOBuffer("foobar"))
+    @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
+    close(stream)
 end
 
 # This does not implement necessary interface methods.
