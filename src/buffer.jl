@@ -86,7 +86,6 @@ end
 function writebyte!(buf::Buffer, b::UInt8)
     buf.data[buf.marginpos] = b
     buf.marginpos += 1
-    buf.total += 1
     return 1
 end
 
@@ -172,6 +171,18 @@ function skipbuffer!(buf::Buffer, n::Integer)
     return buf
 end
 
+# Notify that `n` bytes are consumed from `buf`.
+function consumed!(buf::Buffer, n::Integer)
+    buf.bufferpos += n
+    return buf
+end
+
+# Notify that `n` bytes are supplied to `buf`.
+function supplied!(buf::Buffer, n::Integer)
+    buf.marginpos += n
+    return buf
+end
+
 # Discard buffered data and initialize positions.
 function initbuffer!(buf::Buffer)
     buf.markpos = 0
@@ -234,7 +245,6 @@ function readdata!(input::IO, output::Buffer)
     Base.unsafe_read(input, marginptr(output), n)
     output.marginpos += n
     nread += n
-    output.total += nread
     return nread
 end
 
@@ -254,10 +264,14 @@ end
 
 # Find the first occurrence of a specific byte.
 function findbyte(buf::Buffer, byte::UInt8)
-    ptr = ccall(:memchr, Ptr{Void}, (Ptr{Void}, Cint, Csize_t), pointer(buf.data, buf.bufferpos), byte, buffersize(buf))
-    if ptr == C_NULL
-        return 0
+    p = ccall(
+        :memchr,
+        Ptr{UInt8},
+        (Ptr{UInt8}, Cint, Csize_t),
+        pointer(buf.data, buf.bufferpos), byte, buffersize(buf))
+    if p == C_NULL
+        return marginptr(buf)
     else
-        return Int(ptr - pointer(buf.data, buf.bufferpos)) + buf.bufferpos
+        return p
     end
 end

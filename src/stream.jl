@@ -186,19 +186,21 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8)
     ret = Vector{UInt8}(0)
     filled = 0
     while !eof(stream)
-        pos = findbyte(buffer1, delim)
-        if pos == 0
+        p = findbyte(buffer1, delim)
+        found = false
+        if p < marginptr(buffer1)
+            found = true
+            sz = Int(p + 1 - bufferptr(buffer1))
+            resize!(ret, filled + sz)
+        else
             sz = buffersize(buffer1)
             if length(ret) < filled + sz
                 resize!(ret, filled + sz)
             end
-        else
-            sz = pos - buffer1.bufferpos + 1
-            resize!(ret, filled + sz)
         end
         readdata!(buffer1, ret, filled+1, sz)
         filled += sz
-        if pos > 0
+        if found
             break
         end
     end
@@ -441,9 +443,8 @@ function call_process(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     input = buffermem(inbuf)
     makemargin!(outbuf, minoutsize(stream.codec, input))
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
-    inbuf.bufferpos += Δin
-    outbuf.marginpos += Δout
-    outbuf.total += Δout
+    consumed!(inbuf, Δin)
+    supplied!(outbuf, Δout)
     if state.code == :error
         changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
