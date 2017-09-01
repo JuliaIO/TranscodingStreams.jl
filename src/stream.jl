@@ -67,6 +67,13 @@ function TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=DEFAULT_BU
     return TranscodingStream(codec, stream, State(bufsize))
 end
 
+#=
+function TranscodingStream(codec::Codec, stream::TranscodingStream; bufsize::Integer=DEFAULT_BUFFER_SIZE)
+    buffer = Buffer(DEFAULT_BUFFER_SIZE)
+    return TranscodingStream(codec, stream, State(buffer, stream.state.buffer1))
+end
+=#
+
 function Base.show(io::IO, stream::TranscodingStream)
     print(io, summary(stream), "(<mode=$(stream.state.mode)>)")
 end
