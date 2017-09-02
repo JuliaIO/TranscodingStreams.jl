@@ -29,13 +29,16 @@ function NoopStream(stream::IO; kwargs...)
 end
 
 function TranscodingStream(codec::Noop, stream::IO; bufsize::Integer=DEFAULT_BUFFER_SIZE)
-    if bufsize ≤ 0
-        throw(ArgumentError("non-positive buffer size"))
-    end
+    checkbufsize(bufsize)
     # Use only one buffer.
     buffer = Buffer(bufsize)
-    state = TranscodingStreams.State(buffer, buffer)
-    return TranscodingStream(codec, stream, state)
+    return TranscodingStream(codec, stream, State(buffer, buffer))
+end
+
+function TranscodingStream(codec::Noop, stream::TranscodingStream; bufsize::Integer=DEFAULT_BUFFER_SIZE)
+    checkbufsize(bufsize)
+    buffer = Buffer(bufsize)
+    return TranscodingStream(codec, stream, State(buffer, buffer))
 end
 
 function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)

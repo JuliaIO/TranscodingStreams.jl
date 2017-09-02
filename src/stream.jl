@@ -61,18 +61,26 @@ julia> readstring(stream)
 ```
 """
 function TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=DEFAULT_BUFFER_SIZE)
-    if bufsize ≤ 0
-        throw(ArgumentError("non-positive buffer size"))
-    end
+    checkbufsize(bufsize)
     return TranscodingStream(codec, stream, State(bufsize))
 end
 
-#=
-function TranscodingStream(codec::Codec, stream::TranscodingStream; bufsize::Integer=DEFAULT_BUFFER_SIZE)
-    buffer = Buffer(DEFAULT_BUFFER_SIZE)
-    return TranscodingStream(codec, stream, State(buffer, stream.state.buffer1))
+function TranscodingStream(codec::Codec, stream::TranscodingStream;
+                           bufsize::Integer=DEFAULT_BUFFER_SIZE, shared::Bool=true)
+    checkbufsize(bufsize)
+    if shared
+        buffer = Buffer(DEFAULT_BUFFER_SIZE)
+        return TranscodingStream(codec, stream, State(buffer, stream.state.buffer1))
+    else
+        return TranscodingStream(codec, stream, State(bufsize))
+    end
 end
-=#
+
+function checkbufsize(bufsize::Integer)
+    if bufsize ≤ 0
+        throw(ArgumentError("non-positive buffer size"))
+    end
+end
 
 function Base.show(io::IO, stream::TranscodingStream)
     print(io, summary(stream), "(<mode=$(stream.state.mode)>)")
@@ -405,7 +413,7 @@ function flushbuffer(stream::TranscodingStream)
 end
 
 function flushbufferall(stream::TranscodingStream)
-    @assert stream.state.mode == :write
+    changemode!(stream, :write)
     nflushed::Int = 0
     while buffersize(stream.state.buffer1) > 0
         nflushed += process_to_write(stream)
@@ -418,7 +426,9 @@ function processall(stream::TranscodingStream)
     while buffersize(stream.state.buffer1) > 0 || stream.state.code != :end
         process_to_write(stream)
     end
-    writebuffer!(stream.stream, stream.state.buffer2)
+    while buffersize(stream.state.buffer2) > 0
+        writebuffer!(stream.stream, stream.state.buffer2)
+    end
     @assert buffersize(stream.state.buffer1) == buffersize(stream.state.buffer2) == 0
 end
 
@@ -457,6 +467,19 @@ end
 # Read as much data as possbile from `input` to the margin of `output`.
 # This function will not block if `input` has buffered data.
 function readdata!(input::IO, output::Buffer)
+    return readdata!_impl(input, output)
+end
+
+function readdata!(input::TranscodingStream, output::Buffer)
+    if input.state.buffer1 === output  # shared buffer
+        # Delegate operation to the underlying stream.
+        return fillbuffer(input)
+    else
+        return readdata!_impl(input, output)
+    end
+end
+
+function readdata!_impl(input::IO, output::Buffer)
     nread::Int = 0
     navail = nb_available(input)
     if navail == 0 && marginsize(output) > 0 && !eof(input)
@@ -472,6 +495,19 @@ end
 
 # Write all data to `output` from the buffer of `input`.
 function writebuffer!(output::IO, input::Buffer)
+    return writebuffer!_impl(output, input)
+end
+
+function writebuffer!(output::TranscodingStream, input::Buffer)
+    if output.state.buffer1 === input  # shared buffer
+        # Delegate operation to the underlying stream.
+        return flushbufferall(output)
+    else
+        return writebuffer!_impl(output, input)
+    end
+end
+
+function writebuffer!_impl(output::IO, input::Buffer)
     nwritten = 0
     while buffersize(input) > 0
         n = Base.unsafe_write(output, bufferptr(input), buffersize(input))
