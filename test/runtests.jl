@@ -150,6 +150,18 @@ end
     @test read(stream) == b"foobar"
     close(stream)
 
+    # Two buffers are the same object.
+    stream = NoopStream(IOBuffer("foo"))
+    @test stream.state.buffer1 === stream.state.buffer2
+
+    # Nested NoopStreams share the same buffer.
+    s0 = IOBuffer("foo")
+    s1 = NoopStream(s0)
+    s2 = NoopStream(s1)
+    s3 = NoopStream(s2)
+    @test s1.state.buffer1 === s2.state.buffer1 === s3.state.buffer1 ===
+          s1.state.buffer2 === s2.state.buffer2 === s3.state.buffer2
+
     #= FIXME: restore these tests
     stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
     @test TranscodingStreams.total_in(stream) === Int64(0)

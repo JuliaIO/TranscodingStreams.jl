@@ -28,16 +28,23 @@ function NoopStream(stream::IO; kwargs...)
     return TranscodingStream(Noop(), stream; kwargs...)
 end
 
-function TranscodingStream(codec::Noop, stream::IO; bufsize::Integer=DEFAULT_BUFFER_SIZE)
+function TranscodingStream(codec::Noop, stream::IO;
+                           bufsize::Integer=DEFAULT_BUFFER_SIZE)
     checkbufsize(bufsize)
     # Use only one buffer.
     buffer = Buffer(bufsize)
     return TranscodingStream(codec, stream, State(buffer, buffer))
 end
 
-function TranscodingStream(codec::Noop, stream::TranscodingStream; bufsize::Integer=DEFAULT_BUFFER_SIZE)
+function TranscodingStream(codec::Noop, stream::TranscodingStream;
+                           bufsize::Integer=DEFAULT_BUFFER_SIZE,
+                           sharedbuf::Bool=true)
     checkbufsize(bufsize)
-    buffer = Buffer(bufsize)
+    if sharedbuf
+        buffer = stream.state.buffer1
+    else
+        buffer = Buffer(bufsize)
+    end
     return TranscodingStream(codec, stream, State(buffer, buffer))
 end
 
@@ -93,6 +100,10 @@ function fillbuffer(stream::NoopStream)
     changemode!(stream, :read)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
+    if stream.stream isa TranscodingStream && buffer === stream.stream.state.buffer1
+        # Delegate the operation when buffers are shared.
+        return fillbuffer(stream.stream)
+    end
     nfilled::Int = 0
     while buffersize(buffer) == 0 && !eof(stream.stream)
         makemargin!(buffer, 1)
@@ -111,7 +122,7 @@ function flushbuffer(stream::NoopStream)
 end
 
 function flushbufferall(stream::NoopStream)
-    @assert stream.state.mode == :write
+    changemode!(stream, :write)
     buffer = stream.state.buffer1
     bufsize = buffersize(buffer)
     while buffersize(buffer) > 0

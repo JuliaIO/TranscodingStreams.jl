@@ -60,15 +60,17 @@ julia> readstring(stream)
 
 ```
 """
-function TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=DEFAULT_BUFFER_SIZE)
+function TranscodingStream(codec::Codec, stream::IO;
+                           bufsize::Integer=DEFAULT_BUFFER_SIZE)
     checkbufsize(bufsize)
     return TranscodingStream(codec, stream, State(bufsize))
 end
 
 function TranscodingStream(codec::Codec, stream::TranscodingStream;
-                           bufsize::Integer=DEFAULT_BUFFER_SIZE, shared::Bool=true)
+                           bufsize::Integer=DEFAULT_BUFFER_SIZE,
+                           sharedbuf::Bool=true)
     checkbufsize(bufsize)
-    if shared
+    if sharedbuf
         buffer = Buffer(DEFAULT_BUFFER_SIZE)
         return TranscodingStream(codec, stream, State(buffer, stream.state.buffer1))
     else
@@ -468,8 +470,7 @@ end
 # This function will not block if `input` has buffered data.
 function readdata!(input::IO, output::Buffer)
     if input isa TranscodingStream && input.state.buffer1 === output
-        # Buffers are shared and so we delegate the operation to the underlying
-        # stream.
+        # Delegate the operation to the underlying stream for shared buffers.
         return fillbuffer(input)
     end
     nread::Int = 0
@@ -488,6 +489,7 @@ end
 # Write all data to `output` from the buffer of `input`.
 function writedata!(output::IO, input::Buffer)
     if output isa TranscodingStream && output.state.buffer1 === input
+        # Delegate the operation to the underlying stream for shared buffers.
         return flushbufferall(output)
     end
     nwritten::Int = 0
