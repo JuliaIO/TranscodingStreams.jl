@@ -163,6 +163,7 @@ function emptybuffer!(buf::Buffer)
     return buf
 end
 
+# Skip `n` bytes in the buffer.
 function skipbuffer!(buf::Buffer, n::Integer)
     if n > buffersize(buf)
         throw(ArgumentError("too large skip size"))
@@ -214,6 +215,7 @@ function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     return buf
 end
 
+# Copy data from `buf` to `data`.
 function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
     # NOTE: It's caller's responsibility to ensure that the buffer has at least
     # nbytes.
@@ -246,13 +248,6 @@ function readdata!(input::IO, output::Buffer)
     output.marginpos += n
     nread += n
     return nread
-end
-
-# Read data from `buf` to `dst`.
-function readdata!(buf::Buffer, dst::Vector{UInt8}, dpos::Integer, sz::Integer)
-    copy!(dst, dpos, buf.data, buf.bufferpos, sz)
-    buf.bufferpos += sz
-    return dst
 end
 
 # Write all data to `output` from the buffer of `input`.

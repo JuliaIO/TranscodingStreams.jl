@@ -198,7 +198,7 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8)
                 resize!(ret, filled + sz)
             end
         end
-        readdata!(buffer1, ret, filled+1, sz)
+        copydata!(pointer(ret, filled+1), buffer1, sz)
         filled += sz
         if found
             break
