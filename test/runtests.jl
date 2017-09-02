@@ -142,6 +142,14 @@ end
     @test hash(stream.state.buffer1.data[1:length(data)]) == hash(data)
     close(stream)
 
+    stream = NoopStream(NoopStream(IOBuffer("foobar")))
+    @test read(stream) == b"foobar"
+    close(stream)
+
+    stream = NoopStream(NoopStream(NoopStream(IOBuffer("foobar"))))
+    @test read(stream) == b"foobar"
+    close(stream)
+
     #= FIXME: restore these tests
     stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
     @test TranscodingStreams.total_in(stream) === Int64(0)
