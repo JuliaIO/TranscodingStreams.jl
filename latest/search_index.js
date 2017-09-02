@@ -209,22 +209,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "references.html#TranscodingStreams.CodecIdentity.Identity",
-    "page": "References",
-    "title": "TranscodingStreams.CodecIdentity.Identity",
-    "category": "Type",
-    "text": "Identity()\n\nCreate an identity (no-op) codec.\n\n\n\n"
-},
-
-{
-    "location": "references.html#TranscodingStreams.CodecIdentity.IdentityStream",
-    "page": "References",
-    "title": "TranscodingStreams.CodecIdentity.IdentityStream",
-    "category": "Type",
-    "text": "IdentityStream(stream::IO)\n\nCreate an identity (no-op) stream.\n\n\n\n"
-},
-
-{
     "location": "references.html#TranscodingStreams.Codec",
     "page": "References",
     "title": "TranscodingStreams.Codec",
@@ -285,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "References",
     "title": "Codec",
     "category": "section",
-    "text": "TranscodingStreams.Noop\nTranscodingStreams.NoopStreamThis type is deprecated. Use Noop instead.TranscodingStreams.CodecIdentity.Identity\nTranscodingStreams.CodecIdentity.IdentityStreamTranscodingStreams.Codec\nTranscodingStreams.expectedsize\nTranscodingStreams.minoutsize\nTranscodingStreams.initialize\nTranscodingStreams.finalize\nTranscodingStreams.startproc\nTranscodingStreams.process"
+    "text": "TranscodingStreams.Noop\nTranscodingStreams.NoopStreamTranscodingStreams.Codec\nTranscodingStreams.expectedsize\nTranscodingStreams.minoutsize\nTranscodingStreams.initialize\nTranscodingStreams.finalize\nTranscodingStreams.startproc\nTranscodingStreams.process"
 },
 
 {
