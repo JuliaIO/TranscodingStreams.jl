@@ -454,6 +454,33 @@ function call_process(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     return Δin, Δout
 end
 
+# Read as much data as possbile from `input` to the margin of `output`.
+# This function will not block if `input` has buffered data.
+function readdata!(input::IO, output::Buffer)
+    nread::Int = 0
+    navail = nb_available(input)
+    if navail == 0 && marginsize(output) > 0 && !eof(input)
+        nread += writebyte!(output, read(input, UInt8))
+        navail = nb_available(input)
+    end
+    n = min(navail, marginsize(output))
+    Base.unsafe_read(input, marginptr(output), n)
+    supplied!(output, n)
+    nread += n
+    return nread
+end
+
+# Write all data to `output` from the buffer of `input`.
+function writebuffer!(output::IO, input::Buffer)
+    nwritten = 0
+    while buffersize(input) > 0
+        n = Base.unsafe_write(output, bufferptr(input), buffersize(input))
+        consumed!(input, n)
+        nwritten += n
+    end
+    return nwritten
+end
+
 
 # State Transition
 # ----------------
