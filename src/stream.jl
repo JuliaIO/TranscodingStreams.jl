@@ -319,7 +319,7 @@ function Base.flush(stream::TranscodingStream)
     checkmode(stream)
     if stream.state.mode == :write
         flushbufferall(stream)
-        writebuffer!(stream.stream, stream.state.buffer2)
+        writedata!(stream.stream, stream.state.buffer2)
     end
     flush(stream.stream)
 end
@@ -427,7 +427,7 @@ function processall(stream::TranscodingStream)
         process_to_write(stream)
     end
     while buffersize(stream.state.buffer2) > 0
-        writebuffer!(stream.stream, stream.state.buffer2)
+        writedata!(stream.stream, stream.state.buffer2)
     end
     @assert buffersize(stream.state.buffer1) == buffersize(stream.state.buffer2) == 0
 end
@@ -442,7 +442,7 @@ function process_to_write(stream::TranscodingStream)
         end
     end
     buffer2 = stream.state.buffer2
-    writebuffer!(stream.stream, buffer2)
+    writedata!(stream.stream, buffer2)
     Δin, _ = call_process(stream, buffer1, buffer2)
     makemargin!(buffer1, 0)
     return Δin
@@ -467,19 +467,11 @@ end
 # Read as much data as possbile from `input` to the margin of `output`.
 # This function will not block if `input` has buffered data.
 function readdata!(input::IO, output::Buffer)
-    return readdata!_impl(input, output)
-end
-
-function readdata!(input::TranscodingStream, output::Buffer)
-    if input.state.buffer1 === output  # shared buffer
-        # Delegate operation to the underlying stream.
+    if input isa TranscodingStream && input.state.buffer1 === output
+        # Buffers are shared and so we delegate the operation to the underlying
+        # stream.
         return fillbuffer(input)
-    else
-        return readdata!_impl(input, output)
     end
-end
-
-function readdata!_impl(input::IO, output::Buffer)
     nread::Int = 0
     navail = nb_available(input)
     if navail == 0 && marginsize(output) > 0 && !eof(input)
@@ -494,21 +486,11 @@ function readdata!_impl(input::IO, output::Buffer)
 end
 
 # Write all data to `output` from the buffer of `input`.
-function writebuffer!(output::IO, input::Buffer)
-    return writebuffer!_impl(output, input)
-end
-
-function writebuffer!(output::TranscodingStream, input::Buffer)
-    if output.state.buffer1 === input  # shared buffer
-        # Delegate operation to the underlying stream.
+function writedata!(output::IO, input::Buffer)
+    if output isa TranscodingStream && output.state.buffer1 === input
         return flushbufferall(output)
-    else
-        return writebuffer!_impl(output, input)
     end
-end
-
-function writebuffer!_impl(output::IO, input::Buffer)
-    nwritten = 0
+    nwritten::Int = 0
     while buffersize(input) > 0
         n = Base.unsafe_write(output, bufferptr(input), buffersize(input))
         consumed!(input, n)

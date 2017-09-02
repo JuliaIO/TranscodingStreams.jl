@@ -105,7 +105,7 @@ function flushbuffer(stream::NoopStream)
     changemode!(stream, :write)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
-    nflushed = writebuffer!(stream.stream, buffer)
+    nflushed = writedata!(stream.stream, buffer)
     makemargin!(buffer, 0)
     return nflushed
 end
@@ -115,7 +115,7 @@ function flushbufferall(stream::NoopStream)
     buffer = stream.state.buffer1
     bufsize = buffersize(buffer)
     while buffersize(buffer) > 0
-        writebuffer!(stream.stream, buffer)
+        writedata!(stream.stream, buffer)
     end
     return bufsize
 end
