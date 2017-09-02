@@ -29,17 +29,10 @@ function NoopStream(stream::IO; kwargs...)
 end
 
 function TranscodingStream(codec::Noop, stream::IO;
-                           bufsize::Integer=DEFAULT_BUFFER_SIZE)
-    checkbufsize(bufsize)
-    # Use only one buffer.
-    buffer = Buffer(bufsize)
-    return TranscodingStream(codec, stream, State(buffer, buffer))
-end
-
-function TranscodingStream(codec::Noop, stream::TranscodingStream;
                            bufsize::Integer=DEFAULT_BUFFER_SIZE,
-                           sharedbuf::Bool=true)
+                           sharedbuf::Bool=(stream isa TranscodingStream))
     checkbufsize(bufsize)
+    checksharedbuf(sharedbuf, stream)
     if sharedbuf
         buffer = stream.state.buffer1
     else

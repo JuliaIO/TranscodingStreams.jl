@@ -37,6 +37,18 @@ end
 
 const DEFAULT_BUFFER_SIZE = 16 * 2^10  # 16KiB
 
+function checkbufsize(bufsize::Integer)
+    if bufsize ≤ 0
+        throw(ArgumentError("non-positive buffer size"))
+    end
+end
+
+function checksharedbuf(sharedbuf::Bool, stream::IO)
+    if sharedbuf && !(stream isa TranscodingStream)
+        throw(ArgumentError("invalid stream type for sharedbuf=true"))
+    end
+end
+
 """
     TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=$(DEFAULT_BUFFER_SIZE))
 
@@ -61,27 +73,16 @@ julia> readstring(stream)
 ```
 """
 function TranscodingStream(codec::Codec, stream::IO;
-                           bufsize::Integer=DEFAULT_BUFFER_SIZE)
-    checkbufsize(bufsize)
-    return TranscodingStream(codec, stream, State(bufsize))
-end
-
-function TranscodingStream(codec::Codec, stream::TranscodingStream;
                            bufsize::Integer=DEFAULT_BUFFER_SIZE,
-                           sharedbuf::Bool=true)
+                           sharedbuf::Bool=(stream isa TranscodingStream))
     checkbufsize(bufsize)
+    checksharedbuf(sharedbuf, stream)
     if sharedbuf
-        buffer = Buffer(DEFAULT_BUFFER_SIZE)
-        return TranscodingStream(codec, stream, State(buffer, stream.state.buffer1))
+        state = State(Buffer(bufsize), stream.state.buffer1)
     else
-        return TranscodingStream(codec, stream, State(bufsize))
+        state = State(bufsize)
     end
-end
-
-function checkbufsize(bufsize::Integer)
-    if bufsize ≤ 0
-        throw(ArgumentError("non-positive buffer size"))
-    end
+    return TranscodingStream(codec, stream, State(bufsize))
 end
 
 function Base.show(io::IO, stream::TranscodingStream)
