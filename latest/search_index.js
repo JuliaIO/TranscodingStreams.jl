@@ -109,7 +109,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Examples",
     "title": "Transcode data in one shot",
     "category": "section",
-    "text": "TranscodingStreams.jl extends the transcode function to transcode a data in one shot. transcode takes a codec object as its first argument and a data vector as its second argument:using CodecZlib\ndecompressed = transcode(ZlibDecompression(), b\"x\\x9cKL*JLNLI\\x04R\\x00\\x19\\xf2\\x04U\")\nString(decompressed)"
+    "text": "TranscodingStreams.jl extends the transcode function to transcode a data in one shot. transcode takes a codec object as its first argument and a data vector as its second argument:using CodecZlib\ndecompressed = transcode(ZlibDecompression, b\"x\\x9cKL*JLNLI\\x04R\\x00\\x19\\xf2\\x04U\")\nString(decompressed)"
+},
+
+{
+    "location": "examples.html#Transcode-lots-of-strings-1",
+    "page": "Examples",
+    "title": "Transcode lots of strings",
+    "category": "section",
+    "text": "transcode(<codec type>, data) method is convenient but suboptimal when transcoding a number of objects. This is because the method reallocates a new codec object for every call. Instead, you can use transcode(<codec object>, data) method that reuses the allocated object as follows:using CodecZstd\nstrings = [\"foo\", \"bar\", \"baz\"]\ncodec = ZstdCompression()\ntry\n    for s in strings\n        data = transcode(codec, s)\n        # do something...\n    end\ncatch\n    rethrow()\nfinally\n    CodecZstd.TranscodingStreams.finalize(codec)\nend"
 },
 
 {
@@ -149,7 +157,7 @@ var documenterSearchIndex = {"docs": [
     "page": "References",
     "title": "Base.transcode",
     "category": "Method",
-    "text": "transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}\n\nTranscode data by applying codec.\n\nExamples\n\njulia> using CodecZlib\n\njulia> data = Vector{UInt8}(\"abracadabra\");\n\njulia> compressed = transcode(ZlibCompression(), data);\n\njulia> decompressed = transcode(ZlibDecompression(), compressed);\n\njulia> String(decompressed)\n\"abracadabra\"\n\n\n\n\n"
+    "text": "transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}\n\nTranscode data by applying codec.\n\nNote that this method does not deallocation of codec, which is efficient but the caller will need to deallocate codec.\n\nExamples\n\njulia> using CodecZlib\n\njulia> data = b\"abracadabra\";\n\njulia> compressed = transcode(ZlibCompression(), data);\n\njulia> decompressed = transcode(ZlibDecompression(), compressed);\n\njulia> String(decompressed)\n\"abracadabra\"\n\n\n\n\n"
 },
 
 {
