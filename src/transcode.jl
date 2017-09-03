@@ -68,7 +68,5 @@ function Base.transcode(codec::Codec, data::Vector{UInt8})
     mark!(buffer2)
     stream = TranscodingStream(codec, DevNull, State(Buffer(data), buffer2))
     write(stream, TOKEN_END)
-    transcoded = takemarked!(buffer2)
-    changemode!(stream, :idle)
-    return transcoded
+    return takemarked!(buffer2)
 end

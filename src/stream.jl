@@ -508,68 +508,47 @@ end
 
 # Change the current mode.
 function changemode!(stream::TranscodingStream, newmode::Symbol)
-    mode = stream.state.mode
-    buffer1 = stream.state.buffer1
-    buffer2 = stream.state.buffer2
-    transition_error() =
-        throw(ArgumentError("cannot change the mode from $(mode) to $(newmode)"))
+    state = stream.state
+    mode = state.mode
+    buffer1 = state.buffer1
+    buffer2 = state.buffer2
     if mode == newmode
         # mode does not change
         return
     elseif newmode == :panic
-        if !haserror(stream.state.error)
+        if !haserror(state.error)
             # set a default error
-            stream.state.error[] = ErrorException("unknown error happened while processing data")
+            state.error[] = ErrorException("unknown error happened while processing data")
         end
-        stream.state.mode = newmode
-        finalize_codec(stream.codec, stream.state.error)
-        throw(stream.state.error[])
+        state.mode = newmode
+        finalize_codec(stream.codec, state.error)
+        throw(state.error[])
     elseif mode == :idle
         if newmode == :read || newmode == :write
-            stream.state.code = startproc(stream.codec, newmode, stream.state.error)
-            if stream.state.code == :error
+            state.code = startproc(stream.codec, newmode, state.error)
+            if state.code == :error
                 changemode!(stream, :panic)
             end
-            stream.state.mode = newmode
+            state.mode = newmode
             return
         elseif newmode == :close
-            stream.state.mode = newmode
-            finalize_codec(stream.codec, stream.state.error)
+            state.mode = newmode
+            finalize_codec(stream.codec, state.error)
             return
         end
-    elseif mode == :read
-        if newmode == :idle
-            initbuffer!(buffer1)
-            initbuffer!(buffer2)
-            stream.state.mode = newmode
-            return
-        elseif newmode == :write
-            transition_error()
-        elseif newmode == :close
-            changemode!(stream, :idle)
-            changemode!(stream, :close)
-            return
-        end
-    elseif mode == :write
-        if newmode == :idle
-            processall(stream)
-            initbuffer!(buffer1)
-            initbuffer!(buffer2)
-            stream.state.mode = newmode
-            return
-        elseif newmode == :read
-            transition_error()
-        elseif newmode == :close
-            changemode!(stream, :idle)
-            changemode!(stream, :close)
+    elseif mode == :read || mode == :write
+        if newmode == :close
+            if mode == :write
+                processall(stream)
+            end
+            state.mode = newmode
+            finalize_codec(stream.codec, state.error)
             return
         end
     elseif mode == :panic
         throw_panic_error()
-    else
-        # unreachable
-        @assert false
     end
+    throw(ArgumentError("cannot change the mode from $(mode) to $(newmode)"))
 end
 
 # Check the current mode and throw an exception if needed.
