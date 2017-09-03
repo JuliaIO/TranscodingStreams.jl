@@ -51,8 +51,8 @@ close(stream)
 
 # Array API.
 array = Vector{UInt8}(text)
-array = transcode(GzipCompression(), array)
-array = transcode(GzipDecompression(), array)
+array = transcode(GzipCompression, array)
+array = transcode(GzipDecompression, array)
 @assert text == String(array)
 ```
 
