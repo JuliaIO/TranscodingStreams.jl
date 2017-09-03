@@ -170,6 +170,13 @@ end
     close(stream)
 
     data = b""
+    @test transcode(Noop, data)  == data
+    @test transcode(Noop, data) !== data
+    data = b"foo"
+    @test transcode(Noop, data)  == data
+    @test transcode(Noop, data) !== data
+
+    data = b""
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
     data = b"foo"

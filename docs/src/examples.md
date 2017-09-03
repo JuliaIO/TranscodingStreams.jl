@@ -140,7 +140,7 @@ in one shot. `transcode` takes a codec object as its first argument and a data
 vector as its second argument:
 ```julia
 using CodecZlib
-decompressed = transcode(ZlibDecompression(), b"x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U")
+decompressed = transcode(ZlibDecompression, b"x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U")
 String(decompressed)
 ```
 
