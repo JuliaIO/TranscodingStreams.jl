@@ -399,7 +399,7 @@ function fillbuffer(stream::TranscodingStream)
         end
         makemargin!(buffer2, 1)
         readdata!(stream.stream, buffer2)
-        _, Δout = call_process(stream, buffer2, buffer1)
+        _, Δout = callprocess(stream, buffer2, buffer1)
         nfilled += Δout
     end
     return nfilled
@@ -446,12 +446,12 @@ function process_to_write(stream::TranscodingStream)
     end
     buffer2 = stream.state.buffer2
     writedata!(stream.stream, buffer2)
-    Δin, _ = call_process(stream, buffer1, buffer2)
+    Δin, _ = callprocess(stream, buffer1, buffer2)
     makemargin!(buffer1, 0)
     return Δin
 end
 
-function call_process(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
+function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     state = stream.state
     input = buffermem(inbuf)
     makemargin!(outbuf, minoutsize(stream.codec, input))
