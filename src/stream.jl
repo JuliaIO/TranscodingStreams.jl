@@ -333,44 +333,6 @@ function Base.write(stream::TranscodingStream, ::EndToken)
 end
 
 
-# Transcode
-# ---------
-
-"""
-    transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}
-
-Transcode `data` by applying `codec`.
-
-Examples
---------
-
-```julia
-julia> using CodecZlib
-
-julia> data = Vector{UInt8}("abracadabra");
-
-julia> compressed = transcode(ZlibCompression(), data);
-
-julia> decompressed = transcode(ZlibDecompression(), compressed);
-
-julia> String(decompressed)
-"abracadabra"
-
-```
-"""
-function Base.transcode(codec::Codec, data::Vector{UInt8})
-    # Add `minoutsize` because `transcode` will be called at least two times.
-    buffer2 = Buffer(
-        expectedsize(codec, Memory(data)) + minoutsize(codec, Memory(C_NULL, 0)))
-    mark!(buffer2)
-    stream = TranscodingStream(codec, DevNull, State(Buffer(data), buffer2))
-    write(stream, TOKEN_END)
-    transcoded = takemarked!(buffer2)
-    changemode!(stream, :idle)
-    return transcoded
-end
-
-
 # Utils
 # -----
 
