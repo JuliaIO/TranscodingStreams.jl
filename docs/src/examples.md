@@ -144,6 +144,29 @@ decompressed = transcode(ZlibDecompression, b"x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04
 String(decompressed)
 ```
 
+Transcode lots of strings
+-------------------------
+
+`transcode(<codec type>, data)` method is convenient but suboptimal when
+transcoding a number of objects. This is because the method reallocates a new
+codec object for every call. Instead, you can use `transcode(<codec object>,
+data)` method that reuses the allocated object as follows:
+```julia
+using CodecZstd
+strings = ["foo", "bar", "baz"]
+codec = ZstdCompression()
+try
+    for s in strings
+        data = transcode(codec, s)
+        # do something...
+    end
+catch
+    rethrow()
+finally
+    CodecZstd.TranscodingStreams.finalize(codec)
+end
+```
+
 Unread data
 -----------
 
