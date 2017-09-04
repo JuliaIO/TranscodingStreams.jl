@@ -42,7 +42,7 @@ end
 Transcode `data` by applying `codec`.
 
 Note that this method does not deallocation of `codec`, which is efficient but
-the caller will need to deallocate `codec`.
+the caller may need to deallocate `codec`.
 
 Examples
 --------

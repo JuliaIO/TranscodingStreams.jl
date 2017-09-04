@@ -317,9 +317,13 @@ TranscodingStreams.expectedsize(::QuadrupleCodec, input::Memory) = input.size * 
 TranscodingStreams.minoutsize(::QuadrupleCodec, ::Memory) = 4
 
 @testset "QuadrupleCodec" begin
+    @test transcode(QuadrupleCodec, b"") == b""
+    @test transcode(QuadrupleCodec, b"a") == b"aaaa"
+    @test transcode(QuadrupleCodec, b"ab") == b"aaaabbbb"
     @test transcode(QuadrupleCodec(), b"") == b""
     @test transcode(QuadrupleCodec(), b"a") == b"aaaa"
     @test transcode(QuadrupleCodec(), b"ab") == b"aaaabbbb"
+
     data = "x"^1024
     transcode(QuadrupleCodec(), data)
     @test (@allocated transcode(QuadrupleCodec(), data)) < sizeof(data) * 5
