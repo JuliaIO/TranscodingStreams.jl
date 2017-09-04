@@ -276,7 +276,9 @@ end
     @test eof(stream)  # close
 
     @test_throws ArgumentError NoopStream(IOBuffer(), bufsize=0)
+    @test_throws ArgumentError NoopStream(let s = IOBuffer(); close(s); s; end)
     @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), bufsize=0)
+    @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), sharedbuf=true)
 end
 
 # This does not implement necessary interface methods.
