@@ -112,6 +112,13 @@ end
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer("foo"))
+    read(stream, UInt8)
+    @test_throws ArgumentError skip(stream, -1)
+    skip(stream, 100)
+    @test eof(stream)
+    close(stream)
+
+    stream = TranscodingStream(Noop(), IOBuffer("foo"))
     out = zeros(UInt8, 3)
     @test nb_available(stream) == 0
     @test TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
@@ -260,6 +267,13 @@ end
     stream = NoopStream(IOBuffer("foobar"))
     @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
     close(stream)
+
+    stream = NoopStream(IOBuffer(""))
+    @test eof(stream)  # idle
+    unsafe_write(stream, C_NULL, 0)
+    @test eof(stream)  # write
+    close(stream)
+    @test eof(stream)  # close
 
     @test_throws ArgumentError NoopStream(IOBuffer(), bufsize=0)
     @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), bufsize=0)
