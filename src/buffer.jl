@@ -77,15 +77,27 @@ function buffermem(buf::Buffer)
     return Memory(bufferptr(buf), buffersize(buf))
 end
 
+# Notify that `n` bytes are consumed from `buf`.
+function consumed!(buf::Buffer, n::Integer)
+    buf.bufferpos += n
+    return buf
+end
+
+# Notify that `n` bytes are supplied to `buf`.
+function supplied!(buf::Buffer, n::Integer)
+    buf.marginpos += n
+    return buf
+end
+
 function readbyte!(buf::Buffer)
     b = buf.data[buf.bufferpos]
-    buf.bufferpos += 1
+    consumed!(buf, 1)
     return b
 end
 
 function writebyte!(buf::Buffer, b::UInt8)
     buf.data[buf.marginpos] = b
-    buf.marginpos += 1
+    supplied!(buf, 1)
     return 1
 end
 
@@ -168,19 +180,7 @@ function skipbuffer!(buf::Buffer, n::Integer)
     if n > buffersize(buf)
         throw(ArgumentError("too large skip size"))
     end
-    buf.bufferpos += n
-    return buf
-end
-
-# Notify that `n` bytes are consumed from `buf`.
-function consumed!(buf::Buffer, n::Integer)
-    buf.bufferpos += n
-    return buf
-end
-
-# Notify that `n` bytes are supplied to `buf`.
-function supplied!(buf::Buffer, n::Integer)
-    buf.marginpos += n
+    consumed!(buf, n)
     return buf
 end
 
@@ -190,12 +190,6 @@ function initbuffer!(buf::Buffer)
     buf.bufferpos = buf.marginpos = 1
     buf.total = 0
     return buf
-end
-
-# Copy marked data.
-function copymarked(buf::Buffer)
-    @assert buf.markpos > 0
-    return buf.data[buf.markpos:buf.marginpos-1]
 end
 
 # Take the ownership of the marked data.
@@ -211,7 +205,7 @@ end
 function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
     unsafe_copy!(marginptr(buf), data, nbytes)
-    buf.marginpos += nbytes
+    supplied!(buf, nbytes)
     return buf
 end
 
@@ -221,7 +215,7 @@ function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
     # nbytes.
     @assert buffersize(buf) ≥ nbytes
     unsafe_copy!(data, bufferptr(buf), nbytes)
-    buf.bufferpos += nbytes
+    consumed!(buf, nbytes)
     return data
 end
 
@@ -230,7 +224,7 @@ function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
     copy!(buf.data, buf.bufferpos + nbytes, buf.data, buf.bufferpos, buffersize(buf))
     unsafe_copy!(bufferptr(buf), data, nbytes)
-    buf.marginpos += nbytes
+    supplied!(buf, nbytes)
     return buf
 end
 
