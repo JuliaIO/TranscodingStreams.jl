@@ -82,7 +82,7 @@ function TranscodingStream(codec::Codec, stream::IO;
     else
         state = State(bufsize)
     end
-    return TranscodingStream(codec, stream, State(bufsize))
+    return TranscodingStream(codec, stream, state)
 end
 
 function Base.show(io::IO, stream::TranscodingStream)
