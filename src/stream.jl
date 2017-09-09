@@ -126,8 +126,10 @@ function Base.eof(stream::TranscodingStream)
         return buffersize(stream.state.buffer1) == 0 && fillbuffer(stream) == 0
     elseif mode == :write
         return eof(stream.stream)
-    elseif mode == :close || mode == :stop
+    elseif mode == :close
         return true
+    elseif mode == :stop
+        return buffersize(stream.state.buffer1) == 0
     elseif mode == :panic
         throw_panic_error()
     else
@@ -186,7 +188,7 @@ end
 # --------------
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     if eof(stream)
         throw(EOFError())
     end
@@ -194,7 +196,7 @@ function Base.read(stream::TranscodingStream, ::Type{UInt8})
 end
 
 function Base.readuntil(stream::TranscodingStream, delim::UInt8)
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     buffer1 = stream.state.buffer1
     ret = Vector{UInt8}(0)
     filled = 0
@@ -221,7 +223,7 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8)
 end
 
 function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes::UInt)
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     buffer = stream.state.buffer1
     p = output
     p_end = output + nbytes
@@ -237,7 +239,7 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
 end
 
 function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=length(b))
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     filled = 0
     resized = false
     while filled < nb && !eof(stream)
@@ -254,7 +256,7 @@ function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=
 end
 
 function Base.nb_available(stream::TranscodingStream)
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     return buffersize(stream.state.buffer1)
 end
 
@@ -289,9 +291,18 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     if nbytes < 0
         throw(ArgumentError("negative nbytes"))
     end
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     insertdata!(stream.state.buffer1, convert(Ptr{UInt8}, data), nbytes)
     return nothing
+end
+
+# Ready to read data from the stream.
+function ready_to_read!(stream::TranscodingStream)
+    mode = stream.state.mode
+    if !(mode == :read || mode == :stop)
+        changemode!(stream, :read)
+    end
+    return
 end
 
 
@@ -467,7 +478,6 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
         # When no progress, expand the output buffer.
         makemargin!(outbuf, max(16, marginsize(outbuf) * 2))
     elseif state.code == :end && state.stop_on_end
-        info("stop_on_end")
         changemode!(stream, :stop)
     end
     return Δin, Δout
@@ -542,11 +552,15 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             finalize_codec(stream.codec, state.error)
             return
         end
-    elseif mode == :read || mode == :write
+    elseif mode == :read
         if newmode == :close || newmode == :stop
-            if mode == :write
-                processall(stream)
-            end
+            state.mode = newmode
+            finalize_codec(stream.codec, state.error)
+            return
+        end
+    elseif mode == :write
+        if newmode == :close
+            processall(stream)
             state.mode = newmode
             finalize_codec(stream.codec, state.error)
             return
@@ -554,6 +568,7 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
     elseif mode == :stop
         if newmode == :close
             state.mode = newmode
+            return
         end
     elseif mode == :panic
         throw_panic_error()
