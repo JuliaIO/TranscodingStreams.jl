@@ -30,6 +30,12 @@ using Base.Test
     @test mem.size == sizeof(data)
 end
 
+@testset "TranscodingStream" begin
+    @test TranscodingStreams.splitkwargs(
+        [(:foo, 1), (:bar, true), (:baz, :ok)], (:foo,)) ==
+        ([(:foo, 1)], [(:bar, true), (:baz, :ok)])
+end
+
 @testset "Noop Codec" begin
     source = IOBuffer("")
     stream = TranscodingStream(Noop(), source)

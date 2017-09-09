@@ -109,6 +109,16 @@ function Base.show(io::IO, stream::TranscodingStream)
     print(io, summary(stream), "(<mode=$(stream.state.mode)>)")
 end
 
+# Split keyword arguments.
+function splitkwargs(kwargs, keys)
+    hits = []
+    others = []
+    for kwarg in kwargs
+        push!(kwarg[1] ∈ keys ? hits : others, kwarg)
+    end
+    return hits, others
+end
+
 
 # Base IO Functions
 # -----------------
@@ -350,15 +360,6 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
     return Int(p - input)
 end
 
-function Base.flush(stream::TranscodingStream)
-    checkmode(stream)
-    if stream.state.mode == :write
-        flushbufferall(stream)
-        writedata!(stream.stream, stream.state.buffer2)
-    end
-    flush(stream.stream)
-end
-
 # A singleton type of end token.
 struct EndToken end
 
@@ -379,6 +380,15 @@ function Base.write(stream::TranscodingStream, ::EndToken)
     changemode!(stream, :write)
     processall(stream)
     return 0
+end
+
+function Base.flush(stream::TranscodingStream)
+    checkmode(stream)
+    if stream.state.mode == :write
+        flushbufferall(stream)
+        writedata!(stream.stream, stream.state.buffer2)
+    end
+    flush(stream.stream)
 end
 
 
