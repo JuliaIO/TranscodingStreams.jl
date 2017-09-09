@@ -61,9 +61,8 @@ function test_chunked_read(Encoder, Decoder)
     encoder = Encoder()
     initialize(encoder)
     for _ in 1:500
-        n = rand(1:100)
-        chunks = [rand(alpha, rand(0:100)) for _ in 1:n]
-        data = foldl((x, y)->vcat(x, transcode(encoder, y)), UInt8[], chunks)
+        chunks = [rand(alpha, rand(0:100)) for _ in 1:rand(1:100)]
+        data = mapfoldl(x->transcode(encoder, x), vcat, UInt8[], chunks)
         buffer = NoopStream(IOBuffer(data))
         ok = true
         for chunk in chunks
