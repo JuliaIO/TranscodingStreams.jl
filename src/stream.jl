@@ -74,7 +74,8 @@ julia> readstring(stream)
 """
 function TranscodingStream(codec::Codec, stream::IO;
                            bufsize::Integer=DEFAULT_BUFFER_SIZE,
-                           sharedbuf::Bool=(stream isa TranscodingStream))
+                           sharedbuf::Bool=(stream isa TranscodingStream),
+                           stop_on_end::Bool=false)
     checkbufsize(bufsize)
     checksharedbuf(sharedbuf, stream)
     if sharedbuf
@@ -82,6 +83,7 @@ function TranscodingStream(codec::Codec, stream::IO;
     else
         state = State(bufsize)
     end
+    state.stop_on_end = stop_on_end
     return TranscodingStream(codec, stream, state)
 end
 
@@ -124,7 +126,7 @@ function Base.eof(stream::TranscodingStream)
         return buffersize(stream.state.buffer1) == 0 && fillbuffer(stream) == 0
     elseif mode == :write
         return eof(stream.stream)
-    elseif mode == :close
+    elseif mode == :close || mode == :stop
         return true
     elseif mode == :panic
         throw_panic_error()
@@ -458,11 +460,15 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
     consumed!(inbuf, Δin)
     supplied!(outbuf, Δout)
+    #@show Δin, Δout, state.code, state.stop_on_end
     if state.code == :error
         changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
         # When no progress, expand the output buffer.
         makemargin!(outbuf, max(16, marginsize(outbuf) * 2))
+    elseif state.code == :end && state.stop_on_end
+        info("stop_on_end")
+        changemode!(stream, :stop)
     end
     return Δin, Δout
 end
@@ -531,19 +537,23 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             end
             state.mode = newmode
             return
-        elseif newmode == :close
+        elseif newmode == :close || newmode == :stop
             state.mode = newmode
             finalize_codec(stream.codec, state.error)
             return
         end
     elseif mode == :read || mode == :write
-        if newmode == :close
+        if newmode == :close || newmode == :stop
             if mode == :write
                 processall(stream)
             end
             state.mode = newmode
             finalize_codec(stream.codec, state.error)
             return
+        end
+    elseif mode == :stop
+        if newmode == :close
+            state.mode = newmode
         end
     elseif mode == :panic
         throw_panic_error()
