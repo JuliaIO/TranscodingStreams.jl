@@ -52,3 +52,24 @@ function test_roundtrip_lines(encoder, decoder)
     seekstart(buf)
     Base.Test.@test hash(lines) == hash(readlines(decoder(buf)))
 end
+
+function test_chunked_read(Encoder, Decoder)
+    srand(12345)
+    alpha = b"色即是空"
+    encoder = Encoder()
+    initialize(encoder)
+    for _ in 1:500
+        n = rand(1:100)
+        chunks = [rand(alpha, rand(0:100)) for _ in 1:n]
+        data = foldl((x, y)->vcat(x, transcode(encoder, y)), UInt8[], chunks)
+        buffer = NoopStream(IOBuffer(data))
+        ok = true
+        for chunk in chunks
+            stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
+            ok &= hash(read(stream)) == hash(chunk)
+            ok &= eof(stream)
+        end
+        Base.Test.@test ok
+    end
+    finalize(encoder)
+end

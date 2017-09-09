@@ -381,3 +381,7 @@ end
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd", "CodecBase"]
     Pkg.test(pkg)
 end
+
+# TODO: This should be moved to CodecZlib.jl.
+import CodecZlib: GzipCompression, GzipDecompression
+TranscodingStreams.test_chunked_read(GzipCompression, GzipDecompression)

@@ -121,6 +121,7 @@ end
 function Base.eof(stream::TranscodingStream)
     mode = stream.state.mode
     if mode == :idle
+        # FIXME: This is not true when empty data are compressed.
         return eof(stream.stream)
     elseif mode == :read
         return buffersize(stream.state.buffer1) == 0 && fillbuffer(stream) == 0
@@ -399,7 +400,7 @@ function fillbuffer(stream::TranscodingStream)
     buffer1 = stream.state.buffer1
     buffer2 = stream.state.buffer2
     nfilled::Int = 0
-    while buffersize(buffer1) == 0
+    while buffersize(buffer1) == 0 && stream.state.mode != :stop
         if stream.state.code == :end
             if buffersize(buffer2) == 0 && eof(stream.stream)
                 break
