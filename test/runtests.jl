@@ -335,6 +335,20 @@ TranscodingStreams.minoutsize(::QuadrupleCodec, ::Memory) = 4
     stream = NoopStream(TranscodingStream(QuadrupleCodec(), NoopStream(IOBuffer("foo"))))
     @test read(stream) == b"ffffoooooooo"
     close(stream)
+
+    # Buffers are shared.
+    stream1 = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
+    stream2 = TranscodingStream(QuadrupleCodec(), stream1)
+    @test stream1.state.buffer1 === stream2.state.buffer2
+    close(stream1)
+    close(stream2)
+
+    # Explicitly unshare buffers.
+    stream1 = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
+    stream2 = TranscodingStream(QuadrupleCodec(), stream1, sharedbuf=false)
+    @test stream1.state.buffer1 !== stream2.state.buffer2
+    close(stream1)
+    close(stream2)
 end
 
 # TODO: Remove this in the future.
