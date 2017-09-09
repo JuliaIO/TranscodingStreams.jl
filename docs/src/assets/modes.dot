@@ -1,0 +1,14 @@
+digraph modes {
+    "idle" -> "read";
+    "idle" -> "write";
+    "idle" -> "close";
+    "idle" -> "panic";
+
+    "read" -> "read";
+    "read" -> "close";
+    "read" -> "panic";
+
+    "write" -> "write";
+    "write" -> "close";
+    "write" -> "panic";
+}

@@ -1,18 +1,7 @@
 # Transcoding State
 # =================
 
-"""
-Stream state.
-
-A state will be one of the following modes:
-
-- `:idle` : initial and intermediate mode, no buffered data.
-- `:read` : ready to read data, data may be buffered.
-- `:write`: ready to write data, data may be buffered.
-- `:close`: closed, no buffered data.
-- `:panic`: an exception has been thrown in codec, data may be buffered but we
-            cannot do anything.
-"""
+# See docs/src/devnotes.md.
 mutable struct State
     # current stream mode
     mode::Symbol

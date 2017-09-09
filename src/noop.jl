@@ -28,14 +28,17 @@ function NoopStream(stream::IO; kwargs...)
     return TranscodingStream(Noop(), stream; kwargs...)
 end
 
-function TranscodingStream(codec::Noop, stream::IO; bufsize::Integer=DEFAULT_BUFFER_SIZE)
-    if bufsize ≤ 0
-        throw(ArgumentError("non-positive buffer size"))
+function TranscodingStream(codec::Noop, stream::IO;
+                           bufsize::Integer=DEFAULT_BUFFER_SIZE,
+                           sharedbuf::Bool=(stream isa TranscodingStream))
+    checkbufsize(bufsize)
+    checksharedbuf(sharedbuf, stream)
+    if sharedbuf
+        buffer = stream.state.buffer1
+    else
+        buffer = Buffer(bufsize)
     end
-    # Use only one buffer.
-    buffer = Buffer(bufsize)
-    state = TranscodingStreams.State(buffer, buffer)
-    return TranscodingStream(codec, stream, state)
+    return TranscodingStream(codec, stream, State(buffer, buffer))
 end
 
 function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
@@ -46,8 +49,7 @@ function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
     while p < p_end && !eof(stream)
         if buffersize(buffer) > 0
             m = min(buffersize(buffer), p_end - p)
-            unsafe_copy!(p, bufferptr(buffer), m)
-            buffer.bufferpos += m
+            copydata!(p, buffer, m)
         else
             # directly read data from the underlying stream
             m = p_end - p
@@ -65,8 +67,7 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :write)
     buffer = stream.state.buffer1
     if marginsize(buffer) ≥ nbytes
-        unsafe_copy!(marginptr(buffer), input, nbytes)
-        buffer.marginpos += nbytes
+        copydata!(buffer, input, nbytes)
         return Int(nbytes)
     else
         flushbuffer(stream)
@@ -92,12 +93,14 @@ function fillbuffer(stream::NoopStream)
     changemode!(stream, :read)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
+    if stream.stream isa TranscodingStream && buffer === stream.stream.state.buffer1
+        # Delegate the operation when buffers are shared.
+        return fillbuffer(stream.stream)
+    end
     nfilled::Int = 0
     while buffersize(buffer) == 0 && !eof(stream.stream)
         makemargin!(buffer, 1)
-        n = unsafe_read(stream.stream, marginptr(buffer), marginsize(buffer))
-        buffer.marginpos += n
-        nfilled += n
+        nfilled += readdata!(stream.stream, buffer)
     end
     return nfilled
 end
@@ -106,22 +109,17 @@ function flushbuffer(stream::NoopStream)
     changemode!(stream, :write)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
-    nflushed::Int = 0
-    while buffersize(buffer) > 0
-        n = unsafe_write(stream.stream, bufferptr(buffer), buffersize(buffer))
-        buffer.bufferpos += n
-        nflushed += n
-    end
+    nflushed = writedata!(stream.stream, buffer)
     makemargin!(buffer, 0)
     return nflushed
 end
 
 function flushbufferall(stream::NoopStream)
-    @assert stream.state.mode == :write
+    changemode!(stream, :write)
     buffer = stream.state.buffer1
     bufsize = buffersize(buffer)
     while buffersize(buffer) > 0
-        writebuffer!(stream.stream, buffer)
+        writedata!(stream.stream, buffer)
     end
     return bufsize
 end

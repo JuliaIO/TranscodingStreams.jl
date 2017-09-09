@@ -55,6 +55,13 @@ end
     @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(3)), 3)
     close(stream)
 
+    stream = TranscodingStream(Noop(), IOBuffer("foobar"), bufsize=1)
+    @test read(stream, UInt8) === UInt8('f')
+    data = Vector{UInt8}(5)
+    unsafe_read(stream, pointer(data), 5) === nothing
+    @test data == b"oobar"
+    close(stream)
+
     sink = IOBuffer()
     stream = TranscodingStream(Noop(), sink)
     @test write(stream, "foo") === 3
@@ -112,6 +119,13 @@ end
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer("foo"))
+    read(stream, UInt8)
+    @test_throws ArgumentError skip(stream, -1)
+    skip(stream, 100)
+    @test eof(stream)
+    close(stream)
+
+    stream = TranscodingStream(Noop(), IOBuffer("foo"))
     out = zeros(UInt8, 3)
     @test nb_available(stream) == 0
     @test TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
@@ -141,6 +155,26 @@ end
     @test hash(read(stream)) == hash(data)
     @test hash(stream.state.buffer1.data[1:length(data)]) == hash(data)
     close(stream)
+
+    stream = NoopStream(NoopStream(IOBuffer("foobar")))
+    @test read(stream) == b"foobar"
+    close(stream)
+
+    stream = NoopStream(NoopStream(NoopStream(IOBuffer("foobar"))))
+    @test read(stream) == b"foobar"
+    close(stream)
+
+    # Two buffers are the same object.
+    stream = NoopStream(IOBuffer("foo"))
+    @test stream.state.buffer1 === stream.state.buffer2
+
+    # Nested NoopStreams share the same buffer.
+    s0 = IOBuffer("foo")
+    s1 = NoopStream(s0)
+    s2 = NoopStream(s1)
+    s3 = NoopStream(s2)
+    @test s1.state.buffer1 === s2.state.buffer1 === s3.state.buffer1 ===
+          s1.state.buffer2 === s2.state.buffer2 === s3.state.buffer2
 
     #= FIXME: restore these tests
     stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
@@ -241,8 +275,17 @@ end
     @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
     close(stream)
 
+    stream = NoopStream(IOBuffer(""))
+    @test eof(stream)  # idle
+    unsafe_write(stream, C_NULL, 0)
+    @test eof(stream)  # write
+    close(stream)
+    @test eof(stream)  # close
+
     @test_throws ArgumentError NoopStream(IOBuffer(), bufsize=0)
+    @test_throws ArgumentError NoopStream(let s = IOBuffer(); close(s); s; end)
     @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), bufsize=0)
+    @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), sharedbuf=true)
 end
 
 # This does not implement necessary interface methods.
@@ -274,12 +317,24 @@ TranscodingStreams.expectedsize(::QuadrupleCodec, input::Memory) = input.size * 
 TranscodingStreams.minoutsize(::QuadrupleCodec, ::Memory) = 4
 
 @testset "QuadrupleCodec" begin
+    @test transcode(QuadrupleCodec, b"") == b""
+    @test transcode(QuadrupleCodec, b"a") == b"aaaa"
+    @test transcode(QuadrupleCodec, b"ab") == b"aaaabbbb"
     @test transcode(QuadrupleCodec(), b"") == b""
     @test transcode(QuadrupleCodec(), b"a") == b"aaaa"
     @test transcode(QuadrupleCodec(), b"ab") == b"aaaabbbb"
+
     data = "x"^1024
     transcode(QuadrupleCodec(), data)
     @test (@allocated transcode(QuadrupleCodec(), data)) < sizeof(data) * 5
+
+    stream = TranscodingStream(QuadrupleCodec(), NoopStream(IOBuffer("foo")))
+    @test read(stream) == b"ffffoooooooo"
+    close(stream)
+
+    stream = NoopStream(TranscodingStream(QuadrupleCodec(), NoopStream(IOBuffer("foo"))))
+    @test read(stream) == b"ffffoooooooo"
+    close(stream)
 end
 
 # TODO: Remove this in the future.

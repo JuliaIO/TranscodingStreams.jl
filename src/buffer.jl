@@ -77,16 +77,27 @@ function buffermem(buf::Buffer)
     return Memory(bufferptr(buf), buffersize(buf))
 end
 
+# Notify that `n` bytes are consumed from `buf`.
+function consumed!(buf::Buffer, n::Integer)
+    buf.bufferpos += n
+    return buf
+end
+
+# Notify that `n` bytes are supplied to `buf`.
+function supplied!(buf::Buffer, n::Integer)
+    buf.marginpos += n
+    return buf
+end
+
 function readbyte!(buf::Buffer)
     b = buf.data[buf.bufferpos]
-    buf.bufferpos += 1
+    consumed!(buf, 1)
     return b
 end
 
 function writebyte!(buf::Buffer, b::UInt8)
     buf.data[buf.marginpos] = b
-    buf.marginpos += 1
-    buf.total += 1
+    supplied!(buf, 1)
     return 1
 end
 
@@ -100,6 +111,10 @@ end
 
 function marginmem(buf::Buffer)
     return Memory(marginptr(buf), marginsize(buf))
+end
+
+function ismarked(buf::Buffer)
+    return buf.markpos != 0
 end
 
 function mark!(buf::Buffer)
@@ -160,11 +175,12 @@ function emptybuffer!(buf::Buffer)
     return buf
 end
 
+# Skip `n` bytes in the buffer.
 function skipbuffer!(buf::Buffer, n::Integer)
     if n > buffersize(buf)
         throw(ArgumentError("too large skip size"))
     end
-    buf.bufferpos += n
+    consumed!(buf, n)
     return buf
 end
 
@@ -176,12 +192,6 @@ function initbuffer!(buf::Buffer)
     return buf
 end
 
-# Copy marked data.
-function copymarked(buf::Buffer)
-    @assert buf.markpos > 0
-    return buf.data[buf.markpos:buf.marginpos-1]
-end
-
 # Take the ownership of the marked data.
 function takemarked!(buf::Buffer)
     @assert buf.markpos > 0
@@ -191,52 +201,43 @@ function takemarked!(buf::Buffer)
     return resize!(buf.data, sz)
 end
 
+# Copy data from `data` to `buf`.
+function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
+    makemargin!(buf, nbytes)
+    unsafe_copy!(marginptr(buf), data, nbytes)
+    supplied!(buf, nbytes)
+    return buf
+end
+
+# Copy data from `buf` to `data`.
+function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
+    # NOTE: It's caller's responsibility to ensure that the buffer has at least
+    # nbytes.
+    @assert buffersize(buf) ≥ nbytes
+    unsafe_copy!(data, bufferptr(buf), nbytes)
+    consumed!(buf, nbytes)
+    return data
+end
+
 # Insert data to the current buffer.
 function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
     copy!(buf.data, buf.bufferpos + nbytes, buf.data, buf.bufferpos, buffersize(buf))
     unsafe_copy!(bufferptr(buf), data, nbytes)
-    buf.marginpos += nbytes
+    supplied!(buf, nbytes)
     return buf
-end
-
-# Read as much data as possbile from `input` to the margin of `output`.
-# This function will not block if `input` has buffered data.
-function readdata!(input::IO, output::Buffer)
-    nread::Int = 0
-    navail = nb_available(input)
-    if navail == 0 && marginsize(output) > 0 && !eof(input)
-        nread += writebyte!(output, read(input, UInt8))
-        navail = nb_available(input)
-    end
-    n = min(navail, marginsize(output))
-    Base.unsafe_read(input, marginptr(output), n)
-    output.marginpos += n
-    nread += n
-    output.total += nread
-    return nread
-end
-
-# Read data from `buf` to `dst`.
-function readdata!(buf::Buffer, dst::Vector{UInt8}, dpos::Integer, sz::Integer)
-    copy!(dst, dpos, buf.data, buf.bufferpos, sz)
-    buf.bufferpos += sz
-    return dst
-end
-
-# Write all data to `output` from the buffer of `input`.
-function writebuffer!(output::IO, input::Buffer)
-    while buffersize(input) > 0
-        input.bufferpos += Base.unsafe_write(output, bufferptr(input), buffersize(input))
-    end
 end
 
 # Find the first occurrence of a specific byte.
 function findbyte(buf::Buffer, byte::UInt8)
-    ptr = ccall(:memchr, Ptr{Void}, (Ptr{Void}, Cint, Csize_t), pointer(buf.data, buf.bufferpos), byte, buffersize(buf))
-    if ptr == C_NULL
-        return 0
+    p = ccall(
+        :memchr,
+        Ptr{UInt8},
+        (Ptr{UInt8}, Cint, Csize_t),
+        pointer(buf.data, buf.bufferpos), byte, buffersize(buf))
+    if p == C_NULL
+        return marginptr(buf)
     else
-        return Int(ptr - pointer(buf.data, buf.bufferpos)) + buf.bufferpos
+        return p
     end
 end
