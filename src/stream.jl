@@ -50,9 +50,27 @@ function checksharedbuf(sharedbuf::Bool, stream::IO)
 end
 
 """
-    TranscodingStream(codec::Codec, stream::IO; bufsize::Integer=$(DEFAULT_BUFFER_SIZE))
+    TranscodingStream(codec::Codec, stream::IO;
+                      bufsize::Integer=$(DEFAULT_BUFFER_SIZE),
+                      stop_on_end::Bool=false,
+                      sharedbuf::Bool=(stream isa TranscodingStream))
 
 Create a transcoding stream with `codec` and `stream`.
+
+Arguments
+---------
+
+- `codec`: The data transcoder.
+- `stream`: The wrapped stream.
+- `bufsize`: The initial buffer size.
+- `stop_on_end`:
+    The flag to stop transcoding on `:end` return code of `codec`.  The
+    transcoded data are readable even after the end of transcoding.  Note that
+    some extra data may be buffered from `stream` and thus `sharedbuf` must be
+    `true` to reuse `stream`.
+- `sharedbuf`:
+    The flag to share buffers between adjacent transcoding streams.  The value
+    must be `false` if `stream` is not a `TranscodingStream` object.
 
 Examples
 --------
@@ -74,8 +92,8 @@ julia> readstring(stream)
 """
 function TranscodingStream(codec::Codec, stream::IO;
                            bufsize::Integer=DEFAULT_BUFFER_SIZE,
-                           sharedbuf::Bool=(stream isa TranscodingStream),
-                           stop_on_end::Bool=false)
+                           stop_on_end::Bool=false,
+                           sharedbuf::Bool=(stream isa TranscodingStream))
     checkbufsize(bufsize)
     checksharedbuf(sharedbuf, stream)
     if sharedbuf
