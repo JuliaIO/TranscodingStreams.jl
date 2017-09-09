@@ -157,7 +157,7 @@ var documenterSearchIndex = {"docs": [
     "page": "References",
     "title": "Base.transcode",
     "category": "Method",
-    "text": "transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}\n\nTranscode data by applying codec.\n\nNote that this method does not deallocation of codec, which is efficient but the caller will need to deallocate codec.\n\nExamples\n\njulia> using CodecZlib\n\njulia> data = b\"abracadabra\";\n\njulia> compressed = transcode(ZlibCompression(), data);\n\njulia> decompressed = transcode(ZlibDecompression(), compressed);\n\njulia> String(decompressed)\n\"abracadabra\"\n\n\n\n\n"
+    "text": "transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}\n\nTranscode data by applying codec.\n\nNote that this method does not deallocation of codec, which is efficient but the caller may need to deallocate codec.\n\nExamples\n\njulia> using CodecZlib\n\njulia> data = b\"abracadabra\";\n\njulia> compressed = transcode(ZlibCompression(), data);\n\njulia> decompressed = transcode(ZlibDecompression(), compressed);\n\njulia> String(decompressed)\n\"abracadabra\"\n\n\n\n\n"
 },
 
 {
@@ -281,35 +281,51 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "references.html#TranscodingStreams.Memory",
-    "page": "References",
-    "title": "TranscodingStreams.Memory",
-    "category": "Type",
-    "text": "A contiguous memory.\n\nThis type works like a Vector method.\n\n\n\n"
-},
-
-{
-    "location": "references.html#TranscodingStreams.Error",
-    "page": "References",
-    "title": "TranscodingStreams.Error",
-    "category": "Type",
-    "text": "Container of transcoding error.\n\nAn object of this type is used to notify the caller of an exception that happened inside a transcoding method.  The error field is undefined at first but will be filled when data processing failed. The error should be set by calling the setindex! method (e.g. error[] = ErrorException(\"error!\")).\n\n\n\n"
-},
-
-{
-    "location": "references.html#TranscodingStreams.State",
-    "page": "References",
-    "title": "TranscodingStreams.State",
-    "category": "Type",
-    "text": "Stream state.\n\nA state will be one of the following modes:\n\n:idle : initial and intermediate mode, no buffered data.\n:read : ready to read data, data may be buffered.\n:write: ready to write data, data may be buffered.\n:close: closed, no buffered data.\n:panic: an exception has been thrown in codec, data may be buffered but we           cannot do anything.\n\n\n\n"
-},
-
-{
     "location": "references.html#Internal-types-1",
     "page": "References",
     "title": "Internal types",
     "category": "section",
     "text": "TranscodingStreams.Memory\nTranscodingStreams.Error\nTranscodingStreams.State"
+},
+
+{
+    "location": "devnotes.html#",
+    "page": "Developer's Notes",
+    "title": "Developer's Notes",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "devnotes.html#Developer's-Notes-1",
+    "page": "Developer's Notes",
+    "title": "Developer's Notes",
+    "category": "section",
+    "text": "These notes are not for end users but rather for developers who are interested in the design of the package."
+},
+
+{
+    "location": "devnotes.html#TranscodingStream-type-1",
+    "page": "Developer's Notes",
+    "title": "TranscodingStream type",
+    "category": "section",
+    "text": "TranscodingStream{C,S} (defined in src/stream.jl) has three fields:codec: data codec (<:C where C<:Codec)\nstream: data stream (<:S where S<:IO)\nstate: current state (<:State).A codec will be implemented by package developers and only a special codec Noop is defined in this package.  A stream can be any object that implements at least Base.isopen, Base.eof, Base.close, Base.nb_available, Base.unsafe_read, and Base.unsafe_write.  All mutable fields are delegated to state and hence the stream type itself is immutable.A stream has two buffers in the state field. These are used to store pre-transcoded and transcoded data in the stream. The stream passes references of these two buffers to the codec when processing data. The following diagram illustrates the flow of data:When reading data (`state.mode == :read`):\n  user <--- |state.buffer1| <--- <stream.codec> <--- |state.buffer2| <--- stream\n\nWhen writing data (`state.mode == :write`):\n  user ---> |state.buffer1| ---> <stream.codec> ---> |state.buffer2| ---> streamIn the read mode, a user pull out data from state.buffer1 and pre-transcoded data are filled in state.buffer2. In the write mode, a user will push data into state.buffer1 and transcoded data are filled in state.buffer2. The default buffer size is 16KiB for each.State (defined in src/state.jl) has five fields:mode: current stream mode (<:Symbol)\ncode: return code of the last codec's method call (<:Symbol)\nerror: exception returned by the codec (<:Error)\nbuffer1: data buffer that is closer to the user (<:Buffer)\nbuffer2: data buffer that is farther to the user (<:Buffer)The mode field may be one of the following value::idle : initial and intermediate mode, no buffered data\n:read : ready to read data, data may be buffered\n:write: ready to write data, data may be buffered\n:close: closed, no buffered data\n:panic: an exception has been thrown in codec, data may be buffered but we           cannot do anythingThe initial mode is :idle and mode transition happens as shown in the following diagram: (Image: Mode transition)The mode transition should happen in the changemode!(stream, newmode) function in src/stream.jl. Trying an undefined transition will thrown an exception.A transition happens based on actions (or function calls) of the user or return code of the codec. For example, calling read(stream) will change the mode from :init to :read and then calling close(stream) will change the mode from :read to :close. When data processing fails in the codec, a codec will return :error and the stream will result in :panic."
+},
+
+{
+    "location": "devnotes.html#Shared-buffers-1",
+    "page": "Developer's Notes",
+    "title": "Shared buffers",
+    "category": "section",
+    "text": "Adjacent transcoding streams may share their buffers. This will reduce memory allocation and eliminate data copy between buffers.readdata!(input::IO, output::Buffer) and writedata!(output::IO, input::Buffer) do the actual work of read/write data from/to the underlying stream. These methods have a special pass for shared buffers."
+},
+
+{
+    "location": "devnotes.html#Noop-codec-1",
+    "page": "Developer's Notes",
+    "title": "Noop codec",
+    "category": "section",
+    "text": "Noop (NoopStream) is a codec that does nothing. It works as a buffering layer on top of the underlying stream. Since NoopStream does not need to have two distinct buffers, buffer1 and buffer2 in the State object are shared and some specialized methods are defined for the type. All of these are defined in src/noop.jl."
 },
 
 ]}
