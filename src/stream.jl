@@ -444,13 +444,13 @@ function fillbuffer(stream::TranscodingStream)
     return nfilled
 end
 
-function flushbuffer(stream::TranscodingStream)
+function flushbuffer(stream::TranscodingStream, all::Bool=false)
     changemode!(stream, :write)
     state = stream.state
     buffer1 = state.buffer1
     buffer2 = state.buffer2
     nflushed::Int = 0
-    while makemargin!(buffer1, 0) == 0 # && state.mode != :stop
+    while (all ? buffersize(buffer1) > 0 : makemargin!(buffer1, 0) == 0) && state.mode != :stop
         if state.code == :end
             callstartproc(stream, :write)
         end
@@ -462,20 +462,7 @@ function flushbuffer(stream::TranscodingStream)
 end
 
 function flushbufferall(stream::TranscodingStream)
-    changemode!(stream, :write)
-    state = stream.state
-    buffer1 = state.buffer1
-    buffer2 = state.buffer2
-    nflushed::Int = 0
-    while buffersize(buffer1) > 0 && state.mode != :stop
-        if state.code == :end
-            callstartproc(stream, :write)
-        end
-        writedata!(stream.stream, buffer2)
-        Δin, _ = callprocess(stream, buffer1, buffer2)
-        nflushed += Δin
-    end
-    return nflushed
+    return flushbuffer(stream, true)
 end
 
 function flushuntilend(stream::TranscodingStream)

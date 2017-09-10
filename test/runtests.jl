@@ -391,3 +391,4 @@ end
 # TODO: This should be moved to CodecZlib.jl.
 import CodecZlib: GzipCompression, GzipDecompression
 TranscodingStreams.test_chunked_read(GzipCompression, GzipDecompression)
+TranscodingStreams.test_chunked_write(GzipCompression, GzipDecompression)
