@@ -41,6 +41,24 @@ function TranscodingStream(codec::Noop, stream::IO;
     return TranscodingStream(codec, stream, State(buffer, buffer))
 end
 
+function Base.seek(stream::NoopStream, pos::Integer)
+    seek(stream.stream, pos)
+    initbuffer!(stream.state.buffer1)
+    return
+end
+
+function Base.seekstart(stream::NoopStream)
+    seekstart(stream.stream)
+    initbuffer!(stream.state.buffer1)
+    return
+end
+
+function Base.seekend(stream::NoopStream)
+    seekend(stream.stream)
+    initbuffer!(stream.state.buffer1)
+    return
+end
+
 function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :read)
     buffer = stream.state.buffer1

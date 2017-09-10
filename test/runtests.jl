@@ -95,6 +95,17 @@ end
     @test !ismarked(stream)
     close(stream)
 
+    stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
+    seek(stream, 2)
+    @test read(stream, 3) == b"oba"
+    seek(stream, 0)
+    @test read(stream, 3) == b"foo"
+    seekstart(stream)
+    @test read(stream, 3) == b"foo"
+    seekend(stream)
+    @test eof(stream)
+    close(stream)
+
     data = collect(0x00:0x0f)
     stream = TranscodingStream(Noop(), IOBuffer(data))
     @test read(stream, UInt8) == data[1]
