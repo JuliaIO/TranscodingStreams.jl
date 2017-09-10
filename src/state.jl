@@ -4,7 +4,7 @@
 # See docs/src/devnotes.md.
 mutable struct State
     # current stream mode
-    mode::Symbol  # {:idle, :read, :write, :close, :panic, :stop}
+    mode::Symbol  # {:idle, :read, :write, :stop, :close, :panic}
 
     # return code of the last method call
     code::Symbol  # {:ok, :end, :error}
