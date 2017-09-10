@@ -139,7 +139,7 @@ function reset!(buf::Buffer)
     return buf.bufferpos
 end
 
-# Make margin with ≥`minsize`.
+# Make margin with ≥`minsize` and return the size of it.
 function makemargin!(buf::Buffer, minsize::Integer)
     @assert minsize ≥ 0
     if buffersize(buf) == 0 && buf.markpos == 0

@@ -379,7 +379,7 @@ const TOKEN_END = EndToken()
 function Base.write(stream::TranscodingStream, ::EndToken)
     changemode!(stream, :write)
     flushbufferall(stream)
-    finish(stream)
+    flushuntilend(stream)
     return 0
 end
 
@@ -434,11 +434,6 @@ function fillbuffer(stream::TranscodingStream)
             if buffersize(buffer2) == 0 && eof(stream.stream)
                 break
             end
-            # reset
-            #stream.state.code = startproc(stream.codec, :read, stream.state.error)
-            #if stream.state.code == :error
-            #    changemode!(stream, :panic)
-            #end
             callstartproc(stream, :read)
         end
         makemargin!(buffer2, 1)
@@ -449,26 +444,12 @@ function fillbuffer(stream::TranscodingStream)
     return nfilled
 end
 
-#=
-function flushbuffer(stream::TranscodingStream)
-    changemode!(stream, :write)
-    nflushed::Int = 0
-    makemargin!(stream.state.buffer1, 0)
-    while marginsize(stream.state.buffer1) == 0
-        nflushed += process_to_write(stream)
-    end
-    return nflushed
-end
-=#
-
 function flushbuffer(stream::TranscodingStream)
     changemode!(stream, :write)
     state = stream.state
     buffer1 = state.buffer1
     buffer2 = state.buffer2
     nflushed::Int = 0
-    #makemargin!(stream.state.buffer1, 0)
-    #while marginsize(buffer1) == 0 && state.mode != :stop
     while makemargin!(buffer1, 0) == 0 # && state.mode != :stop
         if state.code == :end
             callstartproc(stream, :write)
@@ -497,7 +478,7 @@ function flushbufferall(stream::TranscodingStream)
     return nflushed
 end
 
-function finish(stream::TranscodingStream)
+function flushuntilend(stream::TranscodingStream)
     changemode!(stream, :write)
     state = stream.state
     buffer1 = state.buffer1
@@ -510,48 +491,6 @@ function finish(stream::TranscodingStream)
     @assert buffersize(buffer1) == 0
     return
 end
-
-#=
-function flushbufferall(stream::TranscodingStream)
-    changemode!(stream, :write)
-    nflushed::Int = 0
-    while buffersize(stream.state.buffer1) > 0
-        nflushed += process_to_write(stream)
-    end
-    return nflushed
-end
-=#
-
-#=
-function processall(stream::TranscodingStream)
-    @assert stream.state.mode == :write
-    while buffersize(stream.state.buffer1) > 0 || stream.state.code != :end
-        process_to_write(stream)
-    end
-    while buffersize(stream.state.buffer2) > 0
-        writedata!(stream.stream, stream.state.buffer2)
-    end
-    @assert buffersize(stream.state.buffer1) == buffersize(stream.state.buffer2) == 0
-end
-=#
-
-#=
-function process_to_write(stream::TranscodingStream)
-    buffer1 = stream.state.buffer1
-    if buffersize(buffer1) > 0 && stream.state.code == :end
-        # reset
-        stream.state.code = startproc(stream.codec, :write, stream.state.error)
-        if stream.state.code == :error
-            changemode!(stream, :panic)
-        end
-    end
-    buffer2 = stream.state.buffer2
-    writedata!(stream.stream, buffer2)
-    Δin, _ = callprocess(stream, buffer1, buffer2)
-    makemargin!(buffer1, 0)
-    return Δin
-end
-=#
 
 
 # Interface to codec
@@ -669,7 +608,7 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
         if newmode == :close || newmode == :stop
             if newmode == :close
                 flushbufferall(stream)
-                finish(stream)
+                flushuntilend(stream)
             end
             state.mode = newmode
             finalize_codec(stream.codec, state.error)

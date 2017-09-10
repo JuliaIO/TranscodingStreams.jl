@@ -350,7 +350,7 @@ TranscodingStreams.minoutsize(::QuadrupleCodec, ::Memory) = 4
 
     data = "x"^1024
     transcode(QuadrupleCodec(), data)
-    #@test (@allocated transcode(QuadrupleCodec(), data)) < sizeof(data) * 5
+    @test (@allocated transcode(QuadrupleCodec(), data)) < sizeof(data) * 5
 
     stream = TranscodingStream(QuadrupleCodec(), NoopStream(IOBuffer("foo")))
     @test read(stream) == b"ffffoooooooo"
