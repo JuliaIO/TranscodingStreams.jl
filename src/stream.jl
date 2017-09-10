@@ -500,7 +500,6 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
     consumed!(inbuf, Δin)
     supplied!(outbuf, Δout)
-    #@show Δin, Δout, state.code, state.stop_on_end
     if state.code == :error
         changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
@@ -511,6 +510,10 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     end
     return Δin, Δout
 end
+
+
+# I/O operations
+# --------------
 
 # Read as much data as possbile from `input` to the margin of `output`.
 # This function will not block if `input` has buffered data.
@@ -548,8 +551,8 @@ function writedata!(output::IO, input::Buffer)
 end
 
 
-# State Transition
-# ----------------
+# Mode Transition
+# ---------------
 
 # Change the current mode.
 function changemode!(stream::TranscodingStream, newmode::Symbol)
@@ -576,7 +579,7 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             end
             state.mode = newmode
             return
-        elseif newmode == :close || newmode == :stop
+        elseif newmode == :close
             state.mode = newmode
             finalize_codec(stream.codec, state.error)
             return
@@ -588,8 +591,10 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             return
         end
     elseif mode == :write
-        if newmode == :close
-            processall(stream)
+        if newmode == :close || newmode == :stop
+            if newmode == :close
+                processall(stream)
+            end
             state.mode = newmode
             finalize_codec(stream.codec, state.error)
             return
