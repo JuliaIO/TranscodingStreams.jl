@@ -41,6 +41,19 @@ function TranscodingStream(codec::Noop, stream::IO;
     return TranscodingStream(codec, stream, State(buffer, buffer))
 end
 
+"""
+    position(stream::NoopStream)
+
+Get the current poition of `stream`.
+
+Note that this method may return a wrong position when
+- some data have been inserted by `TranscodingStreams.unread`, or
+- the position of the wrapped stream has been changed outside of this package.
+"""
+function Base.position(stream::NoopStream)
+    return position(stream.stream) - buffersize(stream.state.buffer1)
+end
+
 function Base.seek(stream::NoopStream, pos::Integer)
     seek(stream.stream, pos)
     initbuffer!(stream.state.buffer1)
