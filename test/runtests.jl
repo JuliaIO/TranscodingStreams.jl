@@ -80,6 +80,13 @@ end
     @test take!(sink) == data
     close(stream)
 
+    stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
+    @test position(stream) === 0
+    read(stream, UInt8)
+    @test position(stream) === 1
+    read(stream)
+    @test position(stream) === 9
+
     data = collect(0x00:0x0f)
     stream = TranscodingStream(Noop(), IOBuffer(data))
     @test !ismarked(stream)
