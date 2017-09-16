@@ -44,24 +44,32 @@ default buffer size is 16KiB for each.
 
 The `mode` field may be one of the following value:
 - `:idle` : initial and intermediate mode, no buffered data
-- `:read` : ready to read data, data may be buffered
-- `:write`: ready to write data, data may be buffered
+- `:read` : being ready to read data, data may be buffered
+- `:write`: being ready to write data, data may be buffered
+- `:stop` : transcoding is stopped, data may be buffered
 - `:close`: closed, no buffered data
 - `:panic`: an exception has been thrown in codec, data may be buffered but we
             cannot do anything
+
+Note that `mode=:stop` does not mean there is no data available in the stream.
+This is because transcoded data may be left in the buffer.
 
 The initial mode is `:idle` and mode transition happens as shown in the
 following diagram:
 ![Mode transition](./assets/modes.svg)
 
-The mode transition should happen in the `changemode!(stream, newmode)` function
-in src/stream.jl. Trying an undefined transition will thrown an exception.
+Modes surrounded by a bold circle are a state in which the transcoding stream
+has released resources by calling `finalize(codec)`.  The mode transition should
+happen in the `changemode!(stream, newmode)` function in src/stream.jl. Trying
+an undefined transition will thrown an exception.
 
-A transition happens based on actions (or function calls) of the user or return
-code of the codec. For example, calling `read(stream)` will change the mode from
-`:init` to `:read` and then calling `close(stream)` will change the mode from
-`:read` to `:close`. When data processing fails in the codec, a codec will
-return `:error` and the stream will result in `:panic`.
+A transition happens according to internal or external events of the transcoding
+stream. The status code and the error object returned by codec methods are
+internal events, and user's method calls are external events.  For example,
+calling `read(stream)` will change the mode from `:init` to `:read` and then
+calling `close(stream)` will change the mode from `:read` to `:close`. When data
+processing fails in the codec, a codec will return `:error` and the stream will
+result in `:panic`.
 
 
 Shared buffers

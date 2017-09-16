@@ -155,7 +155,7 @@ function flushbufferall(stream::NoopStream)
     return bufsize
 end
 
-function processall(stream::NoopStream)
-    flushbufferall(stream)
-    @assert buffersize(stream.state.buffer1) == 0
+function flushuntilend(stream::NoopStream)
+    writedata!(stream.stream, stream.state.buffer1)
+    return
 end

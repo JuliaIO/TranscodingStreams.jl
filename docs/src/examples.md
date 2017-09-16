@@ -132,6 +132,34 @@ Effectively, this is equivalent to the following pipeline:
 
     cat data.txt.gz | gzip -d | zstd >data.txt.zst
 
+Stop decoding on the end of a block
+-----------------------------------
+
+Most codecs support decoding concatenated data blocks. For example, if you
+concatenate two gzip files into a file and read it using
+`GzipDecompressionStream`, you will see the byte stream of concatenation of two
+files. If you need the first part of the file, you can set `stop_on_end` to
+`true` to stop transcoding at the end of the first block:
+```julia
+using CodecZlib
+# cat foo.txt.gz bar.txt.gz > foobar.txt.gz
+stream = GzipDecompressionStream(open("foobar.txt.gz"), stop_on_end=true)
+read(stream)  #> the content of foo.txt
+eof(stream)   #> true
+```
+
+In the case where you need to reuse the wrapped stream, the code above must be
+slightly modified because the transcoding stream may read more bytes than
+necessary from the wrapped stream. By wrapping a stream with `NoopStream`, the
+problem of overreading is resolved:
+```julia
+using CodecZlib
+using TranscodingStreams
+stream = NoopStream(open("foobar.txt.gz"))
+read(GzipDecompressionStream(stream, stop_on_end=true))  #> the content of foo.txt
+read(GzipDecompressionStream(stream, stop_on_end=true))  #> the content of bar.txt
+```
+
 Transcode data in one shot
 --------------------------
 

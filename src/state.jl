@@ -4,10 +4,13 @@
 # See docs/src/devnotes.md.
 mutable struct State
     # current stream mode
-    mode::Symbol
+    mode::Symbol  # {:idle, :read, :write, :stop, :close, :panic}
 
-    # return code of the last method call (:ok or :end)
-    code::Symbol
+    # return code of the last method call
+    code::Symbol  # {:ok, :end, :error}
+
+    # flag to go :stop on :end
+    stop_on_end::Bool
 
     # exception thrown while data processing
     error::Error
@@ -16,11 +19,11 @@ mutable struct State
     buffer1::Buffer
     buffer2::Buffer
 
-    function State(size::Integer)
-        return new(:idle, :ok, Error(), Buffer(size), Buffer(size))
-    end
-
     function State(buffer1::Buffer, buffer2::Buffer)
-        return new(:idle, :ok, Error(), buffer1, buffer2)
+        return new(:idle, :ok, false, Error(), buffer1, buffer2)
     end
+end
+
+function State(size::Integer)
+    return State(Buffer(size), Buffer(size))
 end

@@ -1,8 +1,10 @@
 # Test Tools
 # ==========
 
+TEST_RANDOM_SEED = 12345
+
 function test_roundtrip_read(encoder, decoder)
-    srand(12345)
+    srand(TEST_RANDOM_SEED)
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
         file = IOBuffer(data)
@@ -13,7 +15,7 @@ function test_roundtrip_read(encoder, decoder)
 end
 
 function test_roundtrip_write(encoder, decoder)
-    srand(12345)
+    srand(TEST_RANDOM_SEED)
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
         file = IOBuffer()
@@ -25,7 +27,7 @@ function test_roundtrip_write(encoder, decoder)
 end
 
 function test_roundtrip_transcode(encode, decode)
-    srand(12345)
+    srand(TEST_RANDOM_SEED)
     encoder = encode()
     decoder = decode()
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
@@ -38,7 +40,7 @@ function test_roundtrip_transcode(encode, decode)
 end
 
 function test_roundtrip_lines(encoder, decoder)
-    srand(12345)
+    srand(TEST_RANDOM_SEED)
     lines = String[]
     buf = IOBuffer()
     stream = encoder(buf)
@@ -51,4 +53,44 @@ function test_roundtrip_lines(encoder, decoder)
     flush(stream)
     seekstart(buf)
     Base.Test.@test hash(lines) == hash(readlines(decoder(buf)))
+end
+
+function test_chunked_read(Encoder, Decoder)
+    srand(TEST_RANDOM_SEED)
+    alpha = b"色即是空"
+    encoder = Encoder()
+    initialize(encoder)
+    for _ in 1:500
+        chunks = [rand(alpha, rand(0:100)) for _ in 1:rand(1:100)]
+        data = mapfoldl(x->transcode(encoder, x), vcat, UInt8[], chunks)
+        buffer = NoopStream(IOBuffer(data))
+        ok = true
+        for chunk in chunks
+            stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
+            ok &= hash(read(stream)) == hash(chunk)
+            ok &= eof(stream)
+        end
+        Base.Test.@test ok
+    end
+    finalize(encoder)
+end
+
+function test_chunked_write(Encoder, Decoder)
+    srand(TEST_RANDOM_SEED)
+    alpha = b"空即是色"
+    encoder = Encoder()
+    initialize(encoder)
+    for _ in 1:500
+        chunks = [rand(alpha, rand(0:100)) for _ in 1:2]
+        data = map(x->transcode(encoder, x), chunks)
+        buffer = IOBuffer()
+        stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
+        write(stream, vcat(data...))
+        flush(stream)
+        ok = true
+        ok &= hash(take!(buffer)) == hash(chunks[1])
+        ok &= buffersize(stream.state.buffer1) == length(data[2])
+        Base.Test.@test ok
+    end
+    finalize(encoder)
 end
