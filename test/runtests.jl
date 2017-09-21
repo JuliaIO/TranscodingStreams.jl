@@ -392,3 +392,14 @@ end
 import CodecZlib: GzipCompression, GzipDecompression
 TranscodingStreams.test_chunked_read(GzipCompression, GzipDecompression)
 TranscodingStreams.test_chunked_write(GzipCompression, GzipDecompression)
+
+@testset "seek" begin
+    data = transcode(GzipCompression, b"abracadabra")
+    stream = TranscodingStream(GzipDecompression(), IOBuffer(data))
+    seekstart(stream)
+    @test read(stream, 3) == b"abr"
+    seekstart(stream)
+    @test read(stream, 3) == b"abr"
+    seekend(stream)
+    #@test eof(stream)
+end

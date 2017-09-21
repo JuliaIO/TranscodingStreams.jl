@@ -119,6 +119,16 @@ function splitkwargs(kwargs, keys)
     return hits, others
 end
 
+# Check that mode is valid.
+macro checkmode(validmodes)
+    mode = esc(:mode)
+    quote
+        if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), false, eval(validmodes)))
+            throw(ArgumentError(string("invalid mode :", $(mode))))
+        end
+    end
+end
+
 
 # Base IO Functions
 # -----------------
@@ -209,6 +219,34 @@ function Base.skip(stream::TranscodingStream, offset::Integer)
         # TODO: support skip in write mode
         throw(ArgumentError("not in read mode"))
     end
+    return
+end
+
+
+# Seek Operations
+# ---------------
+
+function Base.seekstart(stream::TranscodingStream)
+    mode = stream.state.mode
+    @checkmode (:idle, :read, :write)
+    if mode == :read || mode == :write
+        callstartproc(stream, mode)
+        emptybuffer!(stream.state.buffer1)
+        emptybuffer!(stream.state.buffer2)
+    end
+    seekstart(stream.stream)
+    return
+end
+
+function Base.seekend(stream::TranscodingStream)
+    mode = stream.state.mode
+    @checkmode (:idle, :read, :write)
+    if mode == :read || mode == :write
+        callstartproc(stream, mode)
+        emptybuffer!(stream.state.buffer1)
+        emptybuffer!(stream.state.buffer2)
+    end
+    seekend(stream.stream)
     return
 end
 
