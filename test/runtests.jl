@@ -403,3 +403,9 @@ TranscodingStreams.test_chunked_write(GzipCompression, GzipDecompression)
     seekend(stream)
     #@test eof(stream)
 end
+
+@testset "panic" begin
+    stream = TranscodingStream(GzipDecompression(), IOBuffer("some invalid data"))
+    @test_throws ErrorException read(stream)
+    @test_throws ArgumentError eof(stream)
+end
