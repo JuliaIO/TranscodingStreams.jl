@@ -232,6 +232,12 @@ end
     @test TranscodingStreams.stats(stream).out === Int64(6)
     close(stream)
 
+    stream = TranscodingStream(Noop(), IOBuffer())
+    @test stream.state.mode == :idle
+    @test write(stream) == 0
+    @test stream.state.mode == :write
+    close(stream)
+
     stream = NoopStream(IOBuffer("foobar"))
     @test nb_available(stream) === 0
     @test readavailable(stream) == b""
@@ -313,7 +319,6 @@ end
     close(stream)
 
     stream = NoopStream(IOBuffer(""))
-    @test eof(stream)  # idle
     unsafe_write(stream, C_NULL, 0)
     @test eof(stream)  # write
     close(stream)
