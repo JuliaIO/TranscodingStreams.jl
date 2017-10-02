@@ -431,7 +431,7 @@ function Base.flush(stream::TranscodingStream)
 end
 
 
-# Utils
+# Stats
 # -----
 
 """
@@ -450,13 +450,23 @@ struct Stats
     transcoded_out::Int64
 end
 
+function Base.show(io::IO, stats::Stats)
+    println(io, summary(stats), ':')
+    println(io, "  consumed: ", stats.consumed)
+    println(io, "  supplied: ", stats.supplied)
+    println(io, "  transcoded_in: ", stats.transcoded_in)
+      print(io, "  transcoded_out: ", stats.transcoded_out)
+end
+
 function stats(stream::TranscodingStream)
     state = stream.state
     mode = state.mode
     @checkmode (:idle, :read, :write)
     buffer1 = state.buffer1
     buffer2 = state.buffer2
-    if mode == :read
+    if mode == :idle
+        transcoded_in = transcoded_out = consumed = supplied = 0
+    elseif mode == :read
         transcoded_in = buffer2.total
         transcoded_out = buffer1.total
         consumed = transcoded_in - buffersize(buffer2)
@@ -466,8 +476,6 @@ function stats(stream::TranscodingStream)
         transcoded_out = buffer2.total
         consumed = transcoded_out - buffersize(buffer2)
         supplied = transcoded_in + buffersize(buffer1)
-    elseif mode == :idle
-        transcoded_in = transcoded_out = consumed = supplied = 0
     else
         assert(false)
     end

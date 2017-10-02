@@ -114,6 +114,30 @@ function Base.transcode(::Noop, data::Vector{UInt8})
 end
 
 
+# Stats
+# -----
+
+function stats(stream::NoopStream)
+    state = stream.state
+    mode = state.mode
+    @checkmode (:idle, :read, :write)
+    buffer = state.buffer1
+    @assert buffer == stream.state.buffer2
+    if mode == :idle
+        consumed = supplied = 0
+    elseif mode == :read
+        supplied = buffer.total
+        consumed = supplied - buffersize(buffer)
+    elseif mode == :write
+        supplied = buffer.total + buffersize(buffer)
+        consumed = buffer.total
+    else
+        assert(false)
+    end
+    return Stats(consumed, supplied, supplied, supplied)
+end
+
+
 # Buffering
 # ---------
 #
@@ -133,29 +157,28 @@ function fillbuffer(stream::NoopStream)
         makemargin!(buffer, 1)
         nfilled += readdata!(stream.stream, buffer)
     end
+    buffer.total += nfilled
     return nfilled
 end
 
-function flushbuffer(stream::NoopStream)
+function flushbuffer(stream::NoopStream, all::Bool=false)
     changemode!(stream, :write)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
-    nflushed = writedata!(stream.stream, buffer)
-    makemargin!(buffer, 0)
+    nflushed::Int = 0
+    if all
+        while buffersize(buffer) > 0
+            nflushed += writedata!(stream.stream, buffer)
+        end
+    else
+        nflushed += writedata!(stream.stream, buffer)
+        makemargin!(buffer, 0)
+    end
+    buffer.total += nflushed
     return nflushed
 end
 
-function flushbufferall(stream::NoopStream)
-    changemode!(stream, :write)
-    buffer = stream.state.buffer1
-    bufsize = buffersize(buffer)
-    while buffersize(buffer) > 0
-        writedata!(stream.stream, buffer)
-    end
-    return bufsize
-end
-
 function flushuntilend(stream::NoopStream)
-    writedata!(stream.stream, stream.state.buffer1)
+    stream.state.buffer1.total += writedata!(stream.stream, stream.state.buffer1)
     return
 end
