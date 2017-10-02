@@ -30,6 +30,21 @@ using Base.Test
     @test mem.size == sizeof(data)
 end
 
+@testset "Stats" begin
+    stats = TranscodingStreams.Stats(1,2,3,4)
+    @test repr(stats) ==
+    """
+    TranscodingStreams.Stats:
+      consumed: 1
+      supplied: 2
+      transcoded_in: 3
+      transcoded_out: 4"""
+    @test stats.consumed == 1
+    @test stats.supplied == 2
+    @test stats.transcoded_in == 3
+    @test stats.transcoded_out == 4
+end
+
 @testset "TranscodingStream" begin
     @test TranscodingStreams.splitkwargs(
         [(:foo, 1), (:bar, true), (:baz, :ok)], (:foo,)) ==
