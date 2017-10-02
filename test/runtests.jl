@@ -373,6 +373,10 @@ TranscodingStreams.minoutsize(::QuadrupleCodec, ::Memory) = 4
     @test stream1.state.buffer1 !== stream2.state.buffer2
     close(stream1)
     close(stream2)
+
+    stream = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
+    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(13)), 13)
+    close(stream)
 end
 
 # TODO: Remove this in the future.
