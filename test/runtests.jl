@@ -409,3 +409,9 @@ end
     @test_throws ErrorException read(stream)
     @test_throws ArgumentError eof(stream)
 end
+
+@testset "open" begin
+    open(CodecZlib.GzipDecompressionStream, joinpath(dirname(@__FILE__), "abra.gzip")) do stream
+        @test read(stream) == b"abracadabra"
+    end
+end
