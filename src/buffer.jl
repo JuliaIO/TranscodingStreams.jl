@@ -89,6 +89,18 @@ function supplied!(buf::Buffer, n::Integer)
     return buf
 end
 
+function consumed2!(buf::Buffer, n::Integer)
+    buf.bufferpos += n
+    buf.total += n
+    return buf
+end
+
+function supplied2!(buf::Buffer, n::Integer)
+    buf.marginpos += n
+    buf.total += n
+    return buf
+end
+
 function readbyte!(buf::Buffer)
     b = buf.data[buf.bufferpos]
     consumed!(buf, 1)

@@ -200,7 +200,6 @@ end
     @test s1.state.buffer1 === s2.state.buffer1 === s3.state.buffer1 ===
           s1.state.buffer2 === s2.state.buffer2 === s3.state.buffer2
 
-    #= FIXME: restore these tests
     stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
     @test TranscodingStreams.total_in(stream) === Int64(0)
     @test TranscodingStreams.total_out(stream) === Int64(0)
@@ -217,7 +216,6 @@ end
     @test TranscodingStreams.total_in(stream) === Int64(6)
     @test TranscodingStreams.total_out(stream) === Int64(6)
     close(stream)
-    =#
 
     stream = NoopStream(IOBuffer("foobar"))
     @test nb_available(stream) === 0

@@ -434,28 +434,52 @@ end
 # Utils
 # -----
 
-function total_in(stream::TranscodingStream)::Int64
-    checkmode(stream)
+"""
+I/O statistics.
+
+This type has four fields:
+- `consumed`: the number of bytes consumed from the stream
+- `supplied`: the number of bytes supplied to the stream
+- `transcoded_in`: the number of bytes transcoded from the input buffer
+- `transcoded_out`: the number of bytes transcoded to the output buffer
+"""
+struct Stats
+    consumed::Int64
+    supplied::Int64
+    transcoded_in::Int64
+    transcoded_out::Int64
+end
+
+function stats(stream::TranscodingStream)
     state = stream.state
-    if state.mode == :read
-        return state.buffer2.total
-    elseif state.mode == :write
-        return state.buffer1.total
+    mode = state.mode
+    @checkmode (:idle, :read, :write)
+    buffer1 = state.buffer1
+    buffer2 = state.buffer2
+    if mode == :read
+        transcoded_in = buffer2.total
+        transcoded_out = buffer1.total
+        consumed = transcoded_in - buffersize(buffer2)
+        supplied = transcoded_out + buffersize(buffer1)
+    elseif mode == :write
+        transcoded_in = buffer1.total
+        transcoded_out = buffer2.total
+        consumed = transcoded_out - buffersize(buffer2)
+        supplied = transcoded_in + buffersize(buffer1)
+    elseif mode == :idle
+        transcoded_in = transcoded_out = consumed = supplied = 0
     else
-        return zero(Int64)
+        assert(false)
     end
+    return Stats(consumed, supplied, transcoded_in, transcoded_out)
+end
+
+function total_in(stream::TranscodingStream)::Int64
+    return stats(stream).consumed
 end
 
 function total_out(stream::TranscodingStream)::Int64
-    checkmode(stream)
-    state = stream.state
-    if state.mode == :read
-        return state.buffer1.total
-    elseif state.mode == :write
-        return state.buffer2.total
-    else
-        return zero(Int64)
-    end
+    return stats(stream).supplied
 end
 
 
@@ -537,8 +561,8 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     input = buffermem(inbuf)
     makemargin!(outbuf, minoutsize(stream.codec, input))
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
-    consumed!(inbuf, Δin)
-    supplied!(outbuf, Δout)
+    consumed2!(inbuf, Δin)
+    supplied2!(outbuf, Δout)
     if state.code == :error
         changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
