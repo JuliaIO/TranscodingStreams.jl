@@ -469,8 +469,8 @@ function stats(stream::TranscodingStream)
     elseif mode == :read
         transcoded_in = buffer2.total
         transcoded_out = buffer1.total
-        consumed = transcoded_in - buffersize(buffer2)
-        supplied = transcoded_out + buffersize(buffer1)
+        consumed = transcoded_out - buffersize(buffer1)
+        supplied = transcoded_in + buffersize(buffer2)
     elseif mode == :write
         transcoded_in = buffer1.total
         transcoded_out = buffer2.total
