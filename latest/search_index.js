@@ -113,6 +113,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "examples.html#Check-I/O-statistics-1",
+    "page": "Examples",
+    "title": "Check I/O statistics",
+    "category": "section",
+    "text": "TranscodingStreams.stats returns a snapshot of the I/O statistics. For example, the following function shows progress of decompression to the standard error:using CodecZlib\n\nfunction decompress(input, output)\n    buffer = Vector{UInt8}(16 * 1024)\n    while !eof(input)\n        n = min(nb_available(input), length(buffer))\n        unsafe_read(input, pointer(buffer), n)\n        unsafe_write(output, pointer(buffer), n)\n        stats = TranscodingStreams.stats(input)\n        print(STDERR, \"\\rin: $(stats.in), out: $(stats.out)\")\n    end\n    println(STDERR)\nend\n\ninput = GzipDecompressionStream(open(\"foobar.txt.gz\"))\noutput = IOBuffer()\ndecompress(input, output)stats.in is the number of bytes supplied to the stream and stats.out is the number of bytes consumed out of the stream."
+},
+
+{
     "location": "examples.html#Transcode-data-in-one-shot-1",
     "page": "Examples",
     "title": "Transcode data in one shot",
@@ -206,6 +214,30 @@ var documenterSearchIndex = {"docs": [
     "title": "TranscodingStream",
     "category": "section",
     "text": "TranscodingStream(codec::Codec, stream::IO)\ntranscode(codec::Codec, data::Vector{UInt8})\nTranscodingStreams.TOKEN_END\nTranscodingStreams.unsafe_read\nTranscodingStreams.unread\nTranscodingStreams.unsafe_unread"
+},
+
+{
+    "location": "references.html#TranscodingStreams.Stats",
+    "page": "References",
+    "title": "TranscodingStreams.Stats",
+    "category": "Type",
+    "text": "I/O statistics.\n\nIts object has four fields:\n\nin: the number of bytes supplied into the stream\nout: the number of bytes consumed out of the stream\ntranscoded_in: the number of bytes transcoded from the input buffer\ntranscoded_out: the number of bytes transcoded to the output buffer\n\nNote that, since the transcoding stream does buffering, in is transcoded_in + {size of buffered data} and out is transcoded_out - {size of buffered data}.\n\n\n\n"
+},
+
+{
+    "location": "references.html#TranscodingStreams.stats",
+    "page": "References",
+    "title": "TranscodingStreams.stats",
+    "category": "Function",
+    "text": "stats(stream::TranscodingStream)\n\nCreate an I/O statistics object of stream.\n\n\n\n"
+},
+
+{
+    "location": "references.html#Statistics-1",
+    "page": "References",
+    "title": "Statistics",
+    "category": "section",
+    "text": "TranscodingStreams.Stats\nTranscodingStreams.stats"
 },
 
 {
