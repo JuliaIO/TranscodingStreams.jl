@@ -431,31 +431,64 @@ function Base.flush(stream::TranscodingStream)
 end
 
 
-# Utils
+# Stats
 # -----
 
-function total_in(stream::TranscodingStream)::Int64
-    checkmode(stream)
-    state = stream.state
-    if state.mode == :read
-        return state.buffer2.total
-    elseif state.mode == :write
-        return state.buffer1.total
-    else
-        return zero(Int64)
-    end
+"""
+I/O statistics.
+
+Its object has four fields:
+- `in`: the number of bytes supplied into the stream
+- `out`: the number of bytes consumed out of the stream
+- `transcoded_in`: the number of bytes transcoded from the input buffer
+- `transcoded_out`: the number of bytes transcoded to the output buffer
+
+Note that, since the transcoding stream does buffering, `in` is `transcoded_in +
+{size of buffered data}` and `out` is `transcoded_out - {size of buffered
+data}`.
+"""
+struct Stats
+    in::Int64
+    out::Int64
+    transcoded_in::Int64
+    transcoded_out::Int64
 end
 
-function total_out(stream::TranscodingStream)::Int64
-    checkmode(stream)
+function Base.show(io::IO, stats::Stats)
+    println(io, summary(stats), ':')
+    println(io, "  in: ", stats.in)
+    println(io, "  out: ", stats.out)
+    println(io, "  transcoded_in: ", stats.transcoded_in)
+      print(io, "  transcoded_out: ", stats.transcoded_out)
+end
+
+"""
+    stats(stream::TranscodingStream)
+
+Create an I/O statistics object of `stream`.
+"""
+function stats(stream::TranscodingStream)
     state = stream.state
-    if state.mode == :read
-        return state.buffer1.total
-    elseif state.mode == :write
-        return state.buffer2.total
+    mode = state.mode
+    @checkmode (:idle, :read, :write)
+    buffer1 = state.buffer1
+    buffer2 = state.buffer2
+    if mode == :idle
+        transcoded_in = transcoded_out = in = out = 0
+    elseif mode == :read
+        transcoded_in = buffer2.total
+        transcoded_out = buffer1.total
+        in = transcoded_in + buffersize(buffer2)
+        out = transcoded_out - buffersize(buffer1)
+    elseif mode == :write
+        transcoded_in = buffer1.total
+        transcoded_out = buffer2.total
+        in = transcoded_in + buffersize(buffer1)
+        out = transcoded_out - buffersize(buffer2)
     else
-        return zero(Int64)
+        assert(false)
     end
+    return Stats(in, out, transcoded_in, transcoded_out)
 end
 
 
@@ -537,8 +570,8 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     input = buffermem(inbuf)
     makemargin!(outbuf, minoutsize(stream.codec, input))
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
-    consumed!(inbuf, Δin)
-    supplied!(outbuf, Δout)
+    consumed2!(inbuf, Δin)
+    supplied2!(outbuf, Δout)
     if state.code == :error
         changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
