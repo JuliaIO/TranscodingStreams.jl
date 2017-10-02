@@ -165,11 +165,12 @@ function makemargin!(buf::Buffer, minsize::Integer)
             datasize = buf.marginpos - buf.markpos
         end
         copy!(buf.data, 1, buf.data, datapos, datasize)
+        shift = datapos - 1
         if buf.markpos > 0
-            buf.markpos -= datapos - 1
+            buf.markpos -= shift
         end
-        buf.bufferpos -= datapos - 1
-        buf.marginpos -= datapos - 1
+        buf.bufferpos -= shift
+        buf.marginpos -= shift
     end
     if marginsize(buf) < minsize
         # expand data buffer
