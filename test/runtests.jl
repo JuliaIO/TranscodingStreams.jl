@@ -319,7 +319,6 @@ end
     close(stream)
 
     stream = NoopStream(IOBuffer(""))
-    @test eof(stream)  # idle
     unsafe_write(stream, C_NULL, 0)
     @test eof(stream)  # write
     close(stream)
