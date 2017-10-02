@@ -437,11 +437,15 @@ end
 """
 I/O statistics.
 
-This type has four fields:
+Its object has four fields:
 - `consumed`: the number of bytes consumed from the stream
 - `supplied`: the number of bytes supplied to the stream
 - `transcoded_in`: the number of bytes transcoded from the input buffer
 - `transcoded_out`: the number of bytes transcoded to the output buffer
+
+Note that, since the transcoding stream does buffering, `consumed` is
+`transcoded_out - {size of buffered data}`  and `supplied` is `transcoded_in +
+{size of buffered data}`.
 """
 struct Stats
     consumed::Int64
@@ -458,6 +462,11 @@ function Base.show(io::IO, stats::Stats)
       print(io, "  transcoded_out: ", stats.transcoded_out)
 end
 
+"""
+    stats(stream::TranscodingStream)
+
+Create an I/O statistics object of `stream`.
+"""
 function stats(stream::TranscodingStream)
     state = stream.state
     mode = state.mode

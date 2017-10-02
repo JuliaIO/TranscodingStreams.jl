@@ -17,6 +17,14 @@ TranscodingStreams.unread
 TranscodingStreams.unsafe_unread
 ```
 
+Statistics
+----------
+
+```@docs
+TranscodingStreams.Stats
+TranscodingStreams.stats
+```
+
 Codec
 -----
 
