@@ -131,9 +131,7 @@ function unmark!(buf::Buffer)
 end
 
 function reset!(buf::Buffer)
-    if buf.markpos == 0
-        throw(ArgumentError("not marked"))
-    end
+    @assert buf.markpos > 0
     buf.bufferpos = buf.markpos
     buf.markpos = 0
     return buf.bufferpos
@@ -177,9 +175,7 @@ end
 
 # Skip `n` bytes in the buffer.
 function skipbuffer!(buf::Buffer, n::Integer)
-    if n > buffersize(buf)
-        throw(ArgumentError("too large skip size"))
-    end
+    @assert n ≤ buffersize(buf)
     consumed!(buf, n)
     return buf
 end
