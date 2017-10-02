@@ -55,6 +55,20 @@ function test_roundtrip_lines(encoder, decoder)
     Base.Test.@test hash(lines) == hash(readlines(decoder(buf)))
 end
 
+function test_roundtrip_fileio(Encoder, Decoder)
+    data = b"""
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla sit amet tempus felis. Etiam molestie urna placerat iaculis pellentesque. Maecenas porttitor et dolor vitae posuere. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc eget nibh quam. Nullam aliquet interdum fringilla. Duis facilisis, lectus in consectetur varius, lorem sem tempor diam, nec auctor tellus nibh sit amet sapien. In ex nunc, elementum eget facilisis ut, luctus eu orci. Sed sapien urna, accumsan et elit non, auctor pretium massa. Phasellus consectetur nisi suscipit blandit aliquam. Nulla facilisi. Mauris pellentesque sem sit amet mi vestibulum eleifend. Nulla faucibus orci ac lorem efficitur, et blandit orci interdum. Aenean posuere ultrices ex sed rhoncus. Donec malesuada mollis sem, sed varius nunc sodales sed. Curabitur lobortis non justo non tristique.
+    """
+    mktemp() do filename, file
+        stream = TranscodingStream(Encoder(), file)
+        write(stream, data)
+        close(stream)
+        stream = TranscodingStream(Decoder(), open(filename))
+        Base.Test.@test hash(read(stream)) == hash(data)
+        close(stream)
+    end
+end
+
 function test_chunked_read(Encoder, Decoder)
     srand(TEST_RANDOM_SEED)
     alpha = b"色即是空"
