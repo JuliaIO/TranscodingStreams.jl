@@ -438,26 +438,26 @@ end
 I/O statistics.
 
 Its object has four fields:
-- `consumed`: the number of bytes consumed from the stream
-- `supplied`: the number of bytes supplied to the stream
+- `in`: the number of bytes supplied into the stream
+- `out`: the number of bytes consumed out of the stream
 - `transcoded_in`: the number of bytes transcoded from the input buffer
 - `transcoded_out`: the number of bytes transcoded to the output buffer
 
-Note that, since the transcoding stream does buffering, `consumed` is
-`transcoded_out - {size of buffered data}`  and `supplied` is `transcoded_in +
-{size of buffered data}`.
+Note that, since the transcoding stream does buffering, `in` is `transcoded_in +
+{size of buffered data}` and `out` is `transcoded_out - {size of buffered
+data}`.
 """
 struct Stats
-    consumed::Int64
-    supplied::Int64
+    in::Int64
+    out::Int64
     transcoded_in::Int64
     transcoded_out::Int64
 end
 
 function Base.show(io::IO, stats::Stats)
     println(io, summary(stats), ':')
-    println(io, "  consumed: ", stats.consumed)
-    println(io, "  supplied: ", stats.supplied)
+    println(io, "  in: ", stats.in)
+    println(io, "  out: ", stats.out)
     println(io, "  transcoded_in: ", stats.transcoded_in)
       print(io, "  transcoded_out: ", stats.transcoded_out)
 end
@@ -474,29 +474,29 @@ function stats(stream::TranscodingStream)
     buffer1 = state.buffer1
     buffer2 = state.buffer2
     if mode == :idle
-        transcoded_in = transcoded_out = consumed = supplied = 0
+        transcoded_in = transcoded_out = in = out = 0
     elseif mode == :read
         transcoded_in = buffer2.total
         transcoded_out = buffer1.total
-        consumed = transcoded_out - buffersize(buffer1)
-        supplied = transcoded_in + buffersize(buffer2)
+        in = transcoded_in + buffersize(buffer2)
+        out = transcoded_out - buffersize(buffer1)
     elseif mode == :write
         transcoded_in = buffer1.total
         transcoded_out = buffer2.total
-        consumed = transcoded_out - buffersize(buffer2)
-        supplied = transcoded_in + buffersize(buffer1)
+        in = transcoded_in + buffersize(buffer1)
+        out = transcoded_out - buffersize(buffer2)
     else
         assert(false)
     end
-    return Stats(consumed, supplied, transcoded_in, transcoded_out)
+    return Stats(in, out, transcoded_in, transcoded_out)
 end
 
-function total_in(stream::TranscodingStream)::Int64
-    return stats(stream).consumed
+function stats_in(stream::TranscodingStream)
+    return stats(stream).in
 end
 
-function total_out(stream::TranscodingStream)::Int64
-    return stats(stream).supplied
+function stats_out(stream::TranscodingStream)
+    return stats(stream).out
 end
 
 

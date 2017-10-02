@@ -35,12 +35,12 @@ end
     @test repr(stats) ==
     """
     TranscodingStreams.Stats:
-      consumed: 1
-      supplied: 2
+      in: 1
+      out: 2
       transcoded_in: 3
       transcoded_out: 4"""
-    @test stats.consumed == 1
-    @test stats.supplied == 2
+    @test stats.in == 1
+    @test stats.out == 2
     @test stats.transcoded_in == 3
     @test stats.transcoded_out == 4
 end
@@ -216,20 +216,20 @@ end
           s1.state.buffer2 === s2.state.buffer2 === s3.state.buffer2
 
     stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
-    @test TranscodingStreams.total_in(stream) === Int64(0)
-    @test TranscodingStreams.total_out(stream) === Int64(0)
+    @test TranscodingStreams.stats_in(stream) === Int64(0)
+    @test TranscodingStreams.stats_out(stream) === Int64(0)
     read(stream)
-    @test TranscodingStreams.total_in(stream) === Int64(6)
-    @test TranscodingStreams.total_out(stream) === Int64(6)
+    @test TranscodingStreams.stats_in(stream) === Int64(6)
+    @test TranscodingStreams.stats_out(stream) === Int64(6)
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer())
-    @test TranscodingStreams.total_in(stream) === Int64(0)
-    @test TranscodingStreams.total_out(stream) === Int64(0)
+    @test TranscodingStreams.stats_in(stream) === Int64(0)
+    @test TranscodingStreams.stats_out(stream) === Int64(0)
     write(stream, b"foobar")
     flush(stream)
-    @test TranscodingStreams.total_in(stream) === Int64(6)
-    @test TranscodingStreams.total_out(stream) === Int64(6)
+    @test TranscodingStreams.stats_in(stream) === Int64(6)
+    @test TranscodingStreams.stats_out(stream) === Int64(6)
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))
@@ -438,14 +438,14 @@ end
     size = filesize(joinpath(dirname(@__FILE__), "abra.gzip"))
     stream = CodecZlib.GzipDecompressionStream(open(joinpath(dirname(@__FILE__), "abra.gzip")))
     stats = TranscodingStreams.stats(stream)
-    @test stats.consumed == 0
-    @test stats.supplied == 0
+    @test stats.in == 0
+    @test stats.out == 0
     @test stats.transcoded_in == 0
     @test stats.transcoded_out == 0
     read(stream, UInt8)
     stats = TranscodingStreams.stats(stream)
-    @test stats.consumed == 1
-    @test stats.supplied == size
+    @test stats.in == size
+    @test stats.out == 1
     @test stats.transcoded_in == size
     @test stats.transcoded_out == 11
     close(stream)
@@ -454,21 +454,21 @@ end
     buf = IOBuffer()
     stream = CodecZlib.GzipCompressionStream(buf)
     stats = TranscodingStreams.stats(stream)
-    @test stats.consumed == 0
-    @test stats.supplied == 0
+    @test stats.in == 0
+    @test stats.out == 0
     @test stats.transcoded_in == 0
     @test stats.transcoded_out == 0
     write(stream, b"abracadabra")
     stats = TranscodingStreams.stats(stream)
-    @test stats.consumed == 0
-    @test stats.supplied == 11
+    @test stats.in == 11
+    @test stats.out == 0
     @test stats.transcoded_in == 0
     @test stats.transcoded_out == 0
     write(stream, TranscodingStreams.TOKEN_END)
     flush(stream)
     stats = TranscodingStreams.stats(stream)
-    @test stats.consumed == position(buf)
-    @test stats.supplied == 11
+    @test stats.in == 11
+    @test stats.out == position(buf)
     @test stats.transcoded_in == 11
     @test stats.transcoded_out == position(buf)
     close(stream)
