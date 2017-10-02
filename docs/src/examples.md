@@ -160,6 +160,35 @@ read(GzipDecompressionStream(stream, stop_on_end=true))  #> the content of foo.t
 read(GzipDecompressionStream(stream, stop_on_end=true))  #> the content of bar.txt
 ```
 
+Check I/O statistics
+--------------------
+
+`TranscodingStreams.stats` returns a snapshot of the I/O statistics. For
+example, the following function shows progress of decompression to the standard
+error:
+```julia
+using CodecZlib
+
+function decompress(input, output)
+    buffer = Vector{UInt8}(16 * 1024)
+    while !eof(input)
+        n = min(nb_available(input), length(buffer))
+        unsafe_read(input, pointer(buffer), n)
+        unsafe_write(output, pointer(buffer), n)
+        stats = TranscodingStreams.stats(input)
+        print(STDERR, "\rin: $(stats.in), out: $(stats.out)")
+    end
+    println(STDERR)
+end
+
+input = GzipDecompressionStream(open("foobar.txt.gz"))
+output = IOBuffer()
+decompress(input, output)
+```
+
+`stats.in` is the number of bytes supplied to the stream and `stats.out` is the
+number of bytes consumed out of the stream.
+
 Transcode data in one shot
 --------------------------
 

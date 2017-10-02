@@ -216,20 +216,20 @@ end
           s1.state.buffer2 === s2.state.buffer2 === s3.state.buffer2
 
     stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
-    @test TranscodingStreams.stats_in(stream) === Int64(0)
-    @test TranscodingStreams.stats_out(stream) === Int64(0)
+    @test TranscodingStreams.stats(stream).in === Int64(0)
+    @test TranscodingStreams.stats(stream).out === Int64(0)
     read(stream)
-    @test TranscodingStreams.stats_in(stream) === Int64(6)
-    @test TranscodingStreams.stats_out(stream) === Int64(6)
+    @test TranscodingStreams.stats(stream).in === Int64(6)
+    @test TranscodingStreams.stats(stream).out === Int64(6)
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer())
-    @test TranscodingStreams.stats_in(stream) === Int64(0)
-    @test TranscodingStreams.stats_out(stream) === Int64(0)
+    @test TranscodingStreams.stats(stream).in === Int64(0)
+    @test TranscodingStreams.stats(stream).out === Int64(0)
     write(stream, b"foobar")
     flush(stream)
-    @test TranscodingStreams.stats_in(stream) === Int64(6)
-    @test TranscodingStreams.stats_out(stream) === Int64(6)
+    @test TranscodingStreams.stats(stream).in === Int64(6)
+    @test TranscodingStreams.stats(stream).out === Int64(6)
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))

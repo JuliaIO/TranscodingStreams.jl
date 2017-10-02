@@ -491,14 +491,6 @@ function stats(stream::TranscodingStream)
     return Stats(in, out, transcoded_in, transcoded_out)
 end
 
-function stats_in(stream::TranscodingStream)
-    return stats(stream).in
-end
-
-function stats_out(stream::TranscodingStream)
-    return stats(stream).out
-end
-
 
 # Buffering
 # ---------
