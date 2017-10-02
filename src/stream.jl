@@ -376,6 +376,12 @@ end
 # Write Functions
 # ---------------
 
+# Write nothing.
+function Base.write(stream::TranscodingStream)
+    changemode!(stream, :write)
+    return 0
+end
+
 function Base.write(stream::TranscodingStream, b::UInt8)
     changemode!(stream, :write)
     if marginsize(stream.state.buffer1) == 0 && flushbuffer(stream) == 0
