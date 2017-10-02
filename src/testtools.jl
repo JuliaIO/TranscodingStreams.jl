@@ -79,12 +79,14 @@ function test_chunked_read(Encoder, Decoder)
         data = mapfoldl(x->transcode(encoder, x), vcat, UInt8[], chunks)
         buffer = NoopStream(IOBuffer(data))
         ok = true
+        local stream
         for chunk in chunks
             stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
             ok &= hash(read(stream)) == hash(chunk)
             ok &= eof(stream)
         end
         Base.Test.@test ok
+        close(stream)
     end
     finalize(encoder)
 end
@@ -105,6 +107,7 @@ function test_chunked_write(Encoder, Decoder)
         ok &= hash(take!(buffer)) == hash(chunks[1])
         ok &= buffersize(stream.state.buffer1) == length(data[2])
         Base.Test.@test ok
+        close(stream)
     end
     finalize(encoder)
 end
