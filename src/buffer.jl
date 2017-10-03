@@ -111,16 +111,18 @@ function supplied2!(buf::Buffer, n::Integer)
     return buf
 end
 
-function readbyte!(buf::Buffer)
-    b = buf.data[buf.bufferpos]
-    consumed!(buf, 1)
-    return b
+# Discard buffered data and initialize positions.
+function initbuffer!(buf::Buffer)
+    buf.markpos = 0
+    buf.bufferpos = buf.marginpos = 1
+    buf.total = 0
+    return buf
 end
 
-function writebyte!(buf::Buffer, b::UInt8)
-    buf.data[buf.marginpos] = b
-    supplied!(buf, 1)
-    return 1
+# Remove all buffered data.
+function emptybuffer!(buf::Buffer)
+    buf.marginpos = buf.bufferpos
+    return buf
 end
 
 # Make margin with ≥`minsize` and return the size of it.
@@ -154,24 +156,24 @@ function makemargin!(buf::Buffer, minsize::Integer)
     return marginsize(buf)
 end
 
-# Remove all buffered data.
-function emptybuffer!(buf::Buffer)
-    buf.marginpos = buf.bufferpos
-    return buf
+# Read a byte.
+function readbyte!(buf::Buffer)
+    b = buf.data[buf.bufferpos]
+    consumed!(buf, 1)
+    return b
+end
+
+# Write a byte.
+function writebyte!(buf::Buffer, b::UInt8)
+    buf.data[buf.marginpos] = b
+    supplied!(buf, 1)
+    return 1
 end
 
 # Skip `n` bytes in the buffer.
 function skipbuffer!(buf::Buffer, n::Integer)
     @assert n ≤ buffersize(buf)
     consumed!(buf, n)
-    return buf
-end
-
-# Discard buffered data and initialize positions.
-function initbuffer!(buf::Buffer)
-    buf.markpos = 0
-    buf.bufferpos = buf.marginpos = 1
-    buf.total = 0
     return buf
 end
 
