@@ -39,10 +39,6 @@ function Base.length(buf::Buffer)
     return length(buf.data)
 end
 
-function Base.endof(buf::Buffer)
-    return buffersize(buf)
-end
-
 function bufferptr(buf::Buffer)
     return pointer(buf.data, buf.bufferpos)
 end
