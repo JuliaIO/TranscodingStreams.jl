@@ -39,32 +39,6 @@ function Base.length(buf::Buffer)
     return length(buf.data)
 end
 
-function Base.endof(buf::Buffer)
-    return buffersize(buf)
-end
-
-function Base.getindex(buf::Buffer, i::Integer)
-    @boundscheck checkbounds(buf, i)
-    @inbounds return buf.data[i+buf.bufferpos-1]
-end
-
-function Base.checkbounds(buf::Buffer, i::Integer)
-    if !(1 ≤ i ≤ endof(buf))
-        throw(BoundsError(buf, i))
-    end
-end
-
-function Base.getindex(buf::Buffer, r::UnitRange{<:Integer})
-    @boundscheck checkbounds(buf, r)
-    @inbounds return buf.data[r+buf.bufferpos-1]
-end
-
-function Base.checkbounds(buf::Buffer, r::UnitRange{<:Integer})
-    if !isempty(r) && !(1 ≤ first(r) && last(r) ≤ endof(buf))
-        throw(BoundsError(buf, r))
-    end
-end
-
 function bufferptr(buf::Buffer)
     return pointer(buf.data, buf.bufferpos)
 end
@@ -75,42 +49,6 @@ end
 
 function buffermem(buf::Buffer)
     return Memory(bufferptr(buf), buffersize(buf))
-end
-
-# Notify that `n` bytes are consumed from `buf`.
-function consumed!(buf::Buffer, n::Integer)
-    buf.bufferpos += n
-    return buf
-end
-
-# Notify that `n` bytes are supplied to `buf`.
-function supplied!(buf::Buffer, n::Integer)
-    buf.marginpos += n
-    return buf
-end
-
-function consumed2!(buf::Buffer, n::Integer)
-    buf.bufferpos += n
-    buf.total += n
-    return buf
-end
-
-function supplied2!(buf::Buffer, n::Integer)
-    buf.marginpos += n
-    buf.total += n
-    return buf
-end
-
-function readbyte!(buf::Buffer)
-    b = buf.data[buf.bufferpos]
-    consumed!(buf, 1)
-    return b
-end
-
-function writebyte!(buf::Buffer, b::UInt8)
-    buf.data[buf.marginpos] = b
-    supplied!(buf, 1)
-    return 1
 end
 
 function marginptr(buf::Buffer)
@@ -149,6 +87,44 @@ function reset!(buf::Buffer)
     return buf.bufferpos
 end
 
+# Notify that `n` bytes are consumed from `buf`.
+function consumed!(buf::Buffer, n::Integer)
+    buf.bufferpos += n
+    return buf
+end
+
+# Notify that `n` bytes are supplied to `buf`.
+function supplied!(buf::Buffer, n::Integer)
+    buf.marginpos += n
+    return buf
+end
+
+function consumed2!(buf::Buffer, n::Integer)
+    buf.bufferpos += n
+    buf.total += n
+    return buf
+end
+
+function supplied2!(buf::Buffer, n::Integer)
+    buf.marginpos += n
+    buf.total += n
+    return buf
+end
+
+# Discard buffered data and initialize positions.
+function initbuffer!(buf::Buffer)
+    buf.markpos = 0
+    buf.bufferpos = buf.marginpos = 1
+    buf.total = 0
+    return buf
+end
+
+# Remove all buffered data.
+function emptybuffer!(buf::Buffer)
+    buf.marginpos = buf.bufferpos
+    return buf
+end
+
 # Make margin with ≥`minsize` and return the size of it.
 function makemargin!(buf::Buffer, minsize::Integer)
     @assert minsize ≥ 0
@@ -165,11 +141,12 @@ function makemargin!(buf::Buffer, minsize::Integer)
             datasize = buf.marginpos - buf.markpos
         end
         copy!(buf.data, 1, buf.data, datapos, datasize)
+        shift = datapos - 1
         if buf.markpos > 0
-            buf.markpos -= datapos - 1
+            buf.markpos -= shift
         end
-        buf.bufferpos -= datapos - 1
-        buf.marginpos -= datapos - 1
+        buf.bufferpos -= shift
+        buf.marginpos -= shift
     end
     if marginsize(buf) < minsize
         # expand data buffer
@@ -179,24 +156,24 @@ function makemargin!(buf::Buffer, minsize::Integer)
     return marginsize(buf)
 end
 
-# Remove all buffered data.
-function emptybuffer!(buf::Buffer)
-    buf.marginpos = buf.bufferpos
-    return buf
+# Read a byte.
+function readbyte!(buf::Buffer)
+    b = buf.data[buf.bufferpos]
+    consumed!(buf, 1)
+    return b
+end
+
+# Write a byte.
+function writebyte!(buf::Buffer, b::UInt8)
+    buf.data[buf.marginpos] = b
+    supplied!(buf, 1)
+    return 1
 end
 
 # Skip `n` bytes in the buffer.
 function skipbuffer!(buf::Buffer, n::Integer)
     @assert n ≤ buffersize(buf)
     consumed!(buf, n)
-    return buf
-end
-
-# Discard buffered data and initialize positions.
-function initbuffer!(buf::Buffer)
-    buf.markpos = 0
-    buf.bufferpos = buf.marginpos = 1
-    buf.total = 0
     return buf
 end
 
