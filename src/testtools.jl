@@ -1,6 +1,8 @@
 # Test Tools
 # ==========
 
+import Base.Test
+
 TEST_RANDOM_SEED = 12345
 
 function test_roundtrip_read(encoder, decoder)
@@ -9,7 +11,7 @@ function test_roundtrip_read(encoder, decoder)
         data = rand(alpha, n)
         file = IOBuffer(data)
         stream = decoder(encoder(file))
-        Base.Test.@test hash(read(stream)) == hash(data)
+        Test.@test hash(read(stream)) == hash(data)
         close(stream)
     end
 end
@@ -21,7 +23,7 @@ function test_roundtrip_write(encoder, decoder)
         file = IOBuffer()
         stream = encoder(decoder(file))
         write(stream, data, TOKEN_END); flush(stream)
-        Base.Test.@test hash(take!(file)) == hash(data)
+        Test.@test hash(take!(file)) == hash(data)
         close(stream)
     end
 end
@@ -32,8 +34,8 @@ function test_roundtrip_transcode(encode, decode)
     decoder = decode()
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
-        Base.Test.@test hash(transcode(decode, transcode(encode, data))) == hash(data)
-        Base.Test.@test hash(transcode(decoder, transcode(encoder, data))) == hash(data)
+        Test.@test hash(transcode(decode, transcode(encode, data))) == hash(data)
+        Test.@test hash(transcode(decoder, transcode(encoder, data))) == hash(data)
     end
     finalize(encoder)
     finalize(decoder)
@@ -52,7 +54,7 @@ function test_roundtrip_lines(encoder, decoder)
     write(stream, TOKEN_END)
     flush(stream)
     seekstart(buf)
-    Base.Test.@test hash(lines) == hash(readlines(decoder(buf)))
+    Test.@test hash(lines) == hash(readlines(decoder(buf)))
 end
 
 function test_roundtrip_fileio(Encoder, Decoder)
@@ -64,7 +66,7 @@ function test_roundtrip_fileio(Encoder, Decoder)
         write(stream, data)
         close(stream)
         stream = TranscodingStream(Decoder(), open(filename))
-        Base.Test.@test hash(read(stream)) == hash(data)
+        Test.@test hash(read(stream)) == hash(data)
         close(stream)
     end
 end
@@ -85,7 +87,7 @@ function test_chunked_read(Encoder, Decoder)
             ok &= hash(read(stream)) == hash(chunk)
             ok &= eof(stream)
         end
-        Base.Test.@test ok
+        Test.@test ok
         close(stream)
     end
     finalize(encoder)
@@ -106,7 +108,7 @@ function test_chunked_write(Encoder, Decoder)
         ok = true
         ok &= hash(take!(buffer)) == hash(chunks[1])
         ok &= buffersize(stream.state.buffer1) == length(data[2])
-        Base.Test.@test ok
+        Test.@test ok
         close(stream)
     end
     finalize(encoder)
