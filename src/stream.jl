@@ -57,17 +57,26 @@ end
 
 Create a transcoding stream with `codec` and `stream`.
 
+A `TranscodingStream` object wraps an input/output stream object `stream`, and
+transcodes the byte stream using `codec`. It is a subtype of `IO` and supports
+most of the I/O functions in the standard library.
+
+See the docs (<https://bicycle1885.github.io/TranscodingStreams.jl/stable/>) for
+available codecs, examples, and more details of the type.
+
 Arguments
 ---------
 
 - `codec`: The data transcoder.
-- `stream`: The wrapped stream.
-- `bufsize`: The initial buffer size.
+- `stream`: The wrapped stream; it must be opened before passed to the constructor.
+- `bufsize`:
+    The initial buffer size (the default size is 16KiB); the buffer size may be
+    extended when required by `codec`.
 - `stop_on_end`:
     The flag to stop transcoding on `:end` return code of `codec`.  The
     transcoded data are readable even after the end of transcoding.  Note that
-    some extra data may be buffered from `stream` and thus `sharedbuf` must be
-    `true` to reuse `stream`.
+    some extra data may be read from `stream` into a buffer and thus `sharedbuf`
+    must be `true` to reuse `stream`.
 - `sharedbuf`:
     The flag to share buffers between adjacent transcoding streams.  The value
     must be `false` if `stream` is not a `TranscodingStream` object.
