@@ -67,11 +67,15 @@ available codecs, examples, and more details of the type.
 Arguments
 ---------
 
-- `codec`: The data transcoder.
-- `stream`: The wrapped stream; it must be opened before passed to the constructor.
+- `codec`:
+    The data transcoder. The transcoding stream does the initialization and
+    finalization of `codec`. Therefore, a codec object is not reusable once it
+    is passed to a transcoding stream.
+- `stream`:
+    The wrapped stream. It must be opened before passed to the constructor.
 - `bufsize`:
-    The initial buffer size (the default size is 16KiB); the buffer size may be
-    extended when required by `codec`.
+    The initial buffer size (the default size is 16KiB). The buffer may be
+    extended whenever `codec` requests so.
 - `stop_on_end`:
     The flag to stop transcoding on `:end` return code of `codec`.  The
     transcoded data are readable even after the end of transcoding.  Note that
