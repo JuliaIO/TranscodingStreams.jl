@@ -128,14 +128,14 @@ end
 
 # TODO: This should be moved to CodecZlib.jl.
 import CodecZlib
-import CodecZlib: GzipCompression, GzipDecompression
-TranscodingStreams.test_chunked_read(GzipCompression, GzipDecompression)
-TranscodingStreams.test_chunked_write(GzipCompression, GzipDecompression)
-TranscodingStreams.test_roundtrip_fileio(GzipCompression, GzipDecompression)
+import CodecZlib: GzipCompressor, GzipDecompressor
+TranscodingStreams.test_chunked_read(GzipCompressor, GzipDecompressor)
+TranscodingStreams.test_chunked_write(GzipCompressor, GzipDecompressor)
+TranscodingStreams.test_roundtrip_fileio(GzipCompressor, GzipDecompressor)
 
 @testset "seek" begin
-    data = transcode(GzipCompression, b"abracadabra")
-    stream = TranscodingStream(GzipDecompression(), IOBuffer(data))
+    data = transcode(GzipCompressor, b"abracadabra")
+    stream = TranscodingStream(GzipDecompressor(), IOBuffer(data))
     seekstart(stream)
     @test read(stream, 3) == b"abr"
     seekstart(stream)
@@ -145,20 +145,20 @@ TranscodingStreams.test_roundtrip_fileio(GzipCompression, GzipDecompression)
 end
 
 @testset "panic" begin
-    stream = TranscodingStream(GzipDecompression(), IOBuffer("some invalid data"))
+    stream = TranscodingStream(GzipDecompressor(), IOBuffer("some invalid data"))
     @test_throws ErrorException read(stream)
     @test_throws ArgumentError eof(stream)
 end
 
 @testset "open" begin
-    open(CodecZlib.GzipDecompressionStream, joinpath(dirname(@__FILE__), "abra.gzip")) do stream
+    open(CodecZlib.GzipDecompressorStream, joinpath(dirname(@__FILE__), "abra.gzip")) do stream
         @test read(stream) == b"abracadabra"
     end
 end
 
 @testset "stats" begin
     size = filesize(joinpath(dirname(@__FILE__), "abra.gzip"))
-    stream = CodecZlib.GzipDecompressionStream(open(joinpath(dirname(@__FILE__), "abra.gzip")))
+    stream = CodecZlib.GzipDecompressorStream(open(joinpath(dirname(@__FILE__), "abra.gzip")))
     stats = TranscodingStreams.stats(stream)
     @test stats.in == 0
     @test stats.out == 0
@@ -174,7 +174,7 @@ end
     @test_throws ArgumentError TranscodingStreams.stats(stream)
 
     buf = IOBuffer()
-    stream = CodecZlib.GzipCompressionStream(buf)
+    stream = CodecZlib.GzipCompressorStream(buf)
     stats = TranscodingStreams.stats(stream)
     @test stats.in == 0
     @test stats.out == 0
