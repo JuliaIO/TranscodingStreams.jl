@@ -1,44 +1,44 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · TranscodingStreams.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/custom.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>TranscodingStreams.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">TranscodingStreams.jl</a></li><li class="current"><a class="toctext" href="examples.html">Examples</a><ul class="internal"><li><a class="toctext" href="#Read-lines-from-a-gzip-compressed-file-1">Read lines from a gzip-compressed file</a></li><li><a class="toctext" href="#Read-compressed-data-from-a-pipe-1">Read compressed data from a pipe</a></li><li><a class="toctext" href="#Save-a-data-matrix-with-Zstd-compression-1">Save a data matrix with Zstd compression</a></li><li><a class="toctext" href="#Explicitly-finish-transcoding-by-writing-TOKEN_END-1">Explicitly finish transcoding by writing <code>TOKEN_END</code></a></li><li><a class="toctext" href="#Use-a-noop-codec-1">Use a noop codec</a></li><li><a class="toctext" href="#Change-the-codec-of-a-file-1">Change the codec of a file</a></li><li><a class="toctext" href="#Stop-decoding-on-the-end-of-a-block-1">Stop decoding on the end of a block</a></li><li><a class="toctext" href="#Check-I/O-statistics-1">Check I/O statistics</a></li><li><a class="toctext" href="#Transcode-data-in-one-shot-1">Transcode data in one shot</a></li><li><a class="toctext" href="#Transcode-lots-of-strings-1">Transcode lots of strings</a></li><li><a class="toctext" href="#Unread-data-1">Unread data</a></li></ul></li><li><a class="toctext" href="references.html">References</a></li><li><a class="toctext" href="devnotes.html">Developer&#39;s Notes</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="examples.html">Examples</a></li></ul><a class="edit-page" href="https://github.com/bicycle1885/TranscodingStreams.jl/blob/master/docs/src/examples.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Examples</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Examples-1" href="#Examples-1">Examples</a></h1><h2><a class="nav-anchor" id="Read-lines-from-a-gzip-compressed-file-1" href="#Read-lines-from-a-gzip-compressed-file-1">Read lines from a gzip-compressed file</a></h2><p>The following snippet is an example of using CodecZlib.jl, which exports <code>GzipDecompressionStream{S}</code> as an alias of <code>TranscodingStream{GzipDecompression,S} where S&lt;:IO</code>:</p><pre><code class="language-julia">using CodecZlib
-stream = GzipDecompressionStream(open(&quot;data.txt.gz&quot;))
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · TranscodingStreams.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/custom.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>TranscodingStreams.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">TranscodingStreams.jl</a></li><li class="current"><a class="toctext" href="examples.html">Examples</a><ul class="internal"><li><a class="toctext" href="#Read-lines-from-a-gzip-compressed-file-1">Read lines from a gzip-compressed file</a></li><li><a class="toctext" href="#Read-compressed-data-from-a-pipe-1">Read compressed data from a pipe</a></li><li><a class="toctext" href="#Save-a-data-matrix-with-Zstd-compression-1">Save a data matrix with Zstd compression</a></li><li><a class="toctext" href="#Explicitly-finish-transcoding-by-writing-TOKEN_END-1">Explicitly finish transcoding by writing <code>TOKEN_END</code></a></li><li><a class="toctext" href="#Use-a-noop-codec-1">Use a noop codec</a></li><li><a class="toctext" href="#Change-the-codec-of-a-file-1">Change the codec of a file</a></li><li><a class="toctext" href="#Stop-decoding-on-the-end-of-a-block-1">Stop decoding on the end of a block</a></li><li><a class="toctext" href="#Check-I/O-statistics-1">Check I/O statistics</a></li><li><a class="toctext" href="#Transcode-data-in-one-shot-1">Transcode data in one shot</a></li><li><a class="toctext" href="#Transcode-lots-of-strings-1">Transcode lots of strings</a></li><li><a class="toctext" href="#Unread-data-1">Unread data</a></li></ul></li><li><a class="toctext" href="references.html">References</a></li><li><a class="toctext" href="devnotes.html">Developer&#39;s Notes</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="examples.html">Examples</a></li></ul><a class="edit-page" href="https://github.com/bicycle1885/TranscodingStreams.jl/blob/master/docs/src/examples.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Examples</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Examples-1" href="#Examples-1">Examples</a></h1><h2><a class="nav-anchor" id="Read-lines-from-a-gzip-compressed-file-1" href="#Read-lines-from-a-gzip-compressed-file-1">Read lines from a gzip-compressed file</a></h2><p>The following snippet is an example of using CodecZlib.jl, which exports <code>GzipDecompressorStream{S}</code> as an alias of <code>TranscodingStream{GzipDecompressor,S} where S&lt;:IO</code>:</p><pre><code class="language-julia">using CodecZlib
+stream = GzipDecompressorStream(open(&quot;data.txt.gz&quot;))
 for line in eachline(stream)
     # do something...
 end
 close(stream)</code></pre><p>Note that the last <code>close</code> call will close the file as well.  Alternatively, <code>open(&lt;stream type&gt;, &lt;filepath&gt;) do ... end</code> syntax will close the file at the end:</p><pre><code class="language-julia">using CodecZlib
-open(GzipDecompressionStream, &quot;data.txt.gz&quot;) do stream
+open(GzipDecompressorStream, &quot;data.txt.gz&quot;) do stream
     for line in eachline(stream)
         # do something...
     end
 end</code></pre><h2><a class="nav-anchor" id="Read-compressed-data-from-a-pipe-1" href="#Read-compressed-data-from-a-pipe-1">Read compressed data from a pipe</a></h2><p>The input is not limited to usual files. You can read data from a pipe (actually, any <code>IO</code> object that implements basic I/O methods) as follows:</p><pre><code class="language-julia">using CodecZlib
 pipe, proc = open(`cat some.data.gz`)
-stream = GzipDecompressionStream(pipe)
+stream = GzipDecompressorStream(pipe)
 for line in eachline(stream)
     # do something...
 end
 close(stream)  # This will finish the process as well.</code></pre><h2><a class="nav-anchor" id="Save-a-data-matrix-with-Zstd-compression-1" href="#Save-a-data-matrix-with-Zstd-compression-1">Save a data matrix with Zstd compression</a></h2><p>Writing compressed data is easy. One thing you need to keep in mind is to call <code>close</code> after writing data; otherwise, the output file will be incomplete:</p><pre><code class="language-julia">using CodecZstd
 mat = randn(100, 100)
-stream = ZstdCompressionStream(open(&quot;data.mat.zst&quot;, &quot;w&quot;))
+stream = ZstdCompressorStream(open(&quot;data.mat.zst&quot;, &quot;w&quot;))
 writedlm(stream, mat)
 close(stream)</code></pre><p>Of course, <code>open(&lt;stream type&gt;, ...) do ... end</code> works well:</p><pre><code class="language-julia">using CodecZstd
 mat = randn(100, 100)
-open(ZstdCompressionStream, &quot;data.mat.zst&quot;, &quot;w&quot;) do stream
+open(ZstdCompressorStream, &quot;data.mat.zst&quot;, &quot;w&quot;) do stream
     writedlm(stream, mat)
 end</code></pre><h2><a class="nav-anchor" id="Explicitly-finish-transcoding-by-writing-TOKEN_END-1" href="#Explicitly-finish-transcoding-by-writing-TOKEN_END-1">Explicitly finish transcoding by writing <code>TOKEN_END</code></a></h2><p>When writing data, the end of a data stream is indicated by calling <code>close</code>, which may write an epilogue if necessary and flush all buffered data to the underlying I/O stream. If you want to explicitly specify the end position of a stream for some reason, you can write <code>TranscodingStreams.TOKEN_END</code> to the transcoding stream as follows:</p><pre><code class="language-julia">using CodecZstd
 using TranscodingStreams
 buf = IOBuffer()
-stream = ZstdCompressionStream(buf)
+stream = ZstdCompressorStream(buf)
 write(stream, &quot;foobarbaz&quot;^100, TranscodingStreams.TOKEN_END)
 flush(stream)
 compressed = take!(buf)
-close(stream)</code></pre><h2><a class="nav-anchor" id="Use-a-noop-codec-1" href="#Use-a-noop-codec-1">Use a noop codec</a></h2><p>Sometimes, the <code>Noop</code> codec, which does nothing, may be useful. The following example creates a decompression stream based on the extension of a filepath:</p><pre><code class="language-julia">using CodecZlib
+close(stream)</code></pre><h2><a class="nav-anchor" id="Use-a-noop-codec-1" href="#Use-a-noop-codec-1">Use a noop codec</a></h2><p>Sometimes, the <code>Noop</code> codec, which does nothing, may be useful. The following example creates a decompressor stream based on the extension of a filepath:</p><pre><code class="language-julia">using CodecZlib
 using CodecBzip2
 using TranscodingStreams
 
 function makestream(filepath)
     if endswith(filepath, &quot;.gz&quot;)
-        codec = GzipDecompression()
+        codec = GzipDecompressor()
     elseif endswith(filepath, &quot;.bz2&quot;)
-        codec = Bzip2Decompression()
+        codec = Bzip2Decompressor()
     else
         codec = Noop()
     end
@@ -53,17 +53,17 @@ using CodecZstd
 input  = open(&quot;data.txt.gz&quot;,  &quot;r&quot;)
 output = open(&quot;data.txt.zst&quot;, &quot;w&quot;)
 
-stream = GzipDecompressionStream(ZstdCompressionStream(output))
+stream = GzipDecompressorStream(ZstdCompressorStream(output))
 write(stream, input)
-close(stream)</code></pre><p>Effectively, this is equivalent to the following pipeline:</p><pre><code class="language-none">cat data.txt.gz | gzip -d | zstd &gt;data.txt.zst</code></pre><h2><a class="nav-anchor" id="Stop-decoding-on-the-end-of-a-block-1" href="#Stop-decoding-on-the-end-of-a-block-1">Stop decoding on the end of a block</a></h2><p>Most codecs support decoding concatenated data blocks. For example, if you concatenate two gzip files into a file and read it using <code>GzipDecompressionStream</code>, you will see the byte stream of concatenation of two files. If you need the first part of the file, you can set <code>stop_on_end</code> to <code>true</code> to stop transcoding at the end of the first block:</p><pre><code class="language-julia">using CodecZlib
+close(stream)</code></pre><p>Effectively, this is equivalent to the following pipeline:</p><pre><code class="language-none">cat data.txt.gz | gzip -d | zstd &gt;data.txt.zst</code></pre><h2><a class="nav-anchor" id="Stop-decoding-on-the-end-of-a-block-1" href="#Stop-decoding-on-the-end-of-a-block-1">Stop decoding on the end of a block</a></h2><p>Most codecs support decoding concatenated data blocks. For example, if you concatenate two gzip files into a file and read it using <code>GzipDecompressorStream</code>, you will see the byte stream of concatenation of two files. If you need the first part of the file, you can set <code>stop_on_end</code> to <code>true</code> to stop transcoding at the end of the first block:</p><pre><code class="language-julia">using CodecZlib
 # cat foo.txt.gz bar.txt.gz &gt; foobar.txt.gz
-stream = GzipDecompressionStream(open(&quot;foobar.txt.gz&quot;), stop_on_end=true)
+stream = GzipDecompressorStream(open(&quot;foobar.txt.gz&quot;), stop_on_end=true)
 read(stream)  #&gt; the content of foo.txt
 eof(stream)   #&gt; true</code></pre><p>In the case where you need to reuse the wrapped stream, the code above must be slightly modified because the transcoding stream may read more bytes than necessary from the wrapped stream. By wrapping a stream with <code>NoopStream</code>, the problem of overreading is resolved:</p><pre><code class="language-julia">using CodecZlib
 using TranscodingStreams
 stream = NoopStream(open(&quot;foobar.txt.gz&quot;))
-read(GzipDecompressionStream(stream, stop_on_end=true))  #&gt; the content of foo.txt
-read(GzipDecompressionStream(stream, stop_on_end=true))  #&gt; the content of bar.txt</code></pre><h2><a class="nav-anchor" id="Check-I/O-statistics-1" href="#Check-I/O-statistics-1">Check I/O statistics</a></h2><p><code>TranscodingStreams.stats</code> returns a snapshot of the I/O statistics. For example, the following function shows progress of decompression to the standard error:</p><pre><code class="language-julia">using CodecZlib
+read(GzipDecompressorStream(stream, stop_on_end=true))  #&gt; the content of foo.txt
+read(GzipDecompressorStream(stream, stop_on_end=true))  #&gt; the content of bar.txt</code></pre><h2><a class="nav-anchor" id="Check-I/O-statistics-1" href="#Check-I/O-statistics-1">Check I/O statistics</a></h2><p><code>TranscodingStreams.stats</code> returns a snapshot of the I/O statistics. For example, the following function shows progress of decompression to the standard error:</p><pre><code class="language-julia">using CodecZlib
 
 function decompress(input, output)
     buffer = Vector{UInt8}(16 * 1024)
@@ -77,13 +77,13 @@ function decompress(input, output)
     println(STDERR)
 end
 
-input = GzipDecompressionStream(open(&quot;foobar.txt.gz&quot;))
+input = GzipDecompressorStream(open(&quot;foobar.txt.gz&quot;))
 output = IOBuffer()
 decompress(input, output)</code></pre><p><code>stats.in</code> is the number of bytes supplied to the stream and <code>stats.out</code> is the number of bytes consumed out of the stream.</p><h2><a class="nav-anchor" id="Transcode-data-in-one-shot-1" href="#Transcode-data-in-one-shot-1">Transcode data in one shot</a></h2><p>TranscodingStreams.jl extends the <code>transcode</code> function to transcode a data in one shot. <code>transcode</code> takes a codec object as its first argument and a data vector as its second argument:</p><pre><code class="language-julia">using CodecZlib
-decompressed = transcode(ZlibDecompression, b&quot;x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U&quot;)
+decompressed = transcode(ZlibDecompressor, b&quot;x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U&quot;)
 String(decompressed)</code></pre><h2><a class="nav-anchor" id="Transcode-lots-of-strings-1" href="#Transcode-lots-of-strings-1">Transcode lots of strings</a></h2><p><code>transcode(&lt;codec type&gt;, data)</code> method is convenient but suboptimal when transcoding a number of objects. This is because the method reallocates a new codec object for every call. Instead, you can use <code>transcode(&lt;codec object&gt;, data)</code> method that reuses the allocated object as follows:</p><pre><code class="language-julia">using CodecZstd
 strings = [&quot;foo&quot;, &quot;bar&quot;, &quot;baz&quot;]
-codec = ZstdCompression()
+codec = ZstdCompressor()
 try
     for s in strings
         data = transcode(codec, s)

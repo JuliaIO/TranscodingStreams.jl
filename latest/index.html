@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>TranscodingStreams.jl · TranscodingStreams.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/custom.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>TranscodingStreams.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href="index.html">TranscodingStreams.jl</a><ul class="internal"><li><a class="toctext" href="#Overview-1">Overview</a></li><li><a class="toctext" href="#Introduction-1">Introduction</a></li><li><a class="toctext" href="#Error-handling-1">Error handling</a></li></ul></li><li><a class="toctext" href="examples.html">Examples</a></li><li><a class="toctext" href="references.html">References</a></li><li><a class="toctext" href="devnotes.html">Developer&#39;s Notes</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="index.html">TranscodingStreams.jl</a></li></ul><a class="edit-page" href="https://github.com/bicycle1885/TranscodingStreams.jl/blob/master/docs/src/index.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>TranscodingStreams.jl</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="TranscodingStreams.jl-1" href="#TranscodingStreams.jl-1">TranscodingStreams.jl</a></h1><h2><a class="nav-anchor" id="Overview-1" href="#Overview-1">Overview</a></h2><p>TranscodingStreams.jl is a package for transcoding (e.g. compression) data streams. It exports a type <code>TranscodingStream</code>, which is a subtype of <code>IO</code> and supports various I/O operations like other usual I/O streams in the standard library. Operations are quick, simple, and consistent.</p><p>In this page, we intorduce the basic concepts of TranscodingStreams.jl and available packages. The <a href="examples.html#Examples-1">Examples</a> page demonstrates common usage. The <a href="references.html#References-1">References</a> page offers a comprehensive API document.</p><h2><a class="nav-anchor" id="Introduction-1" href="#Introduction-1">Introduction</a></h2><p><code>TranscodingStream</code> has two type parameters, <code>C&lt;:Codec</code> and <code>S&lt;:IO</code>, and hence the actual type should be written as <code>TranscodingStream{C&lt;:Codec,S&lt;:IO}</code>. This type wraps an underlying I/O stream <code>S</code> by a codec <code>C</code>. The codec defines transformation (or transcoding) of the stream. For example, when <code>C</code> is a lossless decompression type and <code>S</code> is a file, <code>TranscodingStream{C,S}</code> behaves like a data stream that incrementally decompresses data from the file.</p><p>Codecs are defined in other packages listed below:</p><table>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>TranscodingStreams.jl · TranscodingStreams.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/custom.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>TranscodingStreams.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href="index.html">TranscodingStreams.jl</a><ul class="internal"><li><a class="toctext" href="#Overview-1">Overview</a></li><li><a class="toctext" href="#Introduction-1">Introduction</a></li><li><a class="toctext" href="#Error-handling-1">Error handling</a></li></ul></li><li><a class="toctext" href="examples.html">Examples</a></li><li><a class="toctext" href="references.html">References</a></li><li><a class="toctext" href="devnotes.html">Developer&#39;s Notes</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="index.html">TranscodingStreams.jl</a></li></ul><a class="edit-page" href="https://github.com/bicycle1885/TranscodingStreams.jl/blob/master/docs/src/index.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>TranscodingStreams.jl</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="TranscodingStreams.jl-1" href="#TranscodingStreams.jl-1">TranscodingStreams.jl</a></h1><h2><a class="nav-anchor" id="Overview-1" href="#Overview-1">Overview</a></h2><p>TranscodingStreams.jl is a package for transcoding (e.g. compression) data streams. It exports a type <code>TranscodingStream</code>, which is a subtype of <code>IO</code> and supports various I/O operations like other usual I/O streams in the standard library. Operations are quick, simple, and consistent.</p><p>In this page, we intorduce the basic concepts of TranscodingStreams.jl and available packages. The <a href="examples.html#Examples-1">Examples</a> page demonstrates common usage. The <a href="references.html#References-1">References</a> page offers a comprehensive API document.</p><h2><a class="nav-anchor" id="Introduction-1" href="#Introduction-1">Introduction</a></h2><p><code>TranscodingStream</code> has two type parameters, <code>C&lt;:Codec</code> and <code>S&lt;:IO</code>, and hence the actual type should be written as <code>TranscodingStream{C&lt;:Codec,S&lt;:IO}</code>. This type wraps an underlying I/O stream <code>S</code> by a codec <code>C</code>. The codec defines transformation (or transcoding) of the stream. For example, when <code>C</code> is a lossless decompressor type and <code>S</code> is a file, <code>TranscodingStream{C,S}</code> behaves like a data stream that incrementally decompresses data from the file.</p><p>Codecs are defined in other packages listed below:</p><table>
     <tr>
         <th>Package</th>
         <th>Library</th>
@@ -12,74 +12,74 @@
         <td rowspan="6"><a href="https://github.com/bicycle1885/CodecZlib.jl">CodecZlib.jl</a></td>
         <td rowspan="6"><a href="http://zlib.net/">zlib</a></td>
         <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1952">RFC1952</a></td>
-        <td><code>GzipCompression</code></td>
-        <td><code>GzipCompressionStream</code></td>
+        <td><code>GzipCompressor</code></td>
+        <td><code>GzipCompressorStream</code></td>
         <td>Compress data in gzip (.gz) format.</td>
     </tr>
     <tr>
-        <td><code>GzipDecompression</code></td>
-        <td><code>GzipDecompressionStream</code></td>
+        <td><code>GzipDecompressor</code></td>
+        <td><code>GzipDecompressorStream</code></td>
         <td>Decompress data in gzip (.gz) format.</td>
     </tr>
     <tr>
         <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1950">RFC1950</a></td>
-        <td><code>ZlibCompression</code></td>
-        <td><code>ZlibCompressionStream</code></td>
+        <td><code>ZlibCompressor</code></td>
+        <td><code>ZlibCompressorStream</code></td>
         <td>Compress data in zlib format.</td>
     </tr>
     <tr>
-        <td><code>ZlibDecompression</code></td>
-        <td><code>ZlibDecompressionStream</code></td>
+        <td><code>ZlibDecompressor</code></td>
+        <td><code>ZlibDecompressorStream</code></td>
         <td>Decompress data in zlib format.</td>
     </tr>
     <tr>
         <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1951">RFC1951</a></td>
-        <td><code>DeflateCompression</code></td>
-        <td><code>DeflateCompressionStream</code></td>
+        <td><code>DeflateCompressor</code></td>
+        <td><code>DeflateCompressorStream</code></td>
         <td>Compress data in deflate format.</td>
     </tr>
     <tr>
-        <td><code>DeflateDecompression</code></td>
-        <td><code>DeflateDecompressionStream</code></td>
+        <td><code>DeflateDecompressor</code></td>
+        <td><code>DeflateDecompressorStream</code></td>
         <td>Decompress data in deflate format.</td>
     </tr>
     <tr>
         <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
         <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
         <td rowspan="2"></td>
-        <td><code>Bzip2Compression</code></td>
-        <td><code>Bzip2CompressionStream</code></td>
+        <td><code>Bzip2Compressor</code></td>
+        <td><code>Bzip2CompressorStream</code></td>
         <td>Compress data in bzip2 (.bz2) format.</td>
     </tr>
     <tr>
-        <td><code>Bzip2Decompression</code></td>
-        <td><code>Bzip2DecompressionStream</code></td>
+        <td><code>Bzip2Decompressor</code></td>
+        <td><code>Bzip2DecompressorStream</code></td>
         <td>Decompress data in bzip2 (.bz2) format.</td>
     </tr>
     <tr>
         <td rowspan="2"><a href="https://github.com/bicycle1885/CodecXz.jl">CodecXz.jl</a></td>
         <td rowspan="2"><a href="https://tukaani.org/xz/">xz</a></td>
         <td rowspan="2"><a href="https://tukaani.org/xz/xz-file-format.txt">The .xz File Format</a></td>
-        <td><code>XzCompression</code></td>
-        <td><code>XzCompressionStream</code></td>
+        <td><code>XzCompressor</code></td>
+        <td><code>XzCompressorStream</code></td>
         <td>Compress data in xz (.xz) format.</td>
     </tr>
     <tr>
-        <td><code>XzDecompression</code></td>
-        <td><code>XzDecompressionStream</code></td>
+        <td><code>XzDecompressor</code></td>
+        <td><code>XzDecompressorStream</code></td>
         <td>Decompress data in xz (.xz) format.</td>
     </tr>
     <tr>
         <td rowspan="2"><a href="https://github.com/bicycle1885/CodecZstd.jl">CodecZstd.jl</a></td>
         <td rowspan="2"><a href="http://facebook.github.io/zstd/">zstd</a></td>
-        <td rowspan="2"><a href="https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md">Zstandard Compression Format</a></td>
-        <td><code>ZstdCompression</code></td>
-        <td><code>ZstdCompressionStream</code></td>
+        <td rowspan="2"><a href="https://github.com/facebook/zstd/blob/dev/doc/zstd_compressor_format.md">Zstandard Compressor Format</a></td>
+        <td><code>ZstdCompressor</code></td>
+        <td><code>ZstdCompressorStream</code></td>
         <td>Compress data in zstd (.zst) format.</td>
     </tr>
     <tr>
-        <td><code>ZstdDecompression</code></td>
-        <td><code>ZstdDecompressionStream</code></td>
+        <td><code>ZstdDecompressor</code></td>
+        <td><code>ZstdDecompressorStream</code></td>
         <td>Decompress data in zstd (.zst) format.</td>
     </tr>
     <tr>
@@ -115,4 +115,4 @@
         <td><code>Base64DecoderStream</code></td>
         <td>Decode binary in base64 format.</td>
     </tr>
-</table><p>Install packages you need by calling <code>Pkg.add(&lt;package name&gt;)</code> in a Julia session. For example, if you want to read gzip-compressed files, call <code>Pkg.add(&quot;CodecZlib&quot;)</code> to use <code>GzipDecompression</code> or <code>GzipDecompressionStream</code>. By convention, codec types have a name that matches <code>.*(Co|Deco)mpression</code> and I/O types have a codec name with <code>Stream</code> suffix. All codecs are a subtype <code>TranscodingStreams.Codec</code> and streams are a subtype of <code>Base.IO</code>. An important thing is these packages depend on TranscodingStreams.jl and not <em>vice versa</em>. This means you can install any codec package you need without installing all codec packages.  Also, if you want to define your own codec, it is totally feasible like these packages.  TranscodingStreams.jl requests a codec to implement some interface functions which will be described later.</p><h2><a class="nav-anchor" id="Error-handling-1" href="#Error-handling-1">Error handling</a></h2><p>You may encounter an error while processing data with this package. For example, your compressed data may be corrupted or truncated and the decompression codec cannot handle it properly. In this case, the codec informs the stream of the error and the stream goes to an unrecoverable mode. In this mode, the only possible operations are <code>isopen</code> and <code>close</code>. Other operations, such as <code>read</code> or <code>write</code>, will result in an argument error exception. Resources allocated in the codec will be released by the stream and hence you must not call the finalizer of a codec that is once passed to a transcoding stream object.</p><footer><hr/><a class="next" href="examples.html"><span class="direction">Next</span><span class="title">Examples</span></a></footer></article></body></html>
+</table><p>Install packages you need by calling <code>Pkg.add(&lt;package name&gt;)</code> in a Julia session. For example, if you want to read gzip-compressed files, call <code>Pkg.add(&quot;CodecZlib&quot;)</code> to use <code>GzipDecompressor</code> or <code>GzipDecompressorStream</code>. By convention, codec types have a name that matches <code>.*(Co|Deco)mpression</code> and I/O types have a codec name with <code>Stream</code> suffix. All codecs are a subtype <code>TranscodingStreams.Codec</code> and streams are a subtype of <code>Base.IO</code>. An important thing is these packages depend on TranscodingStreams.jl and not <em>vice versa</em>. This means you can install any codec package you need without installing all codec packages.  Also, if you want to define your own codec, it is totally feasible like these packages.  TranscodingStreams.jl requests a codec to implement some interface functions which will be described later.</p><h2><a class="nav-anchor" id="Error-handling-1" href="#Error-handling-1">Error handling</a></h2><p>You may encounter an error while processing data with this package. For example, your compressed data may be corrupted or truncated and the decompressor codec cannot handle it properly. In this case, the codec informs the stream of the error and the stream goes to an unrecoverable mode. In this mode, the only possible operations are <code>isopen</code> and <code>close</code>. Other operations, such as <code>read</code> or <code>write</code>, will result in an argument error exception. Resources allocated in the codec will be released by the stream and hence you must not call the finalizer of a codec that is once passed to a transcoding stream object.</p><footer><hr/><a class="next" href="examples.html"><span class="direction">Next</span><span class="title">Examples</span></a></footer></article></body></html>
