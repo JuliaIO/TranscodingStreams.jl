@@ -5,11 +5,11 @@ Read lines from a gzip-compressed file
 --------------------------------------
 
 The following snippet is an example of using CodecZlib.jl, which exports
-`GzipDecompressionStream{S}` as an alias of
-`TranscodingStream{GzipDecompression,S} where S<:IO`:
+`GzipDecompressorStream{S}` as an alias of
+`TranscodingStream{GzipDecompressor,S} where S<:IO`:
 ```julia
 using CodecZlib
-stream = GzipDecompressionStream(open("data.txt.gz"))
+stream = GzipDecompressorStream(open("data.txt.gz"))
 for line in eachline(stream)
     # do something...
 end
@@ -21,7 +21,7 @@ Note that the last `close` call will close the file as well.  Alternatively,
 end:
 ```julia
 using CodecZlib
-open(GzipDecompressionStream, "data.txt.gz") do stream
+open(GzipDecompressorStream, "data.txt.gz") do stream
     for line in eachline(stream)
         # do something...
     end
@@ -36,7 +36,7 @@ The input is not limited to usual files. You can read data from a pipe
 ```julia
 using CodecZlib
 pipe, proc = open(`cat some.data.gz`)
-stream = GzipDecompressionStream(pipe)
+stream = GzipDecompressorStream(pipe)
 for line in eachline(stream)
     # do something...
 end
@@ -51,7 +51,7 @@ Writing compressed data is easy. One thing you need to keep in mind is to call
 ```julia
 using CodecZstd
 mat = randn(100, 100)
-stream = ZstdCompressionStream(open("data.mat.zst", "w"))
+stream = ZstdCompressorStream(open("data.mat.zst", "w"))
 writedlm(stream, mat)
 close(stream)
 ```
@@ -60,7 +60,7 @@ Of course, `open(<stream type>, ...) do ... end` works well:
 ```julia
 using CodecZstd
 mat = randn(100, 100)
-open(ZstdCompressionStream, "data.mat.zst", "w") do stream
+open(ZstdCompressorStream, "data.mat.zst", "w") do stream
     writedlm(stream, mat)
 end
 ```
@@ -77,7 +77,7 @@ transcoding stream as follows:
 using CodecZstd
 using TranscodingStreams
 buf = IOBuffer()
-stream = ZstdCompressionStream(buf)
+stream = ZstdCompressorStream(buf)
 write(stream, "foobarbaz"^100, TranscodingStreams.TOKEN_END)
 flush(stream)
 compressed = take!(buf)
@@ -88,7 +88,7 @@ Use a noop codec
 ----------------
 
 Sometimes, the `Noop` codec, which does nothing, may be useful. The following
-example creates a decompression stream based on the extension of a filepath:
+example creates a decompressor stream based on the extension of a filepath:
 ```julia
 using CodecZlib
 using CodecBzip2
@@ -96,9 +96,9 @@ using TranscodingStreams
 
 function makestream(filepath)
     if endswith(filepath, ".gz")
-        codec = GzipDecompression()
+        codec = GzipDecompressor()
     elseif endswith(filepath, ".bz2")
-        codec = Bzip2Decompression()
+        codec = Bzip2Decompressor()
     else
         codec = Noop()
     end
@@ -123,7 +123,7 @@ using CodecZstd
 input  = open("data.txt.gz",  "r")
 output = open("data.txt.zst", "w")
 
-stream = GzipDecompressionStream(ZstdCompressionStream(output))
+stream = GzipDecompressorStream(ZstdCompressorStream(output))
 write(stream, input)
 close(stream)
 ```
@@ -137,13 +137,13 @@ Stop decoding on the end of a block
 
 Most codecs support decoding concatenated data blocks. For example, if you
 concatenate two gzip files into a file and read it using
-`GzipDecompressionStream`, you will see the byte stream of concatenation of two
+`GzipDecompressorStream`, you will see the byte stream of concatenation of two
 files. If you need the first part of the file, you can set `stop_on_end` to
 `true` to stop transcoding at the end of the first block:
 ```julia
 using CodecZlib
 # cat foo.txt.gz bar.txt.gz > foobar.txt.gz
-stream = GzipDecompressionStream(open("foobar.txt.gz"), stop_on_end=true)
+stream = GzipDecompressorStream(open("foobar.txt.gz"), stop_on_end=true)
 read(stream)  #> the content of foo.txt
 eof(stream)   #> true
 ```
@@ -156,8 +156,8 @@ problem of overreading is resolved:
 using CodecZlib
 using TranscodingStreams
 stream = NoopStream(open("foobar.txt.gz"))
-read(GzipDecompressionStream(stream, stop_on_end=true))  #> the content of foo.txt
-read(GzipDecompressionStream(stream, stop_on_end=true))  #> the content of bar.txt
+read(GzipDecompressorStream(stream, stop_on_end=true))  #> the content of foo.txt
+read(GzipDecompressorStream(stream, stop_on_end=true))  #> the content of bar.txt
 ```
 
 Check I/O statistics
@@ -181,7 +181,7 @@ function decompress(input, output)
     println(STDERR)
 end
 
-input = GzipDecompressionStream(open("foobar.txt.gz"))
+input = GzipDecompressorStream(open("foobar.txt.gz"))
 output = IOBuffer()
 decompress(input, output)
 ```
@@ -197,7 +197,7 @@ in one shot. `transcode` takes a codec object as its first argument and a data
 vector as its second argument:
 ```julia
 using CodecZlib
-decompressed = transcode(ZlibDecompression, b"x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U")
+decompressed = transcode(ZlibDecompressor, b"x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U")
 String(decompressed)
 ```
 
@@ -211,7 +211,7 @@ data)` method that reuses the allocated object as follows:
 ```julia
 using CodecZstd
 strings = ["foo", "bar", "baz"]
-codec = ZstdCompression()
+codec = ZstdCompressor()
 try
     for s in strings
         data = transcode(codec, s)
