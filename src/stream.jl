@@ -95,8 +95,8 @@ julia> using CodecZlib
 
 julia> file = open(Pkg.dir("TranscodingStreams", "test", "abra.gzip"));
 
-julia> stream = TranscodingStream(GzipDecompression(), file)
-TranscodingStreams.TranscodingStream{CodecZlib.GzipDecompression,IOStream}(<mode=idle>)
+julia> stream = TranscodingStream(GzipDecompressor(), file)
+TranscodingStreams.TranscodingStream{CodecZlib.GzipDecompressor,IOStream}(<mode=idle>)
 
 julia> readstring(stream)
 "abracadabra"

@@ -42,8 +42,8 @@ erat ex bibendum ipsum, sed varius ipsum ipsum vitae dui.
 
 # Streaming API.
 stream = IOBuffer(text)
-stream = TranscodingStream(GzipCompression(), stream)
-stream = TranscodingStream(GzipDecompression(), stream)
+stream = TranscodingStream(GzipCompressor(), stream)
+stream = TranscodingStream(GzipDecompressor(), stream)
 for line in eachline(stream)
     println(line)
 end
@@ -51,13 +51,13 @@ close(stream)
 
 # Array API.
 array = Vector{UInt8}(text)
-array = transcode(GzipCompression, array)
-array = transcode(GzipDecompression, array)
+array = transcode(GzipCompressor, array)
+array = transcode(GzipDecompressor, array)
 @assert text == String(array)
 ```
 
 Each codec has an alias to its transcoding stream type for ease of use. For
-example, `GzipCompressionStream{S} = TranscodingStream{GzipCompression,S} where
+example, `GzipCompressorStream{S} = TranscodingStream{GzipCompressor,S} where
 S<:IO`.
 
 ## Codec packages
