@@ -52,9 +52,17 @@ julia> using CodecZlib
 
 julia> data = b"abracadabra";
 
-julia> compressed = transcode(ZlibCompressor, data);
+julia> codec = ZlibCompressor();
 
-julia> decompressed = transcode(ZlibDecompressor, compressed);
+julia> compressed = transcode(codec, data);
+
+julia> TranscodingStreams.finalize(codec)
+
+julia> codec = ZlibDecompressor();
+
+julia> decompressed = transcode(codec, compressed);
+
+julia> TranscodingStreams.finalize(codec)
 
 julia> String(decompressed)
 "abracadabra"
