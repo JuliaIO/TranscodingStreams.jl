@@ -173,7 +173,7 @@ var documenterSearchIndex = {"docs": [
     "page": "References",
     "title": "Base.transcode",
     "category": "Method",
-    "text": "transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}\n\nTranscode data by applying codec.\n\nNote that this method does not deallocation of codec, which is efficient but the caller may need to deallocate codec.\n\nExamples\n\njulia> using CodecZlib\n\njulia> data = b\"abracadabra\";\n\njulia> compressed = transcode(ZlibCompressor, data);\n\njulia> decompressed = transcode(ZlibDecompressor, compressed);\n\njulia> String(decompressed)\n\"abracadabra\"\n\n\n\n\n"
+    "text": "transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}\n\nTranscode data by applying codec.\n\nNote that this method does not deallocation of codec, which is efficient but the caller may need to deallocate codec.\n\nExamples\n\njulia> using CodecZlib\n\njulia> data = b\"abracadabra\";\n\njulia> codec = ZlibCompressor();\n\njulia> compressed = transcode(codec, data);\n\njulia> TranscodingStreams.finalize(codec)\n\njulia> codec = ZlibDecompressor();\n\njulia> decompressed = transcode(codec, compressed);\n\njulia> TranscodingStreams.finalize(codec)\n\njulia> String(decompressed)\n\"abracadabra\"\n\n\n\n\n"
 },
 
 {
