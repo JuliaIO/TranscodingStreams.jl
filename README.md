@@ -66,6 +66,7 @@ S<:IO`.
 - [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
 - [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
 - [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
+- [CodecLz4.jl](https://github.com/invenia/CodecLz4.jl) by Invenia.
 - [CodecBase.jl](https://github.com/bicycle1885/CodecBase.jl)
 
 Consult the [docs][docs-latest-url] for more details and examples.
