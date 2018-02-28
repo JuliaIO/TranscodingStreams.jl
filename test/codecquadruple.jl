@@ -7,7 +7,7 @@ function TranscodingStreams.process(
         output :: TranscodingStreams.Memory,
         error  :: TranscodingStreams.Error)
     i = j = 0
-    while i + 1 ≤ endof(input) && j + 4 ≤ endof(output)
+    while i + 1 ≤ lastindex(input) && j + 4 ≤ lastindex(output)
         b = input[i+1]
         i += 1
         output[j+1] = output[j+2] = output[j+3] = output[j+4] = b
@@ -63,6 +63,6 @@ end
     close(stream2)
 
     stream = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
-    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(13)), 13)
+    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(uninitialized, 13)), 13)
     close(stream)
 end
