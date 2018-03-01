@@ -19,7 +19,7 @@ import TranscodingStreams:
 
 # HACK: Overload b"..." syntax for v0.7/v1.0 compatibility.
 macro b_str(data)
-    convert(Vector{UInt8}, data)
+    convert(Vector{UInt8}, codeunits(data))
 end
 
 @testset "Buffer" begin
