@@ -7,6 +7,7 @@ export
     Identity,
     IdentityStream
 
+using Compat
 import TranscodingStreams:
     TranscodingStreams,
     TranscodingStream,
