@@ -1,7 +1,12 @@
 # Test Tools
 # ==========
 
-import Base.Test
+if VERSION > v"0.7-"
+    import Test
+    import Random: srand, randstring
+else
+    import Base.Test
+end
 
 TEST_RANDOM_SEED = 12345
 

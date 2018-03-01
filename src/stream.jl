@@ -276,7 +276,7 @@ end
 function Base.readuntil(stream::TranscodingStream, delim::UInt8)
     ready_to_read!(stream)
     buffer1 = stream.state.buffer1
-    ret = Vector{UInt8}(0)
+    ret = Vector{UInt8}(uninitialized, 0)
     filled = 0
     while !eof(stream)
         p = findbyte(buffer1, delim)
@@ -333,14 +333,21 @@ function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=
     return filled
 end
 
-function Base.nb_available(stream::TranscodingStream)
-    ready_to_read!(stream)
-    return buffersize(stream.state.buffer1)
+if VERSION > v"0.7-"
+    function Base.bytesavailable(stream::TranscodingStream)
+        ready_to_read!(stream)
+        return buffersize(stream.state.buffer1)
+    end
+else
+    function Base.nb_available(stream::TranscodingStream)
+        ready_to_read!(stream)
+        return buffersize(stream.state.buffer1)
+    end
 end
 
 function Base.readavailable(stream::TranscodingStream)
-    n = nb_available(stream)
-    data = Vector{UInt8}(n)
+    n = bytesavailable(stream)
+    data = Vector{UInt8}(uninitialized, n)
     unsafe_read(stream, pointer(data), n)
     return data
 end
@@ -612,10 +619,10 @@ function readdata!(input::IO, output::Buffer)
         return fillbuffer(input)
     end
     nread::Int = 0
-    navail = nb_available(input)
+    navail = bytesavailable(input)
     if navail == 0 && marginsize(output) > 0 && !eof(input)
         nread += writebyte!(output, read(input, UInt8))
-        navail = nb_available(input)
+        navail = bytesavailable(input)
     end
     n = min(navail, marginsize(output))
     Base.unsafe_read(input, marginptr(output), n)

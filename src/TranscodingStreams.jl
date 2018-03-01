@@ -7,6 +7,8 @@ export
     Noop,
     NoopStream
 
+using Compat
+
 include("memory.jl")
 include("buffer.jl")
 include("error.jl")

@@ -20,12 +20,12 @@
 
     stream = TranscodingStream(Noop(), IOBuffer())
     @test_throws EOFError read(stream, UInt8)
-    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(3)), 3)
+    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(uninitialized, 3)), 3)
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer("foobar"), bufsize=1)
     @test read(stream, UInt8) === UInt8('f')
-    data = Vector{UInt8}(5)
+    data = Vector{UInt8}(uninitialized, 5)
     unsafe_read(stream, pointer(data), 5) === nothing
     @test data == b"oobar"
     close(stream)
@@ -113,7 +113,7 @@
 
     stream = TranscodingStream(Noop(), IOBuffer("foo"))
     out = zeros(UInt8, 3)
-    @test nb_available(stream) == 0
+    @test bytesavailable(stream) == 0
     @test TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
     @test out == b"foo"
     close(stream)
@@ -174,10 +174,10 @@
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))
-    @test nb_available(stream) === 0
+    @test bytesavailable(stream) === 0
     @test readavailable(stream) == b""
     @test read(stream, UInt8) === UInt8('f')
-    @test nb_available(stream) === 5
+    @test bytesavailable(stream) === 5
     @test readavailable(stream) == b"oobar"
     close(stream)
 

@@ -1,5 +1,10 @@
 using TranscodingStreams
-using Base.Test
+using Compat
+if VERSION > v"0.7-"
+    using Test
+else
+    using Base.Test
+end
 
 # Tool tests
 # ----------
@@ -11,6 +16,11 @@ import TranscodingStreams:
     readbyte!, writebyte!,
     #=ismarked,=# mark!, unmark!, reset!,
     makemargin!, emptybuffer!
+
+# HACK: Overload b"..." syntax for v0.7/v1.0 compatibility.
+macro b_str(data)
+    convert(Vector{UInt8}, codeunits(data))
+end
 
 @testset "Buffer" begin
     buf = Buffer(1024)
@@ -68,7 +78,7 @@ end
     @test mem isa TranscodingStreams.Memory
     @test mem.ptr === pointer(data)
     @test mem.size === length(mem) === UInt(sizeof(data))
-    @test endof(mem) === 6
+    @test lastindex(mem) === 6
     @test mem[1] === UInt8('f')
     @test mem[2] === UInt8('o')
     @test mem[3] === UInt8('o')

@@ -11,7 +11,7 @@
 #          |<-------->||<-------->||<-------->|
 #     |....xxxxxxxxxxxxXXXXXXXXXXXX...........|
 #     ^    ^           ^           ^          ^
-#     1    markpos     bufferpos   marginpos  endof(data)
+#     1    markpos     bufferpos   marginpos  lastindex(data)
 #
 # `markpos` is positive iff there are marked data; otherwise it is set to zero.
 # `markpos` ≤ `bufferpos` ≤ `marginpos` must hold whenever possible.
@@ -27,7 +27,7 @@ mutable struct Buffer
     total::Int64
 
     function Buffer(size::Integer)
-        return new(Vector{UInt8}(size), 0, 1, 1, 0)
+        return new(Vector{UInt8}(uninitialized, size), 0, 1, 1, 0)
     end
 
     function Buffer(data::Vector{UInt8})
@@ -56,7 +56,7 @@ function marginptr(buf::Buffer)
 end
 
 function marginsize(buf::Buffer)
-    return endof(buf.data) - buf.marginpos + 1
+    return lastindex(buf.data) - buf.marginpos + 1
 end
 
 function marginmem(buf::Buffer)
@@ -140,7 +140,7 @@ function makemargin!(buf::Buffer, minsize::Integer)
             datapos = buf.markpos
             datasize = buf.marginpos - buf.markpos
         end
-        copy!(buf.data, 1, buf.data, datapos, datasize)
+        copyto!(buf.data, 1, buf.data, datapos, datasize)
         shift = datapos - 1
         if buf.markpos > 0
             buf.markpos -= shift
@@ -181,7 +181,7 @@ end
 function takemarked!(buf::Buffer)
     @assert buf.markpos > 0
     sz = buf.marginpos - buf.markpos
-    copy!(buf.data, 1, buf.data, buf.markpos, sz)
+    copyto!(buf.data, 1, buf.data, buf.markpos, sz)
     initbuffer!(buf)
     return resize!(buf.data, sz)
 end
@@ -189,7 +189,7 @@ end
 # Copy data from `data` to `buf`.
 function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
-    unsafe_copy!(marginptr(buf), data, nbytes)
+    unsafe_copyto!(marginptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
 end
@@ -199,7 +199,7 @@ function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
     # NOTE: It's caller's responsibility to ensure that the buffer has at least
     # nbytes.
     @assert buffersize(buf) ≥ nbytes
-    unsafe_copy!(data, bufferptr(buf), nbytes)
+    unsafe_copyto!(data, bufferptr(buf), nbytes)
     consumed!(buf, nbytes)
     return data
 end
@@ -207,8 +207,8 @@ end
 # Insert data to the current buffer.
 function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
-    copy!(buf.data, buf.bufferpos + nbytes, buf.data, buf.bufferpos, buffersize(buf))
-    unsafe_copy!(bufferptr(buf), data, nbytes)
+    copyto!(buf.data, buf.bufferpos + nbytes, buf.data, buf.bufferpos, buffersize(buf))
+    unsafe_copyto!(bufferptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
 end

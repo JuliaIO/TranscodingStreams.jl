@@ -74,7 +74,7 @@ function Base.transcode(codec::Codec, data::Vector{UInt8})
     buffer2 = Buffer(
         expectedsize(codec, Memory(data)) + minoutsize(codec, Memory(C_NULL, 0)))
     mark!(buffer2)
-    stream = TranscodingStream(codec, DevNull, State(Buffer(data), buffer2))
+    stream = TranscodingStream(codec, devnull, State(Buffer(data), buffer2))
     write(stream, TOKEN_END)
     return takemarked!(buffer2)
 end

@@ -141,7 +141,7 @@ Finalize `codec`.
 
 The default method does nothing.
 """
-function finalize(codec::Codec)::Void
+function finalize(codec::Codec)::Nothing
     return nothing
 end
 
