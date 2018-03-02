@@ -129,7 +129,6 @@ end
 include("codecnoop.jl")
 include("codecinvalid.jl")
 include("codecquadruple.jl")
-include("codecidentity.jl")  # deprecated codec
 
 # Test third-party codec packages.
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd", "CodecBase"]
