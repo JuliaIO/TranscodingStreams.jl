@@ -183,7 +183,7 @@ function Base.eof(stream::TranscodingStream)
     elseif mode == :panic
         throw_panic_error()
     else
-        assert(false)
+        @assert false
     end
 end
 

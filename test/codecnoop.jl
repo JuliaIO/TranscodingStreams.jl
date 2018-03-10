@@ -2,6 +2,7 @@
     source = IOBuffer("")
     stream = TranscodingStream(Noop(), source)
     @test eof(stream)
+    @inferred eof(stream)
     @test read(stream) == UInt8[]
     @test contains(repr(stream), "mode=read")
 
