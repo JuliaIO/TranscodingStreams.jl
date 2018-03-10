@@ -202,14 +202,14 @@
     TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
 
     # switch write => read
-    stream = NoopStream(IOBuffer(b"foobar", true, true))
+    stream = NoopStream(Compat.IOBuffer(b"foobar", read=true, write=true))
     @test_throws ArgumentError begin
         write(stream, b"xyz")
         read(stream, 3)
     end
 
     # switch read => write
-    stream = NoopStream(IOBuffer(b"foobar", true, true))
+    stream = NoopStream(Compat.IOBuffer(b"foobar", read=true, write=true))
     @test_throws ArgumentError begin
         read(stream, 3)
         write(stream, b"xyz")
