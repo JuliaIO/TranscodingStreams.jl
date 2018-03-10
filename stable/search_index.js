@@ -164,7 +164,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.TranscodingStream-Tuple{TranscodingStreams.Codec,IO}",
     "page": "References",
     "title": "TranscodingStreams.TranscodingStream",
-    "category": "Method",
+    "category": "method",
     "text": "TranscodingStream(codec::Codec, stream::IO;\n                  bufsize::Integer=16384,\n                  stop_on_end::Bool=false,\n                  sharedbuf::Bool=(stream isa TranscodingStream))\n\nCreate a transcoding stream with codec and stream.\n\nA TranscodingStream object wraps an input/output stream object stream, and transcodes the byte stream using codec. It is a subtype of IO and supports most of the I/O functions in the standard library.\n\nSee the docs (https://bicycle1885.github.io/TranscodingStreams.jl/stable/) for available codecs, examples, and more details of the type.\n\nArguments\n\ncodec:   The data transcoder. The transcoding stream does the initialization and   finalization of codec. Therefore, a codec object is not reusable once it   is passed to a transcoding stream.\nstream:   The wrapped stream. It must be opened before passed to the constructor.\nbufsize:   The initial buffer size (the default size is 16KiB). The buffer may be   extended whenever codec requests so.\nstop_on_end:   The flag to stop transcoding on :end return code of codec.  The   transcoded data are readable even after the end of transcoding.  Note that   some extra data may be read from stream into a buffer and thus sharedbuf   must be true to reuse stream.\nsharedbuf:   The flag to share buffers between adjacent transcoding streams.  The value   must be false if stream is not a TranscodingStream object.\n\nExamples\n\njulia> using TranscodingStreams\n\njulia> using CodecZlib\n\njulia> file = open(Pkg.dir(\"TranscodingStreams\", \"test\", \"abra.gzip\"));\n\njulia> stream = TranscodingStream(GzipDecompressor(), file)\nTranscodingStreams.TranscodingStream{CodecZlib.GzipDecompressor,IOStream}(<mode=idle>)\n\njulia> readstring(stream)\n\"abracadabra\"\n\n\n\n\n"
 },
 
@@ -172,7 +172,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#Base.transcode-Tuple{TranscodingStreams.Codec,Array{UInt8,1}}",
     "page": "References",
     "title": "Base.transcode",
-    "category": "Method",
+    "category": "method",
     "text": "transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}\n\nTranscode data by applying codec.\n\nNote that this method does not deallocation of codec, which is efficient but the caller may need to deallocate codec.\n\nExamples\n\njulia> using CodecZlib\n\njulia> data = b\"abracadabra\";\n\njulia> codec = ZlibCompressor();\n\njulia> compressed = transcode(codec, data);\n\njulia> TranscodingStreams.finalize(codec)\n\njulia> codec = ZlibDecompressor();\n\njulia> decompressed = transcode(codec, compressed);\n\njulia> TranscodingStreams.finalize(codec)\n\njulia> String(decompressed)\n\"abracadabra\"\n\n\n\n\n"
 },
 
@@ -180,7 +180,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.TOKEN_END",
     "page": "References",
     "title": "TranscodingStreams.TOKEN_END",
-    "category": "Constant",
+    "category": "constant",
     "text": "A special token indicating the end of data.\n\nTOKEN_END may be written to a transcoding stream like write(stream, TOKEN_END), which will terminate the current transcoding block.\n\nnote: Note\nCall flush(stream) after write(stream, TOKEN_END) to make sure that all data are written to the underlying stream.\n\n\n\n"
 },
 
@@ -188,7 +188,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.unsafe_read",
     "page": "References",
     "title": "TranscodingStreams.unsafe_read",
-    "category": "Function",
+    "category": "function",
     "text": "unsafe_read(input::IO, output::Ptr{UInt8}, nbytes::Int)::Int\n\nCopy at most nbytes from input into output.\n\nThis function is similar to Base.unsafe_read but is different in some points:\n\nIt does not throw EOFError when it fails to read nbytes from input.\nIt returns the number of bytes written to output.\nIt does not block if there are buffered data in input.\n\n\n\n"
 },
 
@@ -196,7 +196,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.unread",
     "page": "References",
     "title": "TranscodingStreams.unread",
-    "category": "Function",
+    "category": "function",
     "text": "unread(stream::TranscodingStream, data::Vector{UInt8})\n\nInsert data to the current reading position of stream.\n\nThe next read(stream, sizeof(data)) call will read data that are just inserted.\n\n\n\n"
 },
 
@@ -204,7 +204,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.unsafe_unread",
     "page": "References",
     "title": "TranscodingStreams.unsafe_unread",
-    "category": "Function",
+    "category": "function",
     "text": "unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)\n\nInsert nbytes pointed by data to the current reading position of stream.\n\nThe data are copied into the internal buffer and hence data can be safely used after the operation without interfering the stream.\n\n\n\n"
 },
 
@@ -220,7 +220,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.Stats",
     "page": "References",
     "title": "TranscodingStreams.Stats",
-    "category": "Type",
+    "category": "type",
     "text": "I/O statistics.\n\nIts object has four fields:\n\nin: the number of bytes supplied into the stream\nout: the number of bytes consumed out of the stream\ntranscoded_in: the number of bytes transcoded from the input buffer\ntranscoded_out: the number of bytes transcoded to the output buffer\n\nNote that, since the transcoding stream does buffering, in is transcoded_in + {size of buffered data} and out is transcoded_out - {size of buffered data}.\n\n\n\n"
 },
 
@@ -228,7 +228,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.stats",
     "page": "References",
     "title": "TranscodingStreams.stats",
-    "category": "Function",
+    "category": "function",
     "text": "stats(stream::TranscodingStream)\n\nCreate an I/O statistics object of stream.\n\n\n\n"
 },
 
@@ -244,7 +244,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.Noop",
     "page": "References",
     "title": "TranscodingStreams.Noop",
-    "category": "Type",
+    "category": "type",
     "text": "Noop()\n\nCreate a noop codec.\n\nNoop (no operation) is a codec that does nothing. The data read from or written to the stream are kept as-is without any modification. This is often useful as a buffered stream or an identity element of a composition of streams.\n\nThe implementations are specialized for this codec. For example, a Noop stream uses only one buffer rather than a pair of buffers, which avoids copying data between two buffers and the throughput will be larger than a naive implementation.\n\n\n\n"
 },
 
@@ -252,7 +252,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.NoopStream",
     "page": "References",
     "title": "TranscodingStreams.NoopStream",
-    "category": "Type",
+    "category": "type",
     "text": "NoopStream(stream::IO)\n\nCreate a noop stream.\n\n\n\n"
 },
 
@@ -260,7 +260,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.Codec",
     "page": "References",
     "title": "TranscodingStreams.Codec",
-    "category": "Type",
+    "category": "type",
     "text": "An abstract codec type.\n\nAny codec supporting the transcoding protocol must be a subtype of this type.\n\nTranscoding protocol\n\nTranscoding proceeds by calling some functions in a specific way. We call this \"transcoding protocol\" and any codec must implement it as described below.\n\nThere are six functions for a codec to implement:\n\nexpectedsize: return the expected size of transcoded data\nminoutsize: return the minimum output size of process\ninitialize: initialize the codec\nfinalize: finalize the codec\nstartproc: start processing with the codec\nprocess: process data with the codec.\n\nThese are defined in the TranscodingStreams and a new codec type must extend these methods if necessary.  Implementing a process method is mandatory but others are optional.  expectedsize, minoutsize, initialize, finalize, and startproc have a default implementation.\n\nYour codec type is denoted by C and its object by codec.\n\nErrors that occur in these methods are supposed to be unrecoverable and the stream will go to the panic mode. Only Base.isopen and Base.close are available in that mode.\n\nexpectedsize\n\nThe expectedsize(codec::C, input::Memory)::Int method takes codec and input, and returns the expected size of transcoded data. This method will be used as a hint to determine the size of a data buffer when transcode is called. A good hint will reduce the number of buffer resizing and hence result in better performance.\n\nminoutsize\n\nThe minoutsize(codec::C, input::Memory)::Int method takes codec and input, and returns the minimum required size of the output memory when process is called.  For example, an encoder of base64 will write at least four bytes to the output and hence it is reasonable to return 4 with this method.\n\ninitialize\n\nThe initialize(codec::C)::Void method takes codec and returns nothing. This is called once and only once before starting any data processing. Therefore, you may initialize codec (e.g. allocating memory needed to process data) with this method. If initialization fails for some reason, it may throw an exception and no other methods (including finalize) will be called. Therefore, you need to release the memory before throwing an exception.\n\nfinalize\n\nThe finalize(codec::C)::Void method takes codec and returns nothing.  This is called once and only only once just before the transcoding stream goes to the close mode (i.e. when Base.close is called) or just after startproc or process throws an exception. Other errors that happen inside the stream (e.g. EOFError) will not call this method. Therefore, you may finalize codec (e.g. freeing memory) with this method. If finalization fails for some reason, it may throw an exception. You should release the allocated memory in codec before returning or throwing an exception in finalize because otherwise nobody cannot release the memory. Even when an exception is thrown while finalizing a stream, the stream will become the close mode for safety.\n\nstartproc\n\nThe startproc(codec::C, mode::Symbol, error::Error)::Symbol method takes codec, mode and error, and returns a status code. This is called just before the stream starts reading or writing data. mode is either :read or :write and then the stream starts reading or writing, respectively.  The return code must be :ok if codec is ready to read or write data.  Otherwise, it must be :error and the error argument must be set to an exception object.\n\nprocess\n\nThe process(codec::C, input::Memory, output::Memory, error::Error)::Tuple{Int,Int,Symbol} method takes codec, input, output and error, and returns a consumed data size, a produced data size and a status code. This is called repeatedly while processing data. The input (input) and output (output) data are a Memory object, which is a pointer to a contiguous memory region with size. You must read input data from input, transcode the bytes, and then write the output data to output.  Finally you need to return the size of read data, the size of written data, and :ok status code so that the caller can know how many bytes are consumed and produced in the method. When transcoding reaches the end of a data stream, it is notified to this method by empty input. In that case, the method need to write the buffered data (if any) to output. If there is no data to write, the status code must be set to :end. The process method will be called repeatedly until it returns :end status code. If an error happens while processing data, the error argument must be set to an exception object and the return code must be :error.\n\n\n\n"
 },
 
@@ -268,7 +268,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.expectedsize",
     "page": "References",
     "title": "TranscodingStreams.expectedsize",
-    "category": "Function",
+    "category": "function",
     "text": "expectedsize(codec::Codec, input::Memory)::Int\n\nReturn the expected size of the transcoded input with codec.\n\nThe default method returns input.size.\n\n\n\n"
 },
 
@@ -276,7 +276,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.minoutsize",
     "page": "References",
     "title": "TranscodingStreams.minoutsize",
-    "category": "Function",
+    "category": "function",
     "text": "minoutsize(codec::Codec, input::Memory)::Int\n\nReturn the minimum output size to be ensured when calling process.\n\nThe default method returns max(1, div(input.size, 4)).\n\n\n\n"
 },
 
@@ -284,7 +284,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.initialize",
     "page": "References",
     "title": "TranscodingStreams.initialize",
-    "category": "Function",
+    "category": "function",
     "text": "initialize(codec::Codec)::Void\n\nInitialize codec.\n\nThe default method does nothing.\n\n\n\n"
 },
 
@@ -292,7 +292,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.finalize",
     "page": "References",
     "title": "TranscodingStreams.finalize",
-    "category": "Function",
+    "category": "function",
     "text": "finalize(codec::Codec)::Void\n\nFinalize codec.\n\nThe default method does nothing.\n\n\n\n"
 },
 
@@ -300,7 +300,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.startproc",
     "page": "References",
     "title": "TranscodingStreams.startproc",
-    "category": "Function",
+    "category": "function",
     "text": "startproc(codec::Codec, mode::Symbol, error::Error)::Symbol\n\nStart data processing with codec of mode.\n\nThe default method does nothing and returns :ok.\n\n\n\n"
 },
 
@@ -308,7 +308,7 @@ var documenterSearchIndex = {"docs": [
     "location": "references.html#TranscodingStreams.process",
     "page": "References",
     "title": "TranscodingStreams.process",
-    "category": "Function",
+    "category": "function",
     "text": "process(codec::Codec, input::Memory, output::Memory, error::Error)::Tuple{Int,Int,Symbol}\n\nDo data processing with codec.\n\nThere is no default method.\n\n\n\n"
 },
 
