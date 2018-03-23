@@ -4,7 +4,7 @@
     @test eof(stream)
     @inferred eof(stream)
     @test read(stream) == UInt8[]
-    @test contains(repr(stream), "mode=read")
+    @test occursin("mode=read", repr(stream))
 
     source = IOBuffer("foo")
     stream = TranscodingStream(Noop(), source)
@@ -21,12 +21,12 @@
 
     stream = TranscodingStream(Noop(), IOBuffer())
     @test_throws EOFError read(stream, UInt8)
-    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(uninitialized, 3)), 3)
+    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(undef, 3)), 3)
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer("foobar"), bufsize=1)
     @test read(stream, UInt8) === UInt8('f')
-    data = Vector{UInt8}(uninitialized, 5)
+    data = Vector{UInt8}(undef, 5)
     unsafe_read(stream, pointer(data), 5) === nothing
     @test data == b"oobar"
     close(stream)
@@ -34,7 +34,7 @@
     sink = IOBuffer()
     stream = TranscodingStream(Noop(), sink)
     @test write(stream, "foo") === 3
-    @test contains(repr(stream), "mode=write")
+    @test occursin("mode=write", repr(stream))
     flush(stream)
     @test take!(sink) == b"foo"
     close(stream)
