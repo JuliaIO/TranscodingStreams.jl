@@ -276,7 +276,7 @@ end
 function Base.readuntil(stream::TranscodingStream, delim::UInt8)
     ready_to_read!(stream)
     buffer1 = stream.state.buffer1
-    ret = Vector{UInt8}(uninitialized, 0)
+    ret = Vector{UInt8}(undef, 0)
     filled = 0
     while !eof(stream)
         p = findbyte(buffer1, delim)
@@ -347,7 +347,7 @@ end
 
 function Base.readavailable(stream::TranscodingStream)
     n = bytesavailable(stream)
-    data = Vector{UInt8}(uninitialized, n)
+    data = Vector{UInt8}(undef, n)
     unsafe_read(stream, pointer(data), n)
     return data
 end

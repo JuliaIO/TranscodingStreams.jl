@@ -27,7 +27,7 @@ mutable struct Buffer
     total::Int64
 
     function Buffer(size::Integer)
-        return new(Vector{UInt8}(uninitialized, size), 0, 1, 1, 0)
+        return new(Vector{UInt8}(undef, size), 0, 1, 1, 0)
     end
 
     function Buffer(data::Vector{UInt8})

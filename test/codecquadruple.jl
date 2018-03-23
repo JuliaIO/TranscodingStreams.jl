@@ -65,6 +65,6 @@ end
     close(stream2)
 
     stream = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
-    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(uninitialized, 13)), 13)
+    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(undef, 13)), 13)
     close(stream)
 end
