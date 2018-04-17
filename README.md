@@ -60,16 +60,22 @@ Each codec has an alias to its transcoding stream type for ease of use. For
 example, `GzipCompressorStream{S} = TranscodingStream{GzipCompressor,S} where
 S<:IO`.
 
+Consult the [docs][docs-latest-url] for more details and examples.
+
 ## Codec packages
 
+TranscodingStreams.jl offers I/O interfaces to users. It also offers a protocol
+suite to communicate with various codecs. However, specific codecs are not
+included in this package except the `Noop` codec, which does nothing to data.
+The user need to install codecs as a plug-in to do something meaningful.
+
+The following codec packages support the protocol suite:
 - [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
 - [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
 - [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
 - [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
 - [CodecLz4.jl](https://github.com/invenia/CodecLz4.jl) by Invenia.
 - [CodecBase.jl](https://github.com/bicycle1885/CodecBase.jl)
-
-Consult the [docs][docs-latest-url] for more details and examples.
 
 [travisci-img]: https://travis-ci.org/bicycle1885/TranscodingStreams.jl.svg?branch=master
 [travisci-url]: https://travis-ci.org/bicycle1885/TranscodingStreams.jl
