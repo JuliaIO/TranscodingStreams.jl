@@ -135,9 +135,17 @@ end
 # Check that mode is valid.
 macro checkmode(validmodes)
     mode = esc(:mode)
-    quote
-        if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), false, eval(validmodes)))
-            throw(ArgumentError(string("invalid mode :", $(mode))))
+    if VERSION ≥ v"0.7.0-beta.210"
+        quote
+            if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), eval(validmodes), init=false))
+                throw(ArgumentError(string("invalid mode :", $(mode))))
+            end
+        end
+    else
+        quote
+            if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), false, eval(validmodes)))
+                throw(ArgumentError(string("invalid mode :", $(mode))))
+            end
         end
     end
 end
