@@ -1,7 +1,8 @@
 using TranscodingStreams
 using Compat
-if VERSION > v"0.7-"
+if VERSION ≥ v"0.7.0-rc1"
     using Test
+    using Pkg
 else
     using Base.Test
 end
