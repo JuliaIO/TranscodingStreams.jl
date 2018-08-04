@@ -1,17 +1,18 @@
 # Test Tools
 # ==========
 
-if VERSION > v"0.7-"
+if VERSION ≥ v"0.7.0-rc1"
     import Test
-    import Random: srand, randstring
+    import Random: seed!, randstring
 else
     import Base.Test
+    const seed! = srand
 end
 
 TEST_RANDOM_SEED = 12345
 
 function test_roundtrip_read(encoder, decoder)
-    srand(TEST_RANDOM_SEED)
+    seed!(TEST_RANDOM_SEED)
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
         file = IOBuffer(data)
@@ -22,7 +23,7 @@ function test_roundtrip_read(encoder, decoder)
 end
 
 function test_roundtrip_write(encoder, decoder)
-    srand(TEST_RANDOM_SEED)
+    seed!(TEST_RANDOM_SEED)
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
         file = IOBuffer()
@@ -34,7 +35,7 @@ function test_roundtrip_write(encoder, decoder)
 end
 
 function test_roundtrip_transcode(encode, decode)
-    srand(TEST_RANDOM_SEED)
+    seed!(TEST_RANDOM_SEED)
     encoder = encode()
     decoder = decode()
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
@@ -47,7 +48,7 @@ function test_roundtrip_transcode(encode, decode)
 end
 
 function test_roundtrip_lines(encoder, decoder)
-    srand(TEST_RANDOM_SEED)
+    seed!(TEST_RANDOM_SEED)
     lines = String[]
     buf = IOBuffer()
     stream = encoder(buf)
@@ -77,7 +78,7 @@ function test_roundtrip_fileio(Encoder, Decoder)
 end
 
 function test_chunked_read(Encoder, Decoder)
-    srand(TEST_RANDOM_SEED)
+    seed!(TEST_RANDOM_SEED)
     alpha = b"色即是空"
     encoder = Encoder()
     initialize(encoder)
@@ -103,7 +104,7 @@ function test_chunked_read(Encoder, Decoder)
 end
 
 function test_chunked_write(Encoder, Decoder)
-    srand(TEST_RANDOM_SEED)
+    seed!(TEST_RANDOM_SEED)
     alpha = b"空即是色"
     encoder = Encoder()
     initialize(encoder)
