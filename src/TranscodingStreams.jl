@@ -1,13 +1,9 @@
-VERSION < v"0.7.0-beta2.199" && __precompile__()
-
 module TranscodingStreams
 
 export
     TranscodingStream,
     Noop,
     NoopStream
-
-using Compat
 
 include("memory.jl")
 include("buffer.jl")

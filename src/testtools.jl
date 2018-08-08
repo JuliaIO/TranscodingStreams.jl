@@ -1,13 +1,8 @@
 # Test Tools
 # ==========
 
-if VERSION ≥ v"0.7.0-rc1"
-    import Test
-    import Random: seed!, randstring
-else
-    import Base.Test
-    const seed! = srand
-end
+import Test
+using Random: seed!, randstring
 
 TEST_RANDOM_SEED = 12345
 
@@ -84,11 +79,7 @@ function test_chunked_read(Encoder, Decoder)
     initialize(encoder)
     for _ in 1:500
         chunks = [rand(alpha, rand(0:100)) for _ in 1:rand(1:100)]
-        if VERSION ≥ v"0.7.0-beta.210"
-            data = mapfoldl(x->transcode(encoder, x), vcat, chunks, init=UInt8[])
-        else
-            data = mapfoldl(x->transcode(encoder, x), vcat, UInt8[], chunks)
-        end
+        data = mapfoldl(x->transcode(encoder, x), vcat, chunks, init=UInt8[])
         buffer = NoopStream(IOBuffer(data))
         ok = true
         local stream

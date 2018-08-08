@@ -135,17 +135,9 @@ end
 # Check that mode is valid.
 macro checkmode(validmodes)
     mode = esc(:mode)
-    if VERSION ≥ v"0.7.0-beta.210"
-        quote
-            if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), eval(validmodes), init=false))
-                throw(ArgumentError(string("invalid mode :", $(mode))))
-            end
-        end
-    else
-        quote
-            if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), false, eval(validmodes)))
-                throw(ArgumentError(string("invalid mode :", $(mode))))
-            end
+    quote
+        if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), eval(validmodes), init=false))
+            throw(ArgumentError(string("invalid mode :", $(mode))))
         end
     end
 end
@@ -341,16 +333,9 @@ function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=
     return filled
 end
 
-if VERSION > v"0.7-"
-    function Base.bytesavailable(stream::TranscodingStream)
-        ready_to_read!(stream)
-        return buffersize(stream.state.buffer1)
-    end
-else
-    function Base.nb_available(stream::TranscodingStream)
-        ready_to_read!(stream)
-        return buffersize(stream.state.buffer1)
-    end
+function Base.bytesavailable(stream::TranscodingStream)
+    ready_to_read!(stream)
+    return buffersize(stream.state.buffer1)
 end
 
 function Base.readavailable(stream::TranscodingStream)
