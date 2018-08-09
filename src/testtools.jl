@@ -91,14 +91,13 @@ function test_chunked_read(Encoder, Decoder)
         end
         buffer = NoopStream(IOBuffer(data))
         ok = true
-        local stream
         for chunk in chunks
             stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
             ok &= hash(read(stream)) == hash(chunk)
             ok &= eof(stream)
+            close(stream)
         end
         Test.@test ok
-        close(stream)
     end
     finalize(encoder)
 end
