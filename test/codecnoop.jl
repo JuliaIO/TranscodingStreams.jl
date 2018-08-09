@@ -9,7 +9,7 @@
     source = IOBuffer("foo")
     stream = TranscodingStream(Noop(), source)
     @test !eof(stream)
-    @test read(stream) == b"foo"
+    @test read(stream) == bb"foo"
     close(stream)
 
     data = rand(UInt8, 100_000)
@@ -28,7 +28,7 @@
     @test read(stream, UInt8) === UInt8('f')
     data = Vector{UInt8}(undef, 5)
     unsafe_read(stream, pointer(data), 5) === nothing
-    @test data == b"oobar"
+    @test data == bb"oobar"
     close(stream)
 
     sink = IOBuffer()
@@ -36,7 +36,7 @@
     @test write(stream, "foo") === 3
     @test occursin("mode=write", repr(stream))
     flush(stream)
-    @test take!(sink) == b"foo"
+    @test take!(sink) == bb"foo"
     close(stream)
 
     data = rand(UInt8, 100_000)
@@ -49,7 +49,7 @@
     @test take!(sink) == data
     close(stream)
 
-    stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
+    stream = TranscodingStream(Noop(), IOBuffer(bb"foobarbaz"))
     @test position(stream) === 0
     read(stream, UInt8)
     @test position(stream) === 1
@@ -71,13 +71,13 @@
     @test !ismarked(stream)
     close(stream)
 
-    stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
+    stream = TranscodingStream(Noop(), IOBuffer(bb"foobarbaz"))
     seek(stream, 2)
-    @test read(stream, 3) == b"oba"
+    @test read(stream, 3) == bb"oba"
     seek(stream, 0)
-    @test read(stream, 3) == b"foo"
+    @test read(stream, 3) == bb"foo"
     seekstart(stream)
-    @test read(stream, 3) == b"foo"
+    @test read(stream, 3) == bb"foo"
     seekend(stream)
     @test eof(stream)
     close(stream)
@@ -116,7 +116,7 @@
     out = zeros(UInt8, 3)
     @test bytesavailable(stream) == 0
     @test TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
-    @test out == b"foo"
+    @test out == bb"foo"
     close(stream)
 
     data = rand(UInt8, 1999)
@@ -132,11 +132,11 @@
     close(stream)
 
     stream = NoopStream(NoopStream(IOBuffer("foobar")))
-    @test read(stream) == b"foobar"
+    @test read(stream) == bb"foobar"
     close(stream)
 
     stream = NoopStream(NoopStream(NoopStream(IOBuffer("foobar"))))
-    @test read(stream) == b"foobar"
+    @test read(stream) == bb"foobar"
     close(stream)
 
     # Two buffers are the same object.
@@ -151,7 +151,7 @@
     @test s1.state.buffer1 === s2.state.buffer1 === s3.state.buffer1 ===
           s1.state.buffer2 === s2.state.buffer2 === s3.state.buffer2
 
-    stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
+    stream = TranscodingStream(Noop(), IOBuffer(bb"foobar"))
     @test TranscodingStreams.stats(stream).in === Int64(0)
     @test TranscodingStreams.stats(stream).out === Int64(0)
     read(stream)
@@ -162,7 +162,7 @@
     stream = TranscodingStream(Noop(), IOBuffer())
     @test TranscodingStreams.stats(stream).in === Int64(0)
     @test TranscodingStreams.stats(stream).out === Int64(0)
-    write(stream, b"foobar")
+    write(stream, bb"foobar")
     flush(stream)
     @test TranscodingStreams.stats(stream).in === Int64(6)
     @test TranscodingStreams.stats(stream).out === Int64(6)
@@ -176,23 +176,23 @@
 
     stream = NoopStream(IOBuffer("foobar"))
     @test bytesavailable(stream) === 0
-    @test readavailable(stream) == b""
+    @test readavailable(stream) == bb""
     @test read(stream, UInt8) === UInt8('f')
     @test bytesavailable(stream) === 5
-    @test readavailable(stream) == b"oobar"
+    @test readavailable(stream) == bb"oobar"
     close(stream)
 
-    data = b""
+    data = bb""
     @test transcode(Noop, data)  == data
     @test transcode(Noop, data) !== data
-    data = b"foo"
+    data = bb"foo"
     @test transcode(Noop, data)  == data
     @test transcode(Noop, data) !== data
 
-    data = b""
+    data = bb""
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
-    data = b"foo"
+    data = bb"foo"
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
 
@@ -202,56 +202,56 @@
     TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
 
     # switch write => read
-    stream = NoopStream(Compat.IOBuffer(b"foobar", read=true, write=true))
+    stream = NoopStream(IOBuffer(bb"foobar", read=true, write=true))
     @test_throws ArgumentError begin
-        write(stream, b"xyz")
+        write(stream, bb"xyz")
         read(stream, 3)
     end
 
     # switch read => write
-    stream = NoopStream(Compat.IOBuffer(b"foobar", read=true, write=true))
+    stream = NoopStream(IOBuffer(bb"foobar", read=true, write=true))
     @test_throws ArgumentError begin
         read(stream, 3)
-        write(stream, b"xyz")
+        write(stream, bb"xyz")
     end
 
     stream = NoopStream(IOBuffer(""))
-    @test TranscodingStreams.unread(stream, b"foo") === nothing
-    @test read(stream, 3) == b"foo"
+    @test TranscodingStreams.unread(stream, bb"foo") === nothing
+    @test read(stream, 3) == bb"foo"
     close(stream)
 
     stream = NoopStream(IOBuffer("foo"))
-    @test read(stream, 3) == b"foo"
-    @test TranscodingStreams.unread(stream, b"bar") === nothing
-    @test read(stream, 3) == b"bar"
+    @test read(stream, 3) == bb"foo"
+    @test TranscodingStreams.unread(stream, bb"bar") === nothing
+    @test read(stream, 3) == bb"bar"
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))
-    @test TranscodingStreams.unread(stream, b"baz") === nothing
-    @test read(stream, 3) == b"baz"
-    @test read(stream, 3) == b"foo"
-    @test read(stream, 3) == b"bar"
+    @test TranscodingStreams.unread(stream, bb"baz") === nothing
+    @test read(stream, 3) == bb"baz"
+    @test read(stream, 3) == bb"foo"
+    @test read(stream, 3) == bb"bar"
     @test eof(stream)
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))
-    @test read(stream, 3) == b"foo"
-    @test TranscodingStreams.unread(stream, b"baz") === nothing
-    @test read(stream, 3) == b"baz"
-    @test read(stream, 3) == b"bar"
+    @test read(stream, 3) == bb"foo"
+    @test TranscodingStreams.unread(stream, bb"baz") === nothing
+    @test read(stream, 3) == bb"baz"
+    @test read(stream, 3) == bb"bar"
     @test eof(stream)
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))
-    @test read(stream, 3) == b"foo"
-    @test read(stream, 3) == b"bar"
-    @test TranscodingStreams.unread(stream, b"baz") === nothing
-    @test read(stream, 3) == b"baz"
+    @test read(stream, 3) == bb"foo"
+    @test read(stream, 3) == bb"bar"
+    @test TranscodingStreams.unread(stream, bb"baz") === nothing
+    @test read(stream, 3) == bb"baz"
     @test eof(stream)
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))
-    @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
+    @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(bb"foo"), -1)
     close(stream)
 
     stream = NoopStream(IOBuffer(""))

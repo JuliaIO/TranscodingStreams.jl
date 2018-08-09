@@ -1,11 +1,6 @@
 using TranscodingStreams
-using Compat
-if VERSION ≥ v"0.7.0-rc1"
-    using Test
-    using Pkg
-else
-    using Base.Test
-end
+using Test
+using Pkg
 
 # Tool tests
 # ----------
@@ -18,8 +13,8 @@ import TranscodingStreams:
     #=ismarked,=# mark!, unmark!, reset!,
     makemargin!, emptybuffer!
 
-# HACK: Overload b"..." syntax for v0.7/v1.0 compatibility.
-macro b_str(data)
+# binary bytes
+macro bb_str(data)
     convert(Vector{UInt8}, codeunits(data))
 end
 
@@ -28,7 +23,7 @@ end
     @test buf isa Buffer
     @test length(buf.data) == 1024
 
-    data = b"foobar"
+    data = bb"foobar"
     buf = Buffer(data)
     @test buf isa Buffer
     @test bufferptr(buf) === pointer(data)
@@ -74,7 +69,7 @@ end
 end
 
 @testset "Memory" begin
-    data = b"foobar"
+    data = bb"foobar"
     mem = TranscodingStreams.Memory(pointer(data), sizeof(data))
     @test mem isa TranscodingStreams.Memory
     @test mem.ptr === pointer(data)
@@ -95,7 +90,7 @@ end
     @test_throws BoundsError mem[7] = 0x00
     @test_throws BoundsError mem[0] = 0x00
 
-    data = b"foobar"
+    data = bb"foobar"
     mem = TranscodingStreams.Memory(data)
     @test mem isa TranscodingStreams.Memory
     @test mem.ptr == pointer(data)

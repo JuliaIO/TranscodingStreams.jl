@@ -19,14 +19,8 @@ function Base.length(mem::Memory)
     return mem.size
 end
 
-if VERSION > v"0.7-"
-    function Base.lastindex(mem::Memory)
-        return Int(mem.size)
-    end
-else
-    function Base.endof(mem::Memory)
-        return Int(mem.size)
-    end
+function Base.lastindex(mem::Memory)
+    return Int(mem.size)
 end
 
 function Base.checkbounds(mem::Memory, i::Integer)
