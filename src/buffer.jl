@@ -35,6 +35,10 @@ mutable struct Buffer
     end
 end
 
+function Buffer(data::Base.CodeUnits{UInt8})
+    return Buffer(Vector{UInt8}(data))
+end
+
 function Base.length(buf::Buffer)
     return length(buf.data)
 end

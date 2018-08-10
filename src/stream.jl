@@ -361,7 +361,7 @@ Insert `data` to the current reading position of `stream`.
 The next `read(stream, sizeof(data))` call will read data that are just
 inserted.
 """
-function unread(stream::TranscodingStream, data::Vector{UInt8})
+function unread(stream::TranscodingStream, data::Union{Vector{UInt8},Base.CodeUnits{UInt8}})
     unsafe_unread(stream, pointer(data), sizeof(data))
 end
 

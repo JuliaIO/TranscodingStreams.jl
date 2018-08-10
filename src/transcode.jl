@@ -27,7 +27,7 @@ julia> String(decompressed)
 
 ```
 """
-function Base.transcode(::Type{C}, data::Vector{UInt8}) where C<:Codec
+function Base.transcode(::Type{C}, data::Union{Vector{UInt8},Base.CodeUnits{UInt8}}) where C<:Codec
     codec = C()
     initialize(codec)
     try
@@ -70,7 +70,7 @@ julia> String(decompressed)
 
 ```
 """
-function Base.transcode(codec::Codec, data::Vector{UInt8})
+function Base.transcode(codec::Codec, data::Union{Vector{UInt8},Base.CodeUnits{UInt8}})
     # Add `minoutsize` because `transcode` will be called at least two times.
     buffer2 = Buffer(
         expectedsize(codec, Memory(data)) + minoutsize(codec, Memory(C_NULL, 0)))

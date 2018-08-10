@@ -128,5 +128,5 @@ include("codecquadruple.jl")
 
 # Test third-party codec packages.
 for pkg in ["CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd", "CodecBase"]
-    Pkg.test(pkg)
+    #Pkg.test(pkg)
 end
