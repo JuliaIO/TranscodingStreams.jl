@@ -20,19 +20,22 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
     # mutable state of the stream
     state::State
 
-    function TranscodingStream{C,S}(codec::C, stream::S, state::State) where {C<:Codec,S<:IO}
+    function TranscodingStream{C,S}(codec::C, stream::S, state::State, initialized::Bool) where {C<:Codec,S<:IO}
         if !isopen(stream)
             throw(ArgumentError("closed stream"))
         elseif state.mode != :idle
             throw(ArgumentError("invalid initial mode"))
         end
-        initialize(codec)
+        if !initialized
+            initialize(codec)
+        end
         return new(codec, stream, state)
     end
 end
 
-function TranscodingStream(codec::C, stream::S, state::State) where {C<:Codec,S<:IO}
-    return TranscodingStream{C,S}(codec, stream, state)
+function TranscodingStream(codec::C, stream::S, state::State;
+                           initialized::Bool=false) where {C<:Codec,S<:IO}
+    return TranscodingStream{C,S}(codec, stream, state, initialized)
 end
 
 const DEFAULT_BUFFER_SIZE = 16 * 2^10  # 16KiB

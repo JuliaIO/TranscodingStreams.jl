@@ -29,6 +29,7 @@ julia> String(decompressed)
 """
 function Base.transcode(::Type{C}, data::Vector{UInt8}) where C<:Codec
     codec = C()
+    initialize(codec)
     try
         return transcode(codec, data)
     finally
@@ -74,7 +75,7 @@ function Base.transcode(codec::Codec, data::Vector{UInt8})
     buffer2 = Buffer(
         expectedsize(codec, Memory(data)) + minoutsize(codec, Memory(C_NULL, 0)))
     mark!(buffer2)
-    stream = TranscodingStream(codec, devnull, State(Buffer(data), buffer2))
+    stream = TranscodingStream(codec, devnull, State(Buffer(data), buffer2); initialized=true)
     write(stream, TOKEN_END)
     return takemarked!(buffer2)
 end
