@@ -182,17 +182,17 @@
     @test readavailable(stream) == b"oobar"
     close(stream)
 
-    data = bb""
+    data = b""
     @test transcode(Noop, data)  == data
     @test transcode(Noop, data) !== data
-    data = bb"foo"
+    data = b"foo"
     @test transcode(Noop, data)  == data
     @test transcode(Noop, data) !== data
 
-    data = bb""
+    data = b""
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
-    data = bb"foo"
+    data = b"foo"
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
 
