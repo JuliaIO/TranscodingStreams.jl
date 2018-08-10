@@ -77,10 +77,12 @@ Arguments
     The initial buffer size (the default size is 16KiB). The buffer may be
     extended whenever `codec` requests so.
 - `stop_on_end`:
-    The flag to stop transcoding on `:end` return code of `codec`.  The
-    transcoded data are readable even after the end of transcoding.  Note that
-    some extra data may be read from `stream` into a buffer and thus `sharedbuf`
-    must be `true` to reuse `stream`.
+    The flag to stop transcoding on `:end` return code from `codec`.  The
+    transcoded data are readable even after stopping transcoding process.  With
+    this flag on, `stream` is not closed when the wrapper stream is closed with
+    `close`.  Note that some extra data may be read from `stream` into an
+    internal buffer, and thus `stream` must be a `TranscodingStream` object and
+    `sharedbuf` must be `true` to reuse `stream`.
 - `sharedbuf`:
     The flag to share buffers between adjacent transcoding streams.  The value
     must be `false` if `stream` is not a `TranscodingStream` object.
@@ -160,10 +162,13 @@ function Base.isopen(stream::TranscodingStream)
 end
 
 function Base.close(stream::TranscodingStream)
+    stopped = stream.state.mode == :stop
     if stream.state.mode != :panic
         changemode!(stream, :close)
     end
-    close(stream.stream)
+    if !stopped
+        close(stream.stream)
+    end
     return nothing
 end
 
