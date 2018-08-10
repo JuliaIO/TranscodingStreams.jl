@@ -29,12 +29,12 @@ function TranscodingStreams.minoutsize(
 end
 
 @testset "Quadruple Codec" begin
-    @test transcode(QuadrupleCodec, bb"") == bb""
-    @test transcode(QuadrupleCodec, bb"a") == bb"aaaa"
-    @test transcode(QuadrupleCodec, bb"ab") == bb"aaaabbbb"
-    @test transcode(QuadrupleCodec(), bb"") == bb""
-    @test transcode(QuadrupleCodec(), bb"a") == bb"aaaa"
-    @test transcode(QuadrupleCodec(), bb"ab") == bb"aaaabbbb"
+    @test transcode(QuadrupleCodec, b"") == b""
+    @test transcode(QuadrupleCodec, b"a") == b"aaaa"
+    @test transcode(QuadrupleCodec, b"ab") == b"aaaabbbb"
+    @test transcode(QuadrupleCodec(), b"") == b""
+    @test transcode(QuadrupleCodec(), b"a") == b"aaaa"
+    @test transcode(QuadrupleCodec(), b"ab") == b"aaaabbbb"
 
     #=
     data = "x"^1024
@@ -43,11 +43,11 @@ end
     =#
 
     stream = TranscodingStream(QuadrupleCodec(), NoopStream(IOBuffer("foo")))
-    @test read(stream) == bb"ffffoooooooo"
+    @test read(stream) == b"ffffoooooooo"
     close(stream)
 
     stream = NoopStream(TranscodingStream(QuadrupleCodec(), NoopStream(IOBuffer("foo"))))
-    @test read(stream) == bb"ffffoooooooo"
+    @test read(stream) == b"ffffoooooooo"
     close(stream)
 
     # Buffers are shared.

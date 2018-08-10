@@ -13,17 +13,12 @@ import TranscodingStreams:
     #=ismarked,=# mark!, unmark!, reset!,
     makemargin!, emptybuffer!
 
-# binary bytes
-macro bb_str(data)
-    convert(Vector{UInt8}, codeunits(data))
-end
-
 @testset "Buffer" begin
     buf = Buffer(1024)
     @test buf isa Buffer
     @test length(buf.data) == 1024
 
-    data = bb"foobar"
+    data = Vector{UInt8}(b"foobar")
     buf = Buffer(data)
     @test buf isa Buffer
     @test bufferptr(buf) === pointer(data)
@@ -69,7 +64,7 @@ end
 end
 
 @testset "Memory" begin
-    data = bb"foobar"
+    data = Vector{UInt8}(b"foobar")
     mem = TranscodingStreams.Memory(pointer(data), sizeof(data))
     @test mem isa TranscodingStreams.Memory
     @test mem.ptr === pointer(data)
@@ -90,7 +85,7 @@ end
     @test_throws BoundsError mem[7] = 0x00
     @test_throws BoundsError mem[0] = 0x00
 
-    data = bb"foobar"
+    data = Vector{UInt8}(b"foobar")
     mem = TranscodingStreams.Memory(data)
     @test mem isa TranscodingStreams.Memory
     @test mem.ptr == pointer(data)

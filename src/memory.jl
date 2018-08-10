@@ -11,7 +11,7 @@ struct Memory
     size::UInt
 end
 
-function Memory(data::Vector{UInt8})
+function Memory(data::ByteData)
     return Memory(pointer(data), sizeof(data))
 end
 
