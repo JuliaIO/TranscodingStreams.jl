@@ -42,8 +42,10 @@ end
 
 Transcode `data` by applying `codec`.
 
-Note that this method does not deallocation of `codec`, which is efficient but
-the caller may need to deallocate `codec`.
+Note that this method does not initialize or finalize `codec`. This is
+efficient when you transcode a number of pieces of data, but you need to call
+[`TranscodingStreams.initialize`](@ref) and
+[`TranscodingStreams.finalize`](@ref) explicitly.
 
 Examples
 --------
@@ -55,11 +57,15 @@ julia> data = b"abracadabra";
 
 julia> codec = ZlibCompressor();
 
+julia> TranscodingStreams.initialize(codec)
+
 julia> compressed = transcode(codec, data);
 
 julia> TranscodingStreams.finalize(codec)
 
 julia> codec = ZlibDecompressor();
+
+julia> TranscodingStreams.initialize(codec)
 
 julia> decompressed = transcode(codec, compressed);
 
