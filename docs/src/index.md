@@ -1,30 +1,41 @@
-TranscodingStreams.jl
-=====================
+# Home
 
-Overview
---------
+![TranscodingStream](./assets/transcodingstream.png)
 
-TranscodingStreams.jl is a package for transcoding (e.g. compression) data
-streams. It exports a type `TranscodingStream`, which is a subtype of `IO` and
-supports various I/O operations like other usual I/O streams in the standard
-library. Operations are quick, simple, and consistent.
+## Overview
 
-In this page, we intorduce the basic concepts of TranscodingStreams.jl and
-available packages. The [Examples](@ref) page demonstrates common usage. The
-[References](@ref) page offers a comprehensive API document.
+TranscodingStreams.jl is a package for transcoding data streams. Transcoding
+may be compression, decompression, ASCII encoding, and any other codec.  The
+package exports a data type `TranscodingStream`, which is a subtype of `IO` and
+wraps other `IO` object to transcode data read from or written to the wrapped
+stream.
 
+In this page, we introduce the basic concepts of TranscodingStreams.jl and
+currently available packages. The [Examples](@ref) page demonstrates common
+usage. The [Reference](@ref) page offers a comprehensive API document.
 
-Introduction
-------------
+## Introduction
 
 `TranscodingStream` has two type parameters, `C<:Codec` and `S<:IO`, and hence
-the actual type should be written as `TranscodingStream{C<:Codec,S<:IO}`. This
-type wraps an underlying I/O stream `S` by a codec `C`. The codec defines
-transformation (or transcoding) of the stream. For example, when `C` is a
-lossless decompressor type and `S` is a file, `TranscodingStream{C,S}` behaves
-like a data stream that incrementally decompresses data from the file.
+the concrete data type is written as `TranscodingStream{C<:Codec,S<:IO}`. This
+type wraps an underlying I/O stream `S` by a transcoding codec `C`. `C` and `S`
+are orthogonal and hence you can use any combination of these two types.  The
+underlying stream may be any stream that supports I/O operations defined by the
+`Base` module. For example, it may be `IOStream`, `TTY`, `IOBuffer`, or
+`TranscodingStream`. The codec `C` must define the transcoding protocol defined
+in this package.  We already have various codecs in packages listed below.  Of
+course, you can define your own codec by implementing the transcoding protocol
+described in [`TranscodingStreams.Codec`](@ref).
 
-Codecs are defined in other packages listed below:
+You can install codec packages using the standard package manager. These codec
+packages are independent of each other and can be installed separately. You
+won't need to explicitly install the TranscodingStreams.jl package unless you
+will use lower-level interfaces of it. Each codec package defines some codec
+types, which is a subtype of `TranscodingStreams.Codec`, and their
+corresponding transcoding stream aliases.  These aliases are partially
+instantiated by a codec type; for example, `GzipDecompressionStream{S}` is an
+alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
+`IO`.
 
 ```@raw html
 <table>
@@ -33,7 +44,7 @@ Codecs are defined in other packages listed below:
         <th>Library</th>
         <th>Format</th>
         <th>Codec</th>
-        <th>Stream</th>
+        <th>Stream alias</th>
         <th>Description</th>
     </tr>
     <tr>
@@ -100,7 +111,7 @@ Codecs are defined in other packages listed below:
     <tr>
         <td rowspan="2"><a href="https://github.com/bicycle1885/CodecZstd.jl">CodecZstd.jl</a></td>
         <td rowspan="2"><a href="http://facebook.github.io/zstd/">zstd</a></td>
-        <td rowspan="2"><a href="https://github.com/facebook/zstd/blob/dev/doc/zstd_compressor_format.md">Zstandard Compressor Format</a></td>
+        <td rowspan="2"><a href="https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md">Zstandard Compression Format</a></td>
         <td><code>ZstdCompressor</code></td>
         <td><code>ZstdCompressorStream</code></td>
         <td>Compress data in zstd (.zst) format.</td>
@@ -146,27 +157,24 @@ Codecs are defined in other packages listed below:
 </table>
 ```
 
-Install packages you need by calling `Pkg.add(<package name>)` in a Julia
-session. For example, if you want to read gzip-compressed files, call
-`Pkg.add("CodecZlib")` to use `GzipDecompressor` or `GzipDecompressorStream`.
-By convention, codec types have a name that matches `.*(Co|Deco)mpression` and
-I/O types have a codec name with `Stream` suffix. All codecs are a subtype
-`TranscodingStreams.Codec` and streams are a subtype of `Base.IO`. An important
-thing is these packages depend on TranscodingStreams.jl and not *vice versa*.
-This means you can install any codec package you need without installing all
-codec packages.  Also, if you want to define your own codec, it is totally
-feasible like these packages.  TranscodingStreams.jl requests a codec to
-implement some interface functions which will be described later.
 
+## Notes
 
-Error handling
---------------
+### Wrapped streams
 
-You may encounter an error while processing data with this package. For example,
-your compressed data may be corrupted or truncated and the decompressor codec
-cannot handle it properly. In this case, the codec informs the stream of the
-error and the stream goes to an unrecoverable mode. In this mode, the only
-possible operations are `isopen` and `close`. Other operations, such as `read`
-or `write`, will result in an argument error exception. Resources allocated in
-the codec will be released by the stream and hence you must not call the
-finalizer of a codec that is once passed to a transcoding stream object.
+The wrapper stream takes care of the wrapped stream. Reading or writing data
+from or to the wrapped stream outside the management will result in unexpected
+behaviors. When you close the wrapped stream, you must call the `close` method
+of the wrapper stream, which releases allocated resources and closes the
+wrapped stream.
+
+### Error handling
+
+You may encounter an error while processing data with this package. For
+example, your compressed data may be corrupted or truncated for some reason,
+and the decompressor cannot recover the original data. In such a case, the
+codec informs the stream of the error, and the stream goes to an unrecoverable
+mode.  In this mode, the only possible operations are `isopen` and `close`.
+Other operations, such as `read` or `write`, will result in an argument error
+exception. Resources allocated by the codec will be released by the stream, and
+hence you must not call the finalizer of the codec.

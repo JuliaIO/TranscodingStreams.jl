@@ -2,6 +2,11 @@
 # =================
 
 # See docs/src/devnotes.md.
+"""
+A mutable state type of transcoding streams.
+
+See Developer's notes for details.
+"""
 mutable struct State
     # current stream mode
     mode::Symbol  # {:idle, :read, :write, :stop, :close, :panic}

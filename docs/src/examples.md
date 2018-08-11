@@ -6,7 +6,7 @@ Read lines from a gzip-compressed file
 
 The following snippet is an example of using CodecZlib.jl, which exports
 `GzipDecompressorStream{S}` as an alias of
-`TranscodingStream{GzipDecompressor,S} where S<:IO`:
+`TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of `IO`:
 ```julia
 using CodecZlib
 stream = GzipDecompressorStream(open("data.txt.gz"))
@@ -16,9 +16,9 @@ end
 close(stream)
 ```
 
-Note that the last `close` call will close the file as well.  Alternatively,
-`open(<stream type>, <filepath>) do ... end` syntax will close the file at the
-end:
+Note that the last `close` call closes the wrapped file as well.
+Alternatively, `open(<stream type>, <filepath>) do ... end` syntax closes the
+file at the end:
 ```julia
 using CodecZlib
 open(GzipDecompressorStream, "data.txt.gz") do stream
@@ -32,11 +32,11 @@ Read compressed data from a pipe
 --------------------------------
 
 The input is not limited to usual files. You can read data from a pipe
-(actually, any `IO` object that implements basic I/O methods) as follows:
+(actually, any `IO` object that implements standard I/O methods) as follows:
 ```julia
 using CodecZlib
-pipe, proc = open(`cat some.data.gz`)
-stream = GzipDecompressorStream(pipe)
+proc = open(`cat some.data.gz`)
+stream = GzipDecompressorStream(proc)
 for line in eachline(stream)
     # do something...
 end
@@ -50,15 +50,17 @@ Writing compressed data is easy. One thing you need to keep in mind is to call
 `close` after writing data; otherwise, the output file will be incomplete:
 ```julia
 using CodecZstd
+using DelimitedFiles
 mat = randn(100, 100)
 stream = ZstdCompressorStream(open("data.mat.zst", "w"))
 writedlm(stream, mat)
 close(stream)
 ```
 
-Of course, `open(<stream type>, ...) do ... end` works well:
+Of course, `open(<stream type>, ...) do ... end` just works:
 ```julia
 using CodecZstd
+using DelimitedFiles
 mat = randn(100, 100)
 open(ZstdCompressorStream, "data.mat.zst", "w") do stream
     writedlm(stream, mat)
@@ -69,10 +71,11 @@ Explicitly finish transcoding by writing `TOKEN_END`
 ----------------------------------------------------
 
 When writing data, the end of a data stream is indicated by calling `close`,
-which may write an epilogue if necessary and flush all buffered data to the
-underlying I/O stream. If you want to explicitly specify the end position of a
-stream for some reason, you can write `TranscodingStreams.TOKEN_END` to the
-transcoding stream as follows:
+which writes an epilogue if necessary and flushes all buffered data to the
+underlying I/O stream. If you want to explicitly specify the end of a data
+chunk for some reason, you can write `TranscodingStreams.TOKEN_END` to the
+transcoding stream, which finishes the current transcoding process without
+closing the underlying stream:
 ```julia
 using CodecZstd
 using TranscodingStreams
@@ -87,18 +90,19 @@ close(stream)
 Use a noop codec
 ----------------
 
-Sometimes, the `Noop` codec, which does nothing, may be useful. The following
-example creates a decompressor stream based on the extension of a filepath:
+The `Noop` codec does nothing (i.e., buffering data without transformation).
+`NoopStream` is an alias of `TranscodingStream{Noop}`.  The following example
+creates a decompressor stream based on the extension of a filepath:
 ```julia
 using CodecZlib
-using CodecBzip2
+using CodecXz
 using TranscodingStreams
 
 function makestream(filepath)
     if endswith(filepath, ".gz")
         codec = GzipDecompressor()
-    elseif endswith(filepath, ".bz2")
-        codec = Bzip2Decompressor()
+    elseif endswith(filepath, ".xz")
+        codec = XzDecompressor()
     else
         codec = Noop()
     end
@@ -106,7 +110,7 @@ function makestream(filepath)
 end
 
 makestream("data.txt.gz")
-makestream("data.txt.bz2")
+makestream("data.txt.xz")
 makestream("data.txt")
 ```
 
@@ -114,7 +118,7 @@ Change the codec of a file
 --------------------------
 
 `TranscodingStream`s are composable: a stream can be an input/output of another
-stream. You can use this to chage the codec of a file by composing different
+stream. You can use this to change the format of a file by composing different
 codecs as below:
 ```julia
 using CodecZlib
@@ -135,11 +139,13 @@ Effectively, this is equivalent to the following pipeline:
 Stop decoding on the end of a block
 -----------------------------------
 
-Most codecs support decoding concatenated data blocks. For example, if you
-concatenate two gzip files into a file and read it using
-`GzipDecompressorStream`, you will see the byte stream of concatenation of two
-files. If you need the first part of the file, you can set `stop_on_end` to
-`true` to stop transcoding at the end of the first block:
+Many codecs support decoding concatenated data blocks (or chunks). For example,
+if you concatenate two gzip files into a single file and read it using
+`GzipDecompressorStream`, you will see the byte stream of concatenation of the
+two files. If you need the part corresponding the first file, you can set
+`stop_on_end` to `true` to stop transcoding at the end of the first block.
+Note that setting `stop_on_end` to `true` does not close the wrapped stream
+because you will often want to reuse it.
 ```julia
 using CodecZlib
 # cat foo.txt.gz bar.txt.gz > foobar.txt.gz
@@ -150,8 +156,8 @@ eof(stream)   #> true
 
 In the case where you need to reuse the wrapped stream, the code above must be
 slightly modified because the transcoding stream may read more bytes than
-necessary from the wrapped stream. By wrapping a stream with `NoopStream`, the
-problem of overreading is resolved:
+necessary from the wrapped stream. Wrapping the stream with `NoopStream` solves
+the problem because adjacent transcoding streams share the same buffer.
 ```julia
 using CodecZlib
 using TranscodingStreams
@@ -170,9 +176,9 @@ error:
 using CodecZlib
 
 function decompress(input, output)
-    buffer = Vector{UInt8}(16 * 1024)
+    buffer = Vector{UInt8}(undef, 16 * 1024)
     while !eof(input)
-        n = min(nb_available(input), length(buffer))
+        n = min(bytesavailable(input), length(buffer))
         unsafe_read(input, pointer(buffer), n)
         unsafe_write(output, pointer(buffer), n)
         stats = TranscodingStreams.stats(input)
@@ -207,11 +213,17 @@ Transcode lots of strings
 `transcode(<codec type>, data)` method is convenient but suboptimal when
 transcoding a number of objects. This is because the method reallocates a new
 codec object for every call. Instead, you can use `transcode(<codec object>,
-data)` method that reuses the allocated object as follows:
+data)` method that reuses the allocated object as follows. In this usage, you
+need to explicitly allocate and free resources by calling
+`TranscodingStreams.initialize` and `TranscodingStreams.finalize`,
+respectively.
+
 ```julia
 using CodecZstd
+using TranscodingStreams
 strings = ["foo", "bar", "baz"]
 codec = ZstdCompressor()
+TranscodingStreams.initialize(codec)  # allocate resources
 try
     for s in strings
         data = transcode(codec, s)
@@ -220,7 +232,7 @@ try
 catch
     rethrow()
 finally
-    CodecZstd.TranscodingStreams.finalize(codec)
+    TranscodingStreams.finalize(codec)  # free resources
 end
 ```
 
@@ -240,9 +252,9 @@ data2 = read(stream, 8)
 @assert data1 == data2
 ```
 
-The unread operaion is different from the write operation in that the unreaded
+The unread operation is different from the write operation in that the unreaded
 data are not written to the wrapped stream. The unreaded data are stored in the
 internal buffer of a transcoding stream.
 
 Unfortunately, *unwrite* operation is not provided because there is no way to
-cancel write operations that are already commited to the wrapped stream.
+cancel write operations that are already committed to the wrapped stream.

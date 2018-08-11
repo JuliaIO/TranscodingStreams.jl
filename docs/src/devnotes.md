@@ -1,4 +1,4 @@
-Developer's Notes
+Developer's notes
 =================
 
 These notes are not for end users but rather for developers who are interested

@@ -1,5 +1,5 @@
-References
-==========
+Reference
+=========
 
 ```@meta
 CurrentModule = TranscodingStreams
@@ -10,7 +10,8 @@ TranscodingStream
 
 ```@docs
 TranscodingStream(codec::Codec, stream::IO)
-transcode(codec::Codec, data::Vector{UInt8})
+transcode(::Type{<:Codec}, data::ByteData)
+transcode(codec::Codec, data::ByteData)
 TranscodingStreams.TOKEN_END
 TranscodingStreams.unsafe_read
 TranscodingStreams.unread
