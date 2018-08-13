@@ -83,19 +83,6 @@ alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
         <td>Decompress data in deflate format.</td>
     </tr>
     <tr>
-        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
-        <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
-        <td rowspan="2"></td>
-        <td><code>Bzip2Compressor</code></td>
-        <td><code>Bzip2CompressorStream</code></td>
-        <td>Compress data in bzip2 (.bz2) format.</td>
-    </tr>
-    <tr>
-        <td><code>Bzip2Decompressor</code></td>
-        <td><code>Bzip2DecompressorStream</code></td>
-        <td>Decompress data in bzip2 (.bz2) format.</td>
-    </tr>
-    <tr>
         <td rowspan="2"><a href="https://github.com/bicycle1885/CodecXz.jl">CodecXz.jl</a></td>
         <td rowspan="2"><a href="https://tukaani.org/xz/">xz</a></td>
         <td rowspan="2"><a href="https://tukaani.org/xz/xz-file-format.txt">The .xz File Format</a></td>
@@ -153,6 +140,19 @@ alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
         <td><code>Base64Decoder</code></td>
         <td><code>Base64DecoderStream</code></td>
         <td>Decode binary in base64 format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
+        <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
+        <td rowspan="2"></td>
+        <td><code>Bzip2Compressor</code></td>
+        <td><code>Bzip2CompressorStream</code></td>
+        <td>Compress data in bzip2 (.bz2) format.</td>
+    </tr>
+    <tr>
+        <td><code>Bzip2Decompressor</code></td>
+        <td><code>Bzip2DecompressorStream</code></td>
+        <td>Decompress data in bzip2 (.bz2) format.</td>
     </tr>
 </table>
 ```
