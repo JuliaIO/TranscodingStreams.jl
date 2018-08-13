@@ -44,19 +44,6 @@
         <td>Decompress data in deflate format.</td>
     </tr>
     <tr>
-        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
-        <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
-        <td rowspan="2"></td>
-        <td><code>Bzip2Compressor</code></td>
-        <td><code>Bzip2CompressorStream</code></td>
-        <td>Compress data in bzip2 (.bz2) format.</td>
-    </tr>
-    <tr>
-        <td><code>Bzip2Decompressor</code></td>
-        <td><code>Bzip2DecompressorStream</code></td>
-        <td>Decompress data in bzip2 (.bz2) format.</td>
-    </tr>
-    <tr>
         <td rowspan="2"><a href="https://github.com/bicycle1885/CodecXz.jl">CodecXz.jl</a></td>
         <td rowspan="2"><a href="https://tukaani.org/xz/">xz</a></td>
         <td rowspan="2"><a href="https://tukaani.org/xz/xz-file-format.txt">The .xz File Format</a></td>
@@ -114,5 +101,18 @@
         <td><code>Base64Decoder</code></td>
         <td><code>Base64DecoderStream</code></td>
         <td>Decode binary in base64 format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
+        <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
+        <td rowspan="2"></td>
+        <td><code>Bzip2Compressor</code></td>
+        <td><code>Bzip2CompressorStream</code></td>
+        <td>Compress data in bzip2 (.bz2) format.</td>
+    </tr>
+    <tr>
+        <td><code>Bzip2Decompressor</code></td>
+        <td><code>Bzip2DecompressorStream</code></td>
+        <td>Decompress data in bzip2 (.bz2) format.</td>
     </tr>
 </table><h2><a class="nav-anchor" id="Notes-1" href="#Notes-1">Notes</a></h2><h3><a class="nav-anchor" id="Wrapped-streams-1" href="#Wrapped-streams-1">Wrapped streams</a></h3><p>The wrapper stream takes care of the wrapped stream. Reading or writing data from or to the wrapped stream outside the management will result in unexpected behaviors. When you close the wrapped stream, you must call the <code>close</code> method of the wrapper stream, which releases allocated resources and closes the wrapped stream.</p><h3><a class="nav-anchor" id="Error-handling-1" href="#Error-handling-1">Error handling</a></h3><p>You may encounter an error while processing data with this package. For example, your compressed data may be corrupted or truncated for some reason, and the decompressor cannot recover the original data. In such a case, the codec informs the stream of the error, and the stream goes to an unrecoverable mode.  In this mode, the only possible operations are <code>isopen</code> and <code>close</code>. Other operations, such as <code>read</code> or <code>write</code>, will result in an argument error exception. Resources allocated by the codec will be released by the stream, and hence you must not call the finalizer of the codec.</p><footer><hr/><a class="next" href="examples.html"><span class="direction">Next</span><span class="title">Examples</span></a></footer></article></body></html>
