@@ -281,7 +281,7 @@ function Base.read(stream::TranscodingStream, ::Type{UInt8})
     return readbyte!(stream.state.buffer1)
 end
 
-function Base.readuntil(stream::TranscodingStream, delim::UInt8)
+function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=false)
     ready_to_read!(stream)
     buffer1 = stream.state.buffer1
     ret = Vector{UInt8}(undef, 0)
@@ -292,6 +292,9 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8)
         if p < marginptr(buffer1)
             found = true
             sz = Int(p + 1 - bufferptr(buffer1))
+            if !keep
+                sz -= 1
+            end
             resize!(ret, filled + sz)
         else
             sz = buffersize(buffer1)
