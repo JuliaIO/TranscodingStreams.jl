@@ -71,11 +71,11 @@ The user need to install codecs as a plug-in to do something meaningful.
 
 The following codec packages support the protocol suite:
 - [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
-- [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
 - [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
 - [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
-- [CodecLz4.jl](https://github.com/invenia/CodecLz4.jl) by Invenia.
 - [CodecBase.jl](https://github.com/bicycle1885/CodecBase.jl)
+- [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
+- [CodecLz4.jl](https://github.com/invenia/CodecLz4.jl) by Invenia.
 
 [travisci-img]: https://travis-ci.org/bicycle1885/TranscodingStreams.jl.svg?branch=master
 [travisci-url]: https://travis-ci.org/bicycle1885/TranscodingStreams.jl
