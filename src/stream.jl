@@ -284,7 +284,8 @@ end
 function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=false)
     ready_to_read!(stream)
     buffer1 = stream.state.buffer1
-    ret = Vector{UInt8}(undef, 0)
+    # delay initialization so as to reduce the number of buffer resizes
+    local ret::Vector{UInt8}
     filled = 0
     while !eof(stream)
         p = findbyte(buffer1, delim)
@@ -295,12 +296,14 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
             if !keep
                 sz -= 1
             end
-            resize!(ret, filled + sz)
         else
             sz = buffersize(buffer1)
-            if length(ret) < filled + sz
-                resize!(ret, filled + sz)
-            end
+        end
+        if @isdefined(ret)
+            resize!(ret, filled + sz)
+        else
+            @assert filled == 0
+            ret = Vector{UInt8}(undef, sz)
         end
         copydata!(pointer(ret, filled+1), buffer1, sz)
         filled += sz
