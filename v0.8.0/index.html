@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · TranscodingStreams.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/custom.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>TranscodingStreams.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href="index.html">Home</a><ul class="internal"><li><a class="toctext" href="#Overview-1">Overview</a></li><li><a class="toctext" href="#Introduction-1">Introduction</a></li><li><a class="toctext" href="#Notes-1">Notes</a></li></ul></li><li><a class="toctext" href="examples.html">Examples</a></li><li><a class="toctext" href="reference.html">Reference</a></li><li><a class="toctext" href="devnotes.html">Developer&#39;s notes</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="index.html">Home</a></li></ul><a class="edit-page" href="https://github.com/bicycle1885/TranscodingStreams.jl/blob/master/docs/src/index.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Home</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Home-1" href="#Home-1">Home</a></h1><p><img src="assets/transcodingstream.png" alt="TranscodingStream"/></p><h2><a class="nav-anchor" id="Overview-1" href="#Overview-1">Overview</a></h2><p>TranscodingStreams.jl is a package for transcoding data streams. Transcoding may be compression, decompression, ASCII encoding, and any other codec.  The package exports a data type <code>TranscodingStream</code>, which is a subtype of <code>IO</code> and wraps other <code>IO</code> object to transcode data read from or written to the wrapped stream.</p><p>In this page, we introduce the basic concepts of TranscodingStreams.jl and currently available packages. The <a href="examples.html#Examples-1">Examples</a> page demonstrates common usage. The <a href="reference.html#Reference-1">Reference</a> page offers a comprehensive API document.</p><h2><a class="nav-anchor" id="Introduction-1" href="#Introduction-1">Introduction</a></h2><p><code>TranscodingStream</code> has two type parameters, <code>C&lt;:Codec</code> and <code>S&lt;:IO</code>, and hence the concrete data type is written as <code>TranscodingStream{C&lt;:Codec,S&lt;:IO}</code>. This type wraps an underlying I/O stream <code>S</code> by a transcoding codec <code>C</code>. <code>C</code> and <code>S</code> are orthogonal and hence you can use any combination of these two types.  The underlying stream may be any stream that supports I/O operations defined by the <code>Base</code> module. For example, it may be <code>IOStream</code>, <code>TTY</code>, <code>IOBuffer</code>, or <code>TranscodingStream</code>. The codec <code>C</code> must define the transcoding protocol defined in this package.  We already have various codecs in packages listed below.  Of course, you can define your own codec by implementing the transcoding protocol described in <a href="reference.html#TranscodingStreams.Codec"><code>TranscodingStreams.Codec</code></a>.</p><p>You can install codec packages using the standard package manager. These codec packages are independent of each other and can be installed separately. You won&#39;t need to explicitly install the TranscodingStreams.jl package unless you will use lower-level interfaces of it. Each codec package defines some codec types, which is a subtype of <code>TranscodingStreams.Codec</code>, and their corresponding transcoding stream aliases.  These aliases are partially instantiated by a codec type; for example, <code>GzipDecompressionStream{S}</code> is an alias of <code>TranscodingStream{GzipDecompressor,S}</code>, where <code>S</code> is a subtype of <code>IO</code>.</p><table>
+    <tr>
+        <th>Package</th>
+        <th>Library</th>
+        <th>Format</th>
+        <th>Codec</th>
+        <th>Stream alias</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td rowspan="6"><a href="https://github.com/bicycle1885/CodecZlib.jl">CodecZlib.jl</a></td>
+        <td rowspan="6"><a href="http://zlib.net/">zlib</a></td>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1952">RFC1952</a></td>
+        <td><code>GzipCompressor</code></td>
+        <td><code>GzipCompressorStream</code></td>
+        <td>Compress data in gzip (.gz) format.</td>
+    </tr>
+    <tr>
+        <td><code>GzipDecompressor</code></td>
+        <td><code>GzipDecompressorStream</code></td>
+        <td>Decompress data in gzip (.gz) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1950">RFC1950</a></td>
+        <td><code>ZlibCompressor</code></td>
+        <td><code>ZlibCompressorStream</code></td>
+        <td>Compress data in zlib format.</td>
+    </tr>
+    <tr>
+        <td><code>ZlibDecompressor</code></td>
+        <td><code>ZlibDecompressorStream</code></td>
+        <td>Decompress data in zlib format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1951">RFC1951</a></td>
+        <td><code>DeflateCompressor</code></td>
+        <td><code>DeflateCompressorStream</code></td>
+        <td>Compress data in deflate format.</td>
+    </tr>
+    <tr>
+        <td><code>DeflateDecompressor</code></td>
+        <td><code>DeflateDecompressorStream</code></td>
+        <td>Decompress data in deflate format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
+        <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
+        <td rowspan="2"></td>
+        <td><code>Bzip2Compressor</code></td>
+        <td><code>Bzip2CompressorStream</code></td>
+        <td>Compress data in bzip2 (.bz2) format.</td>
+    </tr>
+    <tr>
+        <td><code>Bzip2Decompressor</code></td>
+        <td><code>Bzip2DecompressorStream</code></td>
+        <td>Decompress data in bzip2 (.bz2) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecXz.jl">CodecXz.jl</a></td>
+        <td rowspan="2"><a href="https://tukaani.org/xz/">xz</a></td>
+        <td rowspan="2"><a href="https://tukaani.org/xz/xz-file-format.txt">The .xz File Format</a></td>
+        <td><code>XzCompressor</code></td>
+        <td><code>XzCompressorStream</code></td>
+        <td>Compress data in xz (.xz) format.</td>
+    </tr>
+    <tr>
+        <td><code>XzDecompressor</code></td>
+        <td><code>XzDecompressorStream</code></td>
+        <td>Decompress data in xz (.xz) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecZstd.jl">CodecZstd.jl</a></td>
+        <td rowspan="2"><a href="http://facebook.github.io/zstd/">zstd</a></td>
+        <td rowspan="2"><a href="https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md">Zstandard Compression Format</a></td>
+        <td><code>ZstdCompressor</code></td>
+        <td><code>ZstdCompressorStream</code></td>
+        <td>Compress data in zstd (.zst) format.</td>
+    </tr>
+    <tr>
+        <td><code>ZstdDecompressor</code></td>
+        <td><code>ZstdDecompressorStream</code></td>
+        <td>Decompress data in zstd (.zst) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="6"><a href="https://github.com/bicycle1885/CodecBase.jl">CodecBase.jl</a></td>
+        <td rowspan="6">native</td>
+        <td rowspan="6"><a href="https://tools.ietf.org/html/rfc4648">RFC4648</a></td>
+        <td><code>Base16Encoder</code></td>
+        <td><code>Base16EncoderStream</code></td>
+        <td>Encode binary in base16 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base16Decoder</code></td>
+        <td><code>Base16DecoderStream</code></td>
+        <td>Decode binary in base16 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base32Encoder</code></td>
+        <td><code>Base32EncoderStream</code></td>
+        <td>Encode binary in base32 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base32Decoder</code></td>
+        <td><code>Base32DecoderStream</code></td>
+        <td>Decode binary in base32 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base64Encoder</code></td>
+        <td><code>Base64EncoderStream</code></td>
+        <td>Encode binary in base64 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base64Decoder</code></td>
+        <td><code>Base64DecoderStream</code></td>
+        <td>Decode binary in base64 format.</td>
+    </tr>
+</table><h2><a class="nav-anchor" id="Notes-1" href="#Notes-1">Notes</a></h2><h3><a class="nav-anchor" id="Wrapped-streams-1" href="#Wrapped-streams-1">Wrapped streams</a></h3><p>The wrapper stream takes care of the wrapped stream. Reading or writing data from or to the wrapped stream outside the management will result in unexpected behaviors. When you close the wrapped stream, you must call the <code>close</code> method of the wrapper stream, which releases allocated resources and closes the wrapped stream.</p><h3><a class="nav-anchor" id="Error-handling-1" href="#Error-handling-1">Error handling</a></h3><p>You may encounter an error while processing data with this package. For example, your compressed data may be corrupted or truncated for some reason, and the decompressor cannot recover the original data. In such a case, the codec informs the stream of the error, and the stream goes to an unrecoverable mode.  In this mode, the only possible operations are <code>isopen</code> and <code>close</code>. Other operations, such as <code>read</code> or <code>write</code>, will result in an argument error exception. Resources allocated by the codec will be released by the stream, and hence you must not call the finalizer of the codec.</p><footer><hr/><a class="next" href="examples.html"><span class="direction">Next</span><span class="title">Examples</span></a></footer></article></body></html>
