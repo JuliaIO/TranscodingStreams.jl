@@ -20,7 +20,8 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
     # mutable state of the stream
     state::State
 
-    function TranscodingStream{C,S}(codec::C, stream::S, state::State, initialized::Bool) where {C<:Codec,S<:IO}
+    function TranscodingStream{C,S}(
+            codec::C, stream::S, state::State, initialized::Bool) where {C<:Codec,S<:IO}
         if !isopen(stream)
             throw(ArgumentError("closed stream"))
         elseif state.mode != :idle
@@ -140,8 +141,9 @@ end
 # Check that mode is valid.
 macro checkmode(validmodes)
     mode = esc(:mode)
+    validmodes = [arg.value for arg in validmodes.args]
     quote
-        if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), eval(validmodes), init=false))
+        if !$(foldr((x, y) -> :($(mode) === $(QuoteNode(x)) || $(y)), validmodes, init=false))
             throw(ArgumentError(string("invalid mode :", $(mode))))
         end
     end
@@ -554,13 +556,13 @@ function stats(stream::TranscodingStream)
     if mode == :idle
         transcoded_in = transcoded_out = in = out = 0
     elseif mode == :read
-        transcoded_in = buffer2.total
-        transcoded_out = buffer1.total
+        transcoded_in = buffer2.transcoded
+        transcoded_out = buffer1.transcoded
         in = transcoded_in + buffersize(buffer2)
         out = transcoded_out - buffersize(buffer1)
     elseif mode == :write
-        transcoded_in = buffer1.total
-        transcoded_out = buffer2.total
+        transcoded_in = buffer1.transcoded
+        transcoded_out = buffer2.transcoded
         in = transcoded_in + buffersize(buffer1)
         out = transcoded_out - buffersize(buffer2)
     else
@@ -648,8 +650,8 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     input = buffermem(inbuf)
     makemargin!(outbuf, minoutsize(stream.codec, input))
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
-    consumed2!(inbuf, Δin)
-    supplied2!(outbuf, Δout)
+    consumed!(inbuf, Δin, transcode = true)
+    supplied!(outbuf, Δout, transcode = true)
     if state.code == :error
         changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
