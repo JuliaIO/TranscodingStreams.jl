@@ -7,11 +7,11 @@
 # Buffered data are stored in `data` and three position fields are used to keep
 # track of marked data, buffered data and margin.
 #
-#             marked      buffer      margin
-#          |<-------->||<-------->||<-------->|
-#     |....xxxxxxxxxxxxXXXXXXXXXXXX...........|
-#     ^    ^           ^           ^          ^
-#     1    markpos     bufferpos   marginpos  lastindex(data)
+#                     marked      buffer      margin
+#                  |<-------->||<-------->||<-------->|
+#       data   ....xxxxxxxxxxxxXXXXXXXXXXXX............
+#              ^   ^           ^           ^          ^
+#   position   1   markpos     bufferpos   marginpos  lastindex(data)
 #
 # `markpos` is positive iff there are marked data; otherwise it is set to zero.
 # `markpos` ≤ `bufferpos` ≤ `marginpos` must hold whenever possible.
