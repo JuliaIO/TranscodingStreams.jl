@@ -92,7 +92,7 @@ function reset!(buf::Buffer)
 end
 
 # Notify that `n` bytes are consumed from `buf`.
-function consumed!(buf::Buffer, n::Integer; transcode = false)
+function consumed!(buf::Buffer, n::Integer; transcode::Bool = false)
     buf.bufferpos += n
     if transcode
         buf.transcoded += n
@@ -101,7 +101,7 @@ function consumed!(buf::Buffer, n::Integer; transcode = false)
 end
 
 # Notify that `n` bytes are supplied to `buf`.
-function supplied!(buf::Buffer, n::Integer; transcode = false)
+function supplied!(buf::Buffer, n::Integer; transcode::Bool = false)
     buf.marginpos += n
     if transcode
         buf.transcoded += n
