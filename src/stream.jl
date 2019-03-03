@@ -20,7 +20,8 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
     # mutable state of the stream
     state::State
 
-    function TranscodingStream{C,S}(codec::C, stream::S, state::State, initialized::Bool) where {C<:Codec,S<:IO}
+    function TranscodingStream{C,S}(
+            codec::C, stream::S, state::State, initialized::Bool) where {C<:Codec,S<:IO}
         if !isopen(stream)
             throw(ArgumentError("closed stream"))
         elseif state.mode != :idle
@@ -140,8 +141,9 @@ end
 # Check that mode is valid.
 macro checkmode(validmodes)
     mode = esc(:mode)
+    validmodes = [arg.value for arg in validmodes.args]
     quote
-        if !$(foldr((x, y) -> :($(mode) == $(QuoteNode(x)) || $(y)), eval(validmodes), init=false))
+        if !$(foldr((x, y) -> :($(mode) === $(QuoteNode(x)) || $(y)), validmodes, init=false))
             throw(ArgumentError(string("invalid mode :", $(mode))))
         end
     end
