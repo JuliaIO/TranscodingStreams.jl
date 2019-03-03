@@ -136,7 +136,7 @@ function stats(stream::NoopStream)
         supplied = buffer.total + buffersize(buffer)
         consumed = buffer.total
     else
-        assert(false)
+        @assert false "unreachable"
     end
     return Stats(consumed, supplied, supplied, supplied)
 end

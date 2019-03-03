@@ -648,8 +648,8 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     input = buffermem(inbuf)
     makemargin!(outbuf, minoutsize(stream.codec, input))
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
-    consumed2!(inbuf, Δin)
-    supplied2!(outbuf, Δout)
+    consumed!(inbuf, Δin, transcode = true)
+    supplied!(outbuf, Δout, transcode = true)
     if state.code == :error
         changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
