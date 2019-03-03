@@ -94,18 +94,20 @@ Arguments
 Examples
 --------
 
-```julia
+```jldoctest
 julia> using TranscodingStreams
 
 julia> using CodecZlib
 
-julia> file = open(Pkg.dir("TranscodingStreams", "test", "abra.gzip"));
+julia> file = open(joinpath(dirname(pathof(CodecZlib)), "..", "test", "abra.gz"));
 
 julia> stream = TranscodingStream(GzipDecompressor(), file)
-TranscodingStreams.TranscodingStream{CodecZlib.GzipDecompressor,IOStream}(<mode=idle>)
+TranscodingStream{GzipDecompressor,IOStream}(<mode=idle>)
 
-julia> readstring(stream)
+julia> String(read(stream))
 "abracadabra"
+
+julia> close(stream)
 
 ```
 """
@@ -251,31 +253,6 @@ Return the number of bytes read from or written to `stream`.
 Note that the returned value will be different from that of the underlying
 stream wrapped by `stream`.  This is because `stream` buffers some data and the
 codec may change the length of data.
-
-Examples
---------
-
-```
-julia> using CodecZlib, TranscodingStreams
-
-julia> file = open(joinpath(dirname(pathof(CodecZlib)), "..", "test", "abra.gz"));
-
-julia> stream = GzipDecompressorStream(file)
-TranscodingStream{GzipDecompressor,IOStream}(<mode=idle>)
-
-julia> position(stream)
-0
-
-julia> read(stream, 4)
-4-element Array{UInt8,1}:
- 0x61
- 0x62
- 0x72
- 0x61
-
-julia> position(stream)
-4
-```
 """
 function Base.position(stream::TranscodingStream)
     mode = stream.state.mode
