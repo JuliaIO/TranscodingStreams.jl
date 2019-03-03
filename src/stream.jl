@@ -277,6 +277,7 @@ julia> position(stream)
 """
 function Base.position(stream::TranscodingStream)
     mode = stream.state.mode
+    @checkmode (:idle, :read, :write)
     if mode === :idle
         return Int64(0)
     elseif mode === :read
@@ -563,7 +564,7 @@ function stats(stream::TranscodingStream)
         in = transcoded_in + buffersize(buffer1)
         out = transcoded_out - buffersize(buffer2)
     else
-        assert(false)
+        @assert false "unreachable"
     end
     return Stats(in, out, transcoded_in, transcoded_out)
 end
