@@ -1,7 +1,7 @@
 var documenterSearchIndex = {"docs": [
 
 {
-    "location": "index.html#",
+    "location": "#",
     "page": "Home",
     "title": "Home",
     "category": "page",
@@ -9,7 +9,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Home-1",
+    "location": "#Home-1",
     "page": "Home",
     "title": "Home",
     "category": "section",
@@ -17,7 +17,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Overview-1",
+    "location": "#Overview-1",
     "page": "Home",
     "title": "Overview",
     "category": "section",
@@ -25,7 +25,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Introduction-1",
+    "location": "#Introduction-1",
     "page": "Home",
     "title": "Introduction",
     "category": "section",
@@ -33,7 +33,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Notes-1",
+    "location": "#Notes-1",
     "page": "Home",
     "title": "Notes",
     "category": "section",
@@ -41,7 +41,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Wrapped-streams-1",
+    "location": "#Wrapped-streams-1",
     "page": "Home",
     "title": "Wrapped streams",
     "category": "section",
@@ -49,7 +49,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Error-handling-1",
+    "location": "#Error-handling-1",
     "page": "Home",
     "title": "Error handling",
     "category": "section",
@@ -57,7 +57,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#",
+    "location": "examples/#",
     "page": "Examples",
     "title": "Examples",
     "category": "page",
@@ -65,7 +65,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Examples-1",
+    "location": "examples/#Examples-1",
     "page": "Examples",
     "title": "Examples",
     "category": "section",
@@ -73,7 +73,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Read-lines-from-a-gzip-compressed-file-1",
+    "location": "examples/#Read-lines-from-a-gzip-compressed-file-1",
     "page": "Examples",
     "title": "Read lines from a gzip-compressed file",
     "category": "section",
@@ -81,7 +81,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Read-compressed-data-from-a-pipe-1",
+    "location": "examples/#Read-compressed-data-from-a-pipe-1",
     "page": "Examples",
     "title": "Read compressed data from a pipe",
     "category": "section",
@@ -89,7 +89,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Save-a-data-matrix-with-Zstd-compression-1",
+    "location": "examples/#Save-a-data-matrix-with-Zstd-compression-1",
     "page": "Examples",
     "title": "Save a data matrix with Zstd compression",
     "category": "section",
@@ -97,7 +97,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Explicitly-finish-transcoding-by-writing-TOKEN_END-1",
+    "location": "examples/#Explicitly-finish-transcoding-by-writing-TOKEN_END-1",
     "page": "Examples",
     "title": "Explicitly finish transcoding by writing TOKEN_END",
     "category": "section",
@@ -105,7 +105,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Use-a-noop-codec-1",
+    "location": "examples/#Use-a-noop-codec-1",
     "page": "Examples",
     "title": "Use a noop codec",
     "category": "section",
@@ -113,7 +113,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Change-the-codec-of-a-file-1",
+    "location": "examples/#Change-the-codec-of-a-file-1",
     "page": "Examples",
     "title": "Change the codec of a file",
     "category": "section",
@@ -121,7 +121,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Stop-decoding-on-the-end-of-a-block-1",
+    "location": "examples/#Stop-decoding-on-the-end-of-a-block-1",
     "page": "Examples",
     "title": "Stop decoding on the end of a block",
     "category": "section",
@@ -129,7 +129,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Check-I/O-statistics-1",
+    "location": "examples/#Check-I/O-statistics-1",
     "page": "Examples",
     "title": "Check I/O statistics",
     "category": "section",
@@ -137,7 +137,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Transcode-data-in-one-shot-1",
+    "location": "examples/#Transcode-data-in-one-shot-1",
     "page": "Examples",
     "title": "Transcode data in one shot",
     "category": "section",
@@ -145,7 +145,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Transcode-lots-of-strings-1",
+    "location": "examples/#Transcode-lots-of-strings-1",
     "page": "Examples",
     "title": "Transcode lots of strings",
     "category": "section",
@@ -153,7 +153,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples.html#Unread-data-1",
+    "location": "examples/#Unread-data-1",
     "page": "Examples",
     "title": "Unread data",
     "category": "section",
@@ -161,7 +161,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#",
+    "location": "reference/#",
     "page": "Reference",
     "title": "Reference",
     "category": "page",
@@ -169,7 +169,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#Reference-1",
+    "location": "reference/#Reference-1",
     "page": "Reference",
     "title": "Reference",
     "category": "section",
@@ -177,7 +177,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.TranscodingStream-Tuple{TranscodingStreams.Codec,IO}",
+    "location": "reference/#TranscodingStreams.TranscodingStream-Tuple{TranscodingStreams.Codec,IO}",
     "page": "Reference",
     "title": "TranscodingStreams.TranscodingStream",
     "category": "method",
@@ -185,7 +185,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#Base.transcode-Tuple{Type{#s1} where #s1<:TranscodingStreams.Codec,Union{Array{UInt8,1}, CodeUnits{UInt8,S} where S<:AbstractString}}",
+    "location": "reference/#Base.transcode-Tuple{Type{#s1} where #s1<:TranscodingStreams.Codec,Union{Array{UInt8,1}, CodeUnits{UInt8,S} where S<:AbstractString}}",
     "page": "Reference",
     "title": "Base.transcode",
     "category": "method",
@@ -193,7 +193,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#Base.transcode-Tuple{TranscodingStreams.Codec,Union{Array{UInt8,1}, CodeUnits{UInt8,S} where S<:AbstractString}}",
+    "location": "reference/#Base.transcode-Tuple{TranscodingStreams.Codec,Union{Array{UInt8,1}, CodeUnits{UInt8,S} where S<:AbstractString}}",
     "page": "Reference",
     "title": "Base.transcode",
     "category": "method",
@@ -201,7 +201,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.TOKEN_END",
+    "location": "reference/#TranscodingStreams.TOKEN_END",
     "page": "Reference",
     "title": "TranscodingStreams.TOKEN_END",
     "category": "constant",
@@ -209,7 +209,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.unsafe_read",
+    "location": "reference/#TranscodingStreams.unsafe_read",
     "page": "Reference",
     "title": "TranscodingStreams.unsafe_read",
     "category": "function",
@@ -217,7 +217,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.unread",
+    "location": "reference/#TranscodingStreams.unread",
     "page": "Reference",
     "title": "TranscodingStreams.unread",
     "category": "function",
@@ -225,7 +225,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.unsafe_unread",
+    "location": "reference/#TranscodingStreams.unsafe_unread",
     "page": "Reference",
     "title": "TranscodingStreams.unsafe_unread",
     "category": "function",
@@ -233,15 +233,23 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStream-1",
+    "location": "reference/#Base.position-Tuple{TranscodingStream}",
     "page": "Reference",
-    "title": "TranscodingStream",
-    "category": "section",
-    "text": "TranscodingStream(codec::Codec, stream::IO)\ntranscode(::Type{<:Codec}, data::ByteData)\ntranscode(codec::Codec, data::ByteData)\nTranscodingStreams.TOKEN_END\nTranscodingStreams.unsafe_read\nTranscodingStreams.unread\nTranscodingStreams.unsafe_unread"
+    "title": "Base.position",
+    "category": "method",
+    "text": "position(stream::TranscodingStream)\n\nReturn the number of bytes read from or written to stream.\n\nNote that the returned value will be different from that of the underlying stream wrapped by stream.  This is because stream buffers some data and the codec may change the length of data.\n\nExamples\n\njulia> using CodecZlib, TranscodingStreams\n\njulia> file = open(joinpath(dirname(pathof(CodecZlib)), \"..\", \"test\", \"abra.gz\"));\n\njulia> stream = GzipDecompressorStream(file)\nTranscodingStream{GzipDecompressor,IOStream}(<mode=idle>)\n\njulia> position(stream)\n0\n\njulia> read(stream, 4)\n4-element Array{UInt8,1}:\n 0x61\n 0x62\n 0x72\n 0x61\n\njulia> position(stream)\n4\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference.html#TranscodingStreams.Stats",
+    "location": "reference/#TranscodingStream-1",
+    "page": "Reference",
+    "title": "TranscodingStream",
+    "category": "section",
+    "text": "TranscodingStream(codec::Codec, stream::IO)\ntranscode(::Type{<:Codec}, data::ByteData)\ntranscode(codec::Codec, data::ByteData)\nTranscodingStreams.TOKEN_END\nTranscodingStreams.unsafe_read\nTranscodingStreams.unread\nTranscodingStreams.unsafe_unread\nBase.position(stream::TranscodingStream)"
+},
+
+{
+    "location": "reference/#TranscodingStreams.Stats",
     "page": "Reference",
     "title": "TranscodingStreams.Stats",
     "category": "type",
@@ -249,7 +257,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.stats",
+    "location": "reference/#TranscodingStreams.stats",
     "page": "Reference",
     "title": "TranscodingStreams.stats",
     "category": "function",
@@ -257,7 +265,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#Statistics-1",
+    "location": "reference/#Statistics-1",
     "page": "Reference",
     "title": "Statistics",
     "category": "section",
@@ -265,7 +273,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.Noop",
+    "location": "reference/#TranscodingStreams.Noop",
     "page": "Reference",
     "title": "TranscodingStreams.Noop",
     "category": "type",
@@ -273,7 +281,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.NoopStream",
+    "location": "reference/#TranscodingStreams.NoopStream",
     "page": "Reference",
     "title": "TranscodingStreams.NoopStream",
     "category": "type",
@@ -281,7 +289,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.Codec",
+    "location": "reference/#TranscodingStreams.Codec",
     "page": "Reference",
     "title": "TranscodingStreams.Codec",
     "category": "type",
@@ -289,7 +297,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.expectedsize",
+    "location": "reference/#TranscodingStreams.expectedsize",
     "page": "Reference",
     "title": "TranscodingStreams.expectedsize",
     "category": "function",
@@ -297,7 +305,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.minoutsize",
+    "location": "reference/#TranscodingStreams.minoutsize",
     "page": "Reference",
     "title": "TranscodingStreams.minoutsize",
     "category": "function",
@@ -305,7 +313,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.initialize",
+    "location": "reference/#TranscodingStreams.initialize",
     "page": "Reference",
     "title": "TranscodingStreams.initialize",
     "category": "function",
@@ -313,7 +321,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.finalize",
+    "location": "reference/#TranscodingStreams.finalize",
     "page": "Reference",
     "title": "TranscodingStreams.finalize",
     "category": "function",
@@ -321,7 +329,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.startproc",
+    "location": "reference/#TranscodingStreams.startproc",
     "page": "Reference",
     "title": "TranscodingStreams.startproc",
     "category": "function",
@@ -329,7 +337,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.process",
+    "location": "reference/#TranscodingStreams.process",
     "page": "Reference",
     "title": "TranscodingStreams.process",
     "category": "function",
@@ -337,7 +345,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#Codec-1",
+    "location": "reference/#Codec-1",
     "page": "Reference",
     "title": "Codec",
     "category": "section",
@@ -345,7 +353,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.Memory",
+    "location": "reference/#TranscodingStreams.Memory",
     "page": "Reference",
     "title": "TranscodingStreams.Memory",
     "category": "type",
@@ -353,7 +361,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.Error",
+    "location": "reference/#TranscodingStreams.Error",
     "page": "Reference",
     "title": "TranscodingStreams.Error",
     "category": "type",
@@ -361,7 +369,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#TranscodingStreams.State",
+    "location": "reference/#TranscodingStreams.State",
     "page": "Reference",
     "title": "TranscodingStreams.State",
     "category": "type",
@@ -369,7 +377,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#Internal-types-1",
+    "location": "reference/#Internal-types-1",
     "page": "Reference",
     "title": "Internal types",
     "category": "section",
@@ -377,7 +385,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "devnotes.html#",
+    "location": "devnotes/#",
     "page": "Developer\'s notes",
     "title": "Developer\'s notes",
     "category": "page",
@@ -385,7 +393,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "devnotes.html#Developer\'s-notes-1",
+    "location": "devnotes/#Developer\'s-notes-1",
     "page": "Developer\'s notes",
     "title": "Developer\'s notes",
     "category": "section",
@@ -393,7 +401,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "devnotes.html#TranscodingStream-type-1",
+    "location": "devnotes/#TranscodingStream-type-1",
     "page": "Developer\'s notes",
     "title": "TranscodingStream type",
     "category": "section",
@@ -401,7 +409,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "devnotes.html#Shared-buffers-1",
+    "location": "devnotes/#Shared-buffers-1",
     "page": "Developer\'s notes",
     "title": "Shared buffers",
     "category": "section",
@@ -409,7 +417,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "devnotes.html#Noop-codec-1",
+    "location": "devnotes/#Noop-codec-1",
     "page": "Developer\'s notes",
     "title": "Noop codec",
     "category": "section",
