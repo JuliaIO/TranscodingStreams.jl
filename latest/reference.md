@@ -54,7 +54,7 @@ julia> readstring(stream)
 ```
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/stream.jl#L56-L111' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/stream.jl#L56-L111' class='documenter-source'>source</a><br>
 
 <a id='Base.transcode-Tuple{Type{#s1} where #s1<:TranscodingStreams.Codec,Union{Array{UInt8,1}, Base.CodeUnits{UInt8,S} where S<:AbstractString}}' href='#Base.transcode-Tuple{Type{#s1} where #s1<:TranscodingStreams.Codec,Union{Array{UInt8,1}, Base.CodeUnits{UInt8,S} where S<:AbstractString}}'>#</a>
 **`Base.transcode`** &mdash; *Method*.
@@ -86,7 +86,7 @@ julia> String(decompressed)
 ```
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/transcode.jl#L4-L29' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/transcode.jl#L4-L29' class='documenter-source'>source</a><br>
 
 <a id='Base.transcode-Tuple{TranscodingStreams.Codec,Union{Array{UInt8,1}, Base.CodeUnits{UInt8,S} where S<:AbstractString}}' href='#Base.transcode-Tuple{TranscodingStreams.Codec,Union{Array{UInt8,1}, Base.CodeUnits{UInt8,S} where S<:AbstractString}}'>#</a>
 **`Base.transcode`** &mdash; *Method*.
@@ -130,7 +130,7 @@ julia> String(decompressed)
 ```
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/transcode.jl#L40-L78' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/transcode.jl#L40-L78' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.TOKEN_END' href='#TranscodingStreams.TOKEN_END'>#</a>
 **`TranscodingStreams.TOKEN_END`** &mdash; *Constant*.
@@ -146,7 +146,7 @@ A special token indicating the end of data.
 
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/stream.jl#L484-L494' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/stream.jl#L484-L494' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.unsafe_read' href='#TranscodingStreams.unsafe_read'>#</a>
 **`TranscodingStreams.unsafe_read`** &mdash; *Function*.
@@ -166,7 +166,7 @@ This function is similar to `Base.unsafe_read` but is different in some points:
   * It does not block if there are buffered data in `input`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/io.jl#L4-L13' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/io.jl#L4-L13' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.unread' href='#TranscodingStreams.unread'>#</a>
 **`TranscodingStreams.unread`** &mdash; *Function*.
@@ -182,7 +182,7 @@ Insert `data` to the current reading position of `stream`.
 The next `read(stream, sizeof(data))` call will read data that are just inserted.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/stream.jl#L411-L418' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/stream.jl#L411-L418' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.unsafe_unread' href='#TranscodingStreams.unsafe_unread'>#</a>
 **`TranscodingStreams.unsafe_unread`** &mdash; *Function*.
@@ -198,7 +198,7 @@ Insert `nbytes` pointed by `data` to the current reading position of `stream`.
 The data are copied into the internal buffer and hence `data` can be safely used after the operation without interfering the stream.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/stream.jl#L423-L430' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/stream.jl#L423-L430' class='documenter-source'>source</a><br>
 
 <a id='Base.position-Tuple{TranscodingStream}' href='#Base.position-Tuple{TranscodingStream}'>#</a>
 **`Base.position`** &mdash; *Method*.
@@ -238,7 +238,7 @@ julia> position(stream)
 ```
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/stream.jl#L246-L279' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/stream.jl#L246-L279' class='documenter-source'>source</a><br>
 
 
 <a id='Statistics-1'></a>
@@ -262,7 +262,7 @@ Its object has four fields:
 Note that, since the transcoding stream does buffering, `in` is `transcoded_in + {size of buffered data}` and `out` is `transcoded_out - {size of buffered data}`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/stream.jl#L517-L529' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/stream.jl#L517-L529' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.stats' href='#TranscodingStreams.stats'>#</a>
 **`TranscodingStreams.stats`** &mdash; *Function*.
@@ -276,7 +276,7 @@ stats(stream::TranscodingStream)
 Create an I/O statistics object of `stream`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/stream.jl#L545-L549' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/stream.jl#L545-L549' class='documenter-source'>source</a><br>
 
 
 <a id='Codec-1'></a>
@@ -299,7 +299,7 @@ Noop (no operation) is a codec that does nothing. The data read from or written 
 The implementations are specialized for this codec. For example, a `Noop` stream uses only one buffer rather than a pair of buffers, which avoids copying data between two buffers and the throughput will be larger than a naive implementation.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/noop.jl#L4-L17' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/noop.jl#L4-L17' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.NoopStream' href='#TranscodingStreams.NoopStream'>#</a>
 **`TranscodingStreams.NoopStream`** &mdash; *Type*.
@@ -313,7 +313,7 @@ NoopStream(stream::IO)
 Create a noop stream.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/noop.jl#L22-L26' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/noop.jl#L22-L26' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.Codec' href='#TranscodingStreams.Codec'>#</a>
 **`TranscodingStreams.Codec`** &mdash; *Type*.
@@ -368,7 +368,7 @@ The `startproc(codec::C, mode::Symbol, error::Error)::Symbol` method takes `code
 The `process(codec::C, input::Memory, output::Memory, error::Error)::Tuple{Int,Int,Symbol}` method takes `codec`, `input`, `output` and `error`, and returns a consumed data size, a produced data size and a status code. This is called repeatedly while processing data. The input (`input`) and output (`output`) data are a `Memory` object, which is a pointer to a contiguous memory region with size. You must read input data from `input`, transcode the bytes, and then write the output data to `output`.  Finally you need to return the size of read data, the size of written data, and `:ok` status code so that the caller can know how many bytes are consumed and produced in the method. When transcoding reaches the end of a data stream, it is notified to this method by empty input. In that case, the method need to write the buffered data (if any) to `output`. If there is no data to write, the status code must be set to `:end`. The `process` method will be called repeatedly until it returns `:end` status code. If an error happens while processing data, the `error` argument must be set to an exception object and the return code must be `:error`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/codec.jl#L4-L97' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/codec.jl#L4-L97' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.expectedsize' href='#TranscodingStreams.expectedsize'>#</a>
 **`TranscodingStreams.expectedsize`** &mdash; *Function*.
@@ -384,7 +384,7 @@ Return the expected size of the transcoded `input` with `codec`.
 The default method returns `input.size`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/codec.jl#L104-L110' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/codec.jl#L104-L110' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.minoutsize' href='#TranscodingStreams.minoutsize'>#</a>
 **`TranscodingStreams.minoutsize`** &mdash; *Function*.
@@ -400,7 +400,7 @@ Return the minimum output size to be ensured when calling `process`.
 The default method returns `max(1, div(input.size, 4))`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/codec.jl#L115-L121' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/codec.jl#L115-L121' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.initialize' href='#TranscodingStreams.initialize'>#</a>
 **`TranscodingStreams.initialize`** &mdash; *Function*.
@@ -416,7 +416,7 @@ Initialize `codec`.
 The default method does nothing.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/codec.jl#L126-L132' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/codec.jl#L126-L132' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.finalize' href='#TranscodingStreams.finalize'>#</a>
 **`TranscodingStreams.finalize`** &mdash; *Function*.
@@ -432,7 +432,7 @@ Finalize `codec`.
 The default method does nothing.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/codec.jl#L137-L143' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/codec.jl#L137-L143' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.startproc' href='#TranscodingStreams.startproc'>#</a>
 **`TranscodingStreams.startproc`** &mdash; *Function*.
@@ -448,7 +448,7 @@ Start data processing with `codec` of `mode`.
 The default method does nothing and returns `:ok`.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/codec.jl#L148-L154' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/codec.jl#L148-L154' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.process' href='#TranscodingStreams.process'>#</a>
 **`TranscodingStreams.process`** &mdash; *Function*.
@@ -464,7 +464,7 @@ Do data processing with `codec`.
 There is no default method.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/codec.jl#L159-L165' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/codec.jl#L159-L165' class='documenter-source'>source</a><br>
 
 
 <a id='Internal-types-1'></a>
@@ -481,7 +481,7 @@ A contiguous memory.
 This type works like a `Vector` method.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/memory.jl#L4-L8' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/memory.jl#L4-L8' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.Error' href='#TranscodingStreams.Error'>#</a>
 **`TranscodingStreams.Error`** &mdash; *Type*.
@@ -493,7 +493,7 @@ Container of transcoding error.
 An object of this type is used to notify the caller of an exception that happened inside a transcoding method.  The `error` field is undefined at first but will be filled when data processing failed. The error should be set by calling the `setindex!` method (e.g. `error[] = ErrorException("error!")`).
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/error.jl#L4-L11' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/error.jl#L4-L11' class='documenter-source'>source</a><br>
 
 <a id='TranscodingStreams.State' href='#TranscodingStreams.State'>#</a>
 **`TranscodingStreams.State`** &mdash; *Type*.
@@ -505,5 +505,5 @@ A mutable state type of transcoding streams.
 See Developer's notes for details.
 
 
-<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/af37879e53654a85e9c458678dc90ab9cc250034/src/state.jl#L5-L9' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/bicycle1885/TranscodingStreams.jl/blob/8649b8394cdd1fc877dac5e6654b79992a35d0c7/src/state.jl#L5-L9' class='documenter-source'>source</a><br>
 
