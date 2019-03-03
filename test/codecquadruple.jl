@@ -50,6 +50,22 @@ end
     @test read(stream) == b"ffffoooooooo"
     close(stream)
 
+    stream = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
+    @test position(stream) === 0
+    read(stream, 3)
+    @test position(stream) === 3
+    read(stream, UInt8)
+    @test position(stream) === 4
+    close(stream)
+
+    stream = TranscodingStream(QuadrupleCodec(), IOBuffer())
+    @test position(stream) === 0
+    write(stream, 0x00)
+    @test position(stream) === 1
+    write(stream, "foo")
+    @test position(stream) === 4
+    close(stream)
+
     # Buffers are shared.
     stream1 = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
     stream2 = TranscodingStream(QuadrupleCodec(), stream1)

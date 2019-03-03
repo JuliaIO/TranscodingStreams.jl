@@ -16,6 +16,7 @@ TranscodingStreams.TOKEN_END
 TranscodingStreams.unsafe_read
 TranscodingStreams.unread
 TranscodingStreams.unsafe_unread
+Base.position(stream::TranscodingStream)
 ```
 
 Statistics
