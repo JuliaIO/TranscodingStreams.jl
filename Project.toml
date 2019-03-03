@@ -1,0 +1,24 @@
+name = "TranscodingStreams"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+license = "MIT"
+authors = ["Kenta Sato <bicycle1885@gmail.com>"]
+version = "0.8.1"
+
+[deps]
+CodecZstd = "6b39b394-51ab-5f42-8807-6242bab2b4c2"
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[extras]
+CodecBase = "6c391c72-fb7b-5838-ba82-7cfb1bcfecbf"
+CodecBzip2 = "523fee87-0ab8-5b00-afb7-3ecf72e48cfd"
+CodecXz = "ba30903b-d9e8-5048-a5ec-d1f5b0d4b47b"
+CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
+CodecZstd = "6b39b394-51ab-5f42-8807-6242bab2b4c2"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "Pkg", "CodecZlib", "CodecBzip2", "CodecXz", "CodecZstd", "CodecBase"]
