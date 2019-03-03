@@ -23,8 +23,8 @@ mutable struct Buffer
     bufferpos::Int
     marginpos::Int
 
-    # the number of total bytes passed through this buffer
-    total::Int64
+    # the total number of transcoded bytes
+    transcoded::Int64
 
     function Buffer(size::Integer)
         return new(Vector{UInt8}(undef, size), 0, 1, 1, 0)
@@ -95,7 +95,7 @@ end
 function consumed!(buf::Buffer, n::Integer; transcode = false)
     buf.bufferpos += n
     if transcode
-        buf.total += n
+        buf.transcoded += n
     end
     return buf
 end
@@ -104,7 +104,7 @@ end
 function supplied!(buf::Buffer, n::Integer; transcode = false)
     buf.marginpos += n
     if transcode
-        buf.total += n
+        buf.transcoded += n
     end
     return buf
 end
@@ -113,7 +113,7 @@ end
 function initbuffer!(buf::Buffer)
     buf.markpos = 0
     buf.bufferpos = buf.marginpos = 1
-    buf.total = 0
+    buf.transcoded = 0
     return buf
 end
 

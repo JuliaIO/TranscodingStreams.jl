@@ -554,13 +554,13 @@ function stats(stream::TranscodingStream)
     if mode == :idle
         transcoded_in = transcoded_out = in = out = 0
     elseif mode == :read
-        transcoded_in = buffer2.total
-        transcoded_out = buffer1.total
+        transcoded_in = buffer2.transcoded
+        transcoded_out = buffer1.transcoded
         in = transcoded_in + buffersize(buffer2)
         out = transcoded_out - buffersize(buffer1)
     elseif mode == :write
-        transcoded_in = buffer1.total
-        transcoded_out = buffer2.total
+        transcoded_in = buffer1.transcoded
+        transcoded_out = buffer2.transcoded
         in = transcoded_in + buffersize(buffer1)
         out = transcoded_out - buffersize(buffer2)
     else

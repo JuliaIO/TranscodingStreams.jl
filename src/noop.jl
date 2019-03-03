@@ -130,11 +130,11 @@ function stats(stream::NoopStream)
     if mode == :idle
         consumed = supplied = 0
     elseif mode == :read
-        supplied = buffer.total
+        supplied = buffer.transcoded
         consumed = supplied - buffersize(buffer)
     elseif mode == :write
-        supplied = buffer.total + buffersize(buffer)
-        consumed = buffer.total
+        supplied = buffer.transcoded + buffersize(buffer)
+        consumed = buffer.transcoded
     else
         @assert false "unreachable"
     end
@@ -161,7 +161,7 @@ function fillbuffer(stream::NoopStream)
         makemargin!(buffer, 1)
         nfilled += readdata!(stream.stream, buffer)
     end
-    buffer.total += nfilled
+    buffer.transcoded += nfilled
     return nfilled
 end
 
@@ -178,11 +178,11 @@ function flushbuffer(stream::NoopStream, all::Bool=false)
         nflushed += writedata!(stream.stream, buffer)
         makemargin!(buffer, 0)
     end
-    buffer.total += nflushed
+    buffer.transcoded += nflushed
     return nflushed
 end
 
 function flushuntilend(stream::NoopStream)
-    stream.state.buffer1.total += writedata!(stream.stream, stream.state.buffer1)
+    stream.state.buffer1.transcoded += writedata!(stream.stream, stream.state.buffer1)
     return
 end
