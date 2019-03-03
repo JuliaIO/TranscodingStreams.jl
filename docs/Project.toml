@@ -1,0 +1,7 @@
+[deps]
+CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+
+[compat]
+Documenter = "~0.21"
