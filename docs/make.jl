@@ -1,5 +1,6 @@
 using Documenter
 using TranscodingStreams
+using CodecZlib
 
 makedocs(
     sitename="TranscodingStreams.jl",
