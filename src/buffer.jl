@@ -111,9 +111,8 @@ end
 
 # Discard buffered data and initialize positions.
 function initbuffer!(buf::Buffer)
-    buf.markpos = 0
+    buf.markpos = buf.transcoded = 0
     buf.bufferpos = buf.marginpos = 1
-    buf.transcoded = 0
     return buf
 end
 
