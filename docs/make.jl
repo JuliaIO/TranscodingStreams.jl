@@ -8,8 +8,4 @@ makedocs(
     assets=["assets/custom.css"],
 )
 
-deploydocs(
-    repo="github.com/bicycle1885/TranscodingStreams.jl.git",
-    target="build",
-    deps=nothing,
-    make=nothing)
+deploydocs(repo="github.com/bicycle1885/TranscodingStreams.jl.git")
