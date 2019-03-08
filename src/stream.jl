@@ -337,6 +337,10 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
             break
         end
     end
+    if !@isdefined(ret)
+        # special case: stream is empty
+        ret = UInt8[]
+    end
     return ret
 end
 
