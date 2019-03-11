@@ -148,16 +148,16 @@ end
 # These methods are overloaded for the `Noop` codec because it has only one
 # buffer for efficiency.
 
-function fillbuffer(stream::NoopStream)
+function fillbuffer(stream::NoopStream; eager::Bool = false)
     changemode!(stream, :read)
     buffer = stream.state.buffer1
     @assert buffer === stream.state.buffer2
     if stream.stream isa TranscodingStream && buffer === stream.stream.state.buffer1
         # Delegate the operation when buffers are shared.
-        return fillbuffer(stream.stream)
+        return fillbuffer(stream.stream, eager = eager)
     end
     nfilled::Int = 0
-    while buffersize(buffer) == 0 && !eof(stream.stream)
+    while ((!eager && buffersize(buffer) == 0) || (eager && makemargin!(buffer, 0, eager = true) > 0)) && !eof(stream.stream)
         makemargin!(buffer, 1)
         nfilled += readdata!(stream.stream, buffer)
     end
