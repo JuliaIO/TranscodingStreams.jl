@@ -123,12 +123,13 @@ function emptybuffer!(buf::Buffer)
 end
 
 # Make margin with ≥`minsize` and return the size of it.
-function makemargin!(buf::Buffer, minsize::Integer)
+# If eager is true, it tries to move data even when the buffer has enough margin.
+function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
     @assert minsize ≥ 0
     if buffersize(buf) == 0 && buf.markpos == 0
         buf.bufferpos = buf.marginpos = 1
     end
-    if marginsize(buf) < minsize
+    if marginsize(buf) < minsize || eager
         # shift data to left
         if buf.markpos == 0
             datapos = buf.bufferpos

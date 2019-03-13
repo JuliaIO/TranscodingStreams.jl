@@ -556,12 +556,12 @@ end
 # Buffering
 # ---------
 
-function fillbuffer(stream::TranscodingStream)
+function fillbuffer(stream::TranscodingStream; eager::Bool = false)
     changemode!(stream, :read)
     buffer1 = stream.state.buffer1
     buffer2 = stream.state.buffer2
     nfilled::Int = 0
-    while buffersize(buffer1) == 0 && stream.state.mode != :stop
+    while ((!eager && buffersize(buffer1) == 0) || (eager && makemargin!(buffer1, 0, eager = true) > 0)) && stream.state.mode != :stop
         if stream.state.code == :end
             if buffersize(buffer2) == 0 && eof(stream.stream)
                 break
