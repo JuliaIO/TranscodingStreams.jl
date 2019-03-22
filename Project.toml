@@ -2,7 +2,7 @@ name = "TranscodingStreams"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 license = "MIT"
 authors = ["Kenta Sato <bicycle1885@gmail.com>"]
-version = "0.9.2"
+version = "0.9.3"
 
 [deps]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
