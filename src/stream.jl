@@ -334,6 +334,10 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
         copydata!(pointer(ret, filled+1), buffer1, sz)
         filled += sz
         if found
+            if !keep
+                # skip the delimiter
+                skipbuffer!(buffer1, 1)
+            end
             break
         end
     end

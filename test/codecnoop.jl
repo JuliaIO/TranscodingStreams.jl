@@ -260,10 +260,24 @@
     close(stream)
     @test eof(stream)  # close
 
-    stream = NoopStream(IOBuffer(""))
-    data = readuntil(stream, 0x00)
-    @test data isa Vector{UInt8}
-    @test isempty(data)
+    @testset "readuntil" begin
+        stream = NoopStream(IOBuffer(""))
+        data = readuntil(stream, 0x00)
+        @test data isa Vector{UInt8}
+        @test isempty(data)
+
+        stream = NoopStream(IOBuffer("foo,bar"))
+        @test readuntil(stream, UInt8(',')) == b"foo"
+        @test read(stream) == b"bar"
+
+        stream = NoopStream(IOBuffer("foo,bar"))
+        @test readuntil(stream, UInt8(','), keep = false) == b"foo"
+        @test read(stream) == b"bar"
+
+        stream = NoopStream(IOBuffer("foo,bar"))
+        @test readuntil(stream, UInt8(','), keep = true) == b"foo,"
+        @test read(stream) == b"bar"
+    end
 
     @test_throws ArgumentError NoopStream(IOBuffer(), bufsize=0)
     @test_throws ArgumentError NoopStream(let s = IOBuffer(); close(s); s; end)
