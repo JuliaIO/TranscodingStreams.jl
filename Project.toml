@@ -8,6 +8,9 @@ version = "0.9.4"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
+[compat]
+julia = "1"
+
 [extras]
 CodecBase = "6c391c72-fb7b-5838-ba82-7cfb1bcfecbf"
 CodecXz = "ba30903b-d9e8-5048-a5ec-d1f5b0d4b47b"
