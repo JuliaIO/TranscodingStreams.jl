@@ -1,7 +1,7 @@
 # Test Tools
 # ==========
 
-using Test: Test
+using Test.Test
 using Random: seed!, randstring
 
 TEST_RANDOM_SEED = 12345
