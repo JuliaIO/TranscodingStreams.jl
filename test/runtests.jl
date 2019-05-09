@@ -5,7 +5,7 @@ using Pkg
 # Tool tests
 # ----------
 
-import TranscodingStreams:
+using TranscodingStreams:
     Buffer, Memory,
     bufferptr, buffersize, buffermem,
     marginptr, marginsize, marginmem,
