@@ -635,6 +635,13 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     input = buffermem(inbuf)
     makemargin!(outbuf, minoutsize(stream.codec, input))
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
+    @debug(
+       "called process()",
+        input_size = buffersize(inbuf),
+        output_size = marginsize(outbuf),
+        input_delta = Δin,
+        output_delta = Δout,
+   )
     consumed!(inbuf, Δin, transcode = true)
     supplied!(outbuf, Δout, transcode = true)
     if state.code == :error
