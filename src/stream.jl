@@ -636,12 +636,13 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     makemargin!(outbuf, minoutsize(stream.codec, input))
     Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
     @debug(
-       "called process()",
+        "called process()",
+        code = state.code,
         input_size = buffersize(inbuf),
         output_size = marginsize(outbuf),
         input_delta = Δin,
         output_delta = Δout,
-   )
+    )
     consumed!(inbuf, Δin, transcode = true)
     supplied!(outbuf, Δout, transcode = true)
     if state.code == :error
@@ -709,8 +710,7 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
         return
     elseif newmode == :panic
         if !haserror(state.error)
-            # set a default error
-            state.error[] = ErrorException("unknown error happened while processing data")
+            set_default_error!(state.error)
         end
         state.mode = newmode
         finalize_codec(stream.codec, state.error)
@@ -765,6 +765,11 @@ end
 # Throw an argument error (must be called only when the mode is panic).
 function throw_panic_error()
     throw(ArgumentError("stream is in unrecoverable error; only isopen and close are callable"))
+end
+
+# Set a defualt error.
+function set_default_error!(error::Error)
+    error[] = ErrorException("unknown error happened while processing data")
 end
 
 # Call the finalize method of the codec.
