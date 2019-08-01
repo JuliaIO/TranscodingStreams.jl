@@ -107,11 +107,8 @@ function Base.transcode(codec::Codec, data::ByteData)
         end
         n = max(Δout, minoutsize(codec, buffermem(input)))
     end
-    if marginsize(output) == 0
-        return output.data
-    else
-        return output.data[1:output.marginpos-1]
-    end
+    resize!(output.data, output.marginpos - 1)
+    return output.data
     @label error
     if !haserror(error)
         set_default_error!(error)
