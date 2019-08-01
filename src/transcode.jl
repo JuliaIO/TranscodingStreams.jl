@@ -85,30 +85,35 @@ function Base.transcode(codec::Codec, data::ByteData)
         @goto error
     end
     n = minoutsize(codec, buffermem(input))
-    while code !== :end || buffersize(input) > 0
-        makemargin!(output, n)
-        Δin, Δout, code = process(codec, buffermem(input), marginmem(output), error)
-        @debug(
-            "called process()",
-            code = code,
-            input_size = buffersize(input),
-            output_size = marginsize(output),
-            input_delta = Δin,
-            output_delta = Δout,
-        )
-        consumed!(input, Δin)
-        supplied!(output, Δout)
-        if code === :error
-            @goto error
-        elseif code === :end && buffersize(input) > 0
+    @label process
+    makemargin!(output, n)
+    Δin, Δout, code = process(codec, buffermem(input), marginmem(output), error)
+    @debug(
+        "called process()",
+        code = code,
+        input_size = buffersize(input),
+        output_size = marginsize(output),
+        input_delta = Δin,
+        output_delta = Δout,
+    )
+    consumed!(input, Δin)
+    supplied!(output, Δout)
+    if code === :error
+        @goto error
+    elseif code === :end
+        if buffersize(input) > 0
             if startproc(codec, :write, error) === :error
                 @goto error
             end
+            n = minoutsize(codec, buffermem(input))
+            @goto process
         end
+        resize!(output.data, output.marginpos - 1)
+        return output.data
+    else
         n = max(Δout, minoutsize(codec, buffermem(input)))
+        @goto process
     end
-    resize!(output.data, output.marginpos - 1)
-    return output.data
     @label error
     if !haserror(error)
         set_default_error!(error)
