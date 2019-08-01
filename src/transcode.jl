@@ -78,14 +78,15 @@ julia> String(decompressed)
 """
 function Base.transcode(codec::Codec, data::ByteData)
     input = Buffer(data)
-    output = Buffer(initial_output_size(codec, Memory(data)))
+    output = Buffer(initial_output_size(codec, buffermem(input)))
     error = Error()
     code = startproc(codec, :write, error)
-    if codec === :error
+    if code === :error
         @goto error
     end
+    n = minoutsize(codec, buffermem(input))
     while code !== :end || buffersize(input) > 0
-        makemargin!(output, minoutsize(codec, buffermem(input)))
+        makemargin!(output, n)
         Δin, Δout, code = process(codec, buffermem(input), marginmem(output), error)
         @debug(
             "called process()",
@@ -103,9 +104,8 @@ function Base.transcode(codec::Codec, data::ByteData)
             if startproc(codec, :write, error) === :error
                 @goto error
             end
-        else
-            makemargin!(output, Δout)
         end
+        n = max(Δout, minoutsize(codec, buffermem(input)))
     end
     if marginsize(output) == 0
         return output.data
