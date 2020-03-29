@@ -70,18 +70,18 @@ included in this package except the `Noop` codec, which does nothing to data.
 The user need to install codecs as a plug-in to do something meaningful.
 
 The following codec packages support the protocol suite:
-- [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
-- [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
-- [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
-- [CodecBase.jl](https://github.com/bicycle1885/CodecBase.jl)
-- [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
-- [CodecLz4.jl](https://github.com/invenia/CodecLz4.jl) by Invenia.
+- [CodecZlib.jl](https://github.com/JuliaIO/CodecZlib.jl)
+- [CodecXz.jl](https://github.com/JuliaIO/CodecXz.jl)
+- [CodecZstd.jl](https://github.com/JuliaIO/CodecZstd.jl)
+- [CodecBase.jl](https://github.com/JuliaIO/CodecBase.jl)
+- [CodecBzip2.jl](https://github.com/JuliaIO/CodecBzip2.jl)
+- [CodecLz4.jl](https://github.com/JuliaIO/CodecLz4.jl) by Invenia.
 
-[travisci-img]: https://travis-ci.org/bicycle1885/TranscodingStreams.jl.svg?branch=master
-[travisci-url]: https://travis-ci.org/bicycle1885/TranscodingStreams.jl
-[codecov-img]: http://codecov.io/github/bicycle1885/TranscodingStreams.jl/coverage.svg?branch=master
-[codecov-url]: http://codecov.io/github/bicycle1885/TranscodingStreams.jl?branch=master
+[travisci-img]: https://travis-ci.org/github/juliaio/TranscodingStreams.jl.svg?branch=master
+[travisci-url]: https://travis-ci.org/github/juliaio/TranscodingStreams.jl
+[codecov-img]: http://codecov.io/github/juliaio/TranscodingStreams.jl/coverage.svg?branch=master
+[codecov-url]: http://codecov.io/github/juliaio/TranscodingStreams.jl?branch=master
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-stable-url]: https://bicycle1885.github.io/TranscodingStreams.jl/stable/
+[docs-stable-url]: https://juliaio.github.io/TranscodingStreams.jl/stable/
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
-[docs-latest-url]: https://bicycle1885.github.io/TranscodingStreams.jl/latest/
+[docs-latest-url]: https://juliaio.github.io/TranscodingStreams.jl/latest/

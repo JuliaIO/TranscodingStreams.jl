@@ -48,7 +48,7 @@ alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
         <th>Description</th>
     </tr>
     <tr>
-        <td rowspan="6"><a href="https://github.com/bicycle1885/CodecZlib.jl">CodecZlib.jl</a></td>
+        <td rowspan="6"><a href="https://github.com/JuliaIO/CodecZlib.jl">CodecZlib.jl</a></td>
         <td rowspan="6"><a href="http://zlib.net/">zlib</a></td>
         <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1952">RFC1952</a></td>
         <td><code>GzipCompressor</code></td>
@@ -83,7 +83,7 @@ alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
         <td>Decompress data in deflate format.</td>
     </tr>
     <tr>
-        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecXz.jl">CodecXz.jl</a></td>
+        <td rowspan="2"><a href="https://github.com/JuliaIO/CodecXz.jl">CodecXz.jl</a></td>
         <td rowspan="2"><a href="https://tukaani.org/xz/">xz</a></td>
         <td rowspan="2"><a href="https://tukaani.org/xz/xz-file-format.txt">The .xz File Format</a></td>
         <td><code>XzCompressor</code></td>
@@ -96,7 +96,7 @@ alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
         <td>Decompress data in xz (.xz) format.</td>
     </tr>
     <tr>
-        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecZstd.jl">CodecZstd.jl</a></td>
+        <td rowspan="2"><a href="https://github.com/JuliaIO/CodecZstd.jl">CodecZstd.jl</a></td>
         <td rowspan="2"><a href="http://facebook.github.io/zstd/">zstd</a></td>
         <td rowspan="2"><a href="https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md">Zstandard Compression Format</a></td>
         <td><code>ZstdCompressor</code></td>
@@ -109,7 +109,7 @@ alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
         <td>Decompress data in zstd (.zst) format.</td>
     </tr>
     <tr>
-        <td rowspan="6"><a href="https://github.com/bicycle1885/CodecBase.jl">CodecBase.jl</a></td>
+        <td rowspan="6"><a href="https://github.com/JuliaIO/CodecBase.jl">CodecBase.jl</a></td>
         <td rowspan="6">native</td>
         <td rowspan="6"><a href="https://tools.ietf.org/html/rfc4648">RFC4648</a></td>
         <td><code>Base16Encoder</code></td>
@@ -142,7 +142,7 @@ alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
         <td>Decode binary in base64 format.</td>
     </tr>
     <tr>
-        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
+        <td rowspan="2"><a href="https://github.com/JuliaIO/CodecBzip2.jl">CodecBzip2.jl</a></td>
         <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
         <td rowspan="2"></td>
         <td><code>Bzip2Compressor</code></td>
