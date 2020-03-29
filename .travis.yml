@@ -3,19 +3,20 @@ os:
   - linux
 julia:
   - 1.0
-  - 1.1
+  - 1.4
   - nightly
-matrix:
-  allow_failures:
-    - julia: nightly
+env:
+  - JULIA_PROJECT="@."
 notifications:
   email: false
 after_success:
   - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
 jobs:
+  allow_failures:
+    - julia: nightly
   include:
     - stage: "Documentation"
-      julia: 1.1
+      julia: 1.4
       os: linux
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
