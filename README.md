@@ -82,6 +82,6 @@ The following codec packages support the protocol suite:
 [codecov-img]: http://codecov.io/github/bicycle1885/TranscodingStreams.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/bicycle1885/TranscodingStreams.jl?branch=master
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-stable-url]: https://bicycle1885.github.io/TranscodingStreams.jl/stable/
+[docs-stable-url]: https://juliaio.github.io/TranscodingStreams.jl/stable/
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
-[docs-latest-url]: https://bicycle1885.github.io/TranscodingStreams.jl/latest/
+[docs-latest-url]: https://juliaio.github.io/TranscodingStreams.jl/latest/
