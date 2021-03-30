@@ -12,6 +12,7 @@ This function is similar to `Base.unsafe_read` but is different in some points:
 - It does not block if there are buffered data in `input`.
 """
 function unsafe_read(input::IO, output::Ptr{UInt8}, nbytes::Integer)::Int
+    nbytes = convert(UInt, nbytes)
     p = output
     navail = bytesavailable(input)
     if navail == 0 && nbytes > 0 && !eof(input)
