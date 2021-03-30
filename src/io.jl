@@ -11,7 +11,7 @@ This function is similar to `Base.unsafe_read` but is different in some points:
 - It returns the number of bytes written to `output`.
 - It does not block if there are buffered data in `input`.
 """
-function unsafe_read(input::IO, output::Ptr{UInt8}, nbytes::Integer)::Int
+function unsafe_read(input::IO, output::Ptr{UInt8}, nbytes::Integer)
     nbytes = convert(UInt, nbytes)
     p = output
     navail = bytesavailable(input)
