@@ -118,6 +118,10 @@ function TranscodingStream(codec::Codec, stream::IO;
     checkbufsize(bufsize)
     checksharedbuf(sharedbuf, stream)
     if sharedbuf
+    	# Here, the compiler cannot infer at compile time that the
+    	# stream must be a TranscodingStream, so we need to help the
+    	# compiler along. See https://github.com/JuliaIO/TranscodingStreams.jl/pull/111
+        stream::TranscodingStream
         state = State(Buffer(bufsize), stream.state.buffer1)
     else
         state = State(bufsize)
