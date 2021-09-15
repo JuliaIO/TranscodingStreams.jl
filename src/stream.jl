@@ -168,6 +168,48 @@ function Base.open(f::Function, ::Type{T}, args...) where T<:TranscodingStream
     end
 end
 
+# ComposedFunction is available in Julia 1.6
+@static if VERSION ≥ v"1.6"
+    function Base.open(
+        f::Function,
+        code::ComposedFunction{
+            <:Union{<:Type{<:TranscodingStream}, <:ComposedFunction},
+            <:Type{<:TranscodingStream}
+        },
+        path::AbstractString
+    )
+        io = open(code, path)
+        try
+            f(io)
+        finally
+            close(io)
+        end
+    end
+
+    # Allow open with chained TranscodingStreams
+    function Base.open(
+        code::ComposedFunction{
+            <:Union{<:Type{<:TranscodingStream}, <:ComposedFunction},
+            <:Type{<:TranscodingStream}
+        },
+        path::AbstractString
+    )
+        _open(typeof(code), open(path))
+    end
+
+    function _open(code::Type{T}, io::IO) where {
+        S <: TranscodingStream,
+        U <: Union{<:Type{<:TranscodingStream}, <:ComposedFunction},
+        T <: ComposedFunction{U,<:Type{S}}
+    }
+        _open(U, S(io))
+    end
+
+    function _open(code::Type{<:Type{T}}, io::IO) where {T <: TranscodingStream}
+        T(io)
+    end
+end
+
 function Base.isopen(stream::TranscodingStream)
     return stream.state.mode != :close && stream.state.mode != :panic
 end
