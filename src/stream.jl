@@ -102,7 +102,7 @@ julia> using CodecZlib
 julia> file = open(joinpath(dirname(pathof(CodecZlib)), "..", "test", "abra.gz"));
 
 julia> stream = TranscodingStream(GzipDecompressor(), file)
-TranscodingStream{GzipDecompressor,IOStream}(<mode=idle>)
+TranscodingStream{GzipDecompressor, IOStream}(<mode=idle>)
 
 julia> String(read(stream))
 "abracadabra"

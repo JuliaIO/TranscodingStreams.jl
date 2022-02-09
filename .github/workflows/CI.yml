@@ -54,6 +54,6 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
-            using MyPackage
-            DocMeta.setdocmeta!(MyPackage, :DocTestSetup, :(using MyPackage); recursive=true)
-            doctest(MyPackage)'
+            using TranscodingStreams
+            DocMeta.setdocmeta!(TranscodingStreams, :DocTestSetup, :(using TranscodingStreams); recursive=true)
+            doctest(TranscodingStreams)'
