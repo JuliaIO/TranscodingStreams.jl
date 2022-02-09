@@ -284,7 +284,7 @@ function Base.seekstart(stream::TranscodingStream)
         emptybuffer!(stream.state.buffer2)
     end
     seekstart(stream.stream)
-    return
+    return stream
 end
 
 function Base.seekend(stream::TranscodingStream)
@@ -296,7 +296,7 @@ function Base.seekend(stream::TranscodingStream)
         emptybuffer!(stream.state.buffer2)
     end
     seekend(stream.stream)
-    return
+    return stream
 end
 
 
