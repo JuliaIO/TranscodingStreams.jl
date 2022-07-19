@@ -51,7 +51,16 @@ Note that this method may return a wrong position when
 - the position of the wrapped stream has been changed outside of this package.
 """
 function Base.position(stream::NoopStream)
-    return position(stream.stream) - buffersize(stream.state.buffer1)
+    mode = stream.state.mode
+    @checkmode (:idle, :read, :write)
+    if mode === :idle
+        return Int64(0)
+    elseif mode === :write
+        return position(stream.stream) + buffersize(stream.state.buffer1)
+    elseif mode === :read
+        return position(stream.stream) - buffersize(stream.state.buffer1)
+    end
+    @assert false "unreachable"
 end
 
 function Base.seek(stream::NoopStream, pos::Integer)
@@ -126,7 +135,7 @@ function stats(stream::NoopStream)
     mode = state.mode
     @checkmode (:idle, :read, :write)
     buffer = state.buffer1
-    @assert buffer == stream.state.buffer2
+    @assert buffer === stream.state.buffer2
     if mode == :idle
         consumed = supplied = 0
     elseif mode == :read

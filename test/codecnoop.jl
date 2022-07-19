@@ -283,4 +283,29 @@
     @test_throws ArgumentError NoopStream(let s = IOBuffer(); close(s); s; end)
     @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), bufsize=0)
     @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), sharedbuf=true)
+
+    @testset "position" begin
+        iob = IOBuffer()
+        sink = IOBuffer()
+        stream = NoopStream(sink, bufsize=16)
+        @test position(stream) == position(iob)
+        for len in 0:10:100
+            write(stream, repeat("x", len))
+            write(iob, repeat("x", len))
+            @test position(stream) == position(iob)
+        end
+        @test position(stream) == position(sink) == position(iob)
+        close(stream)
+        close(iob)
+
+        mktemp() do path, sink
+            stream = NoopStream(sink, bufsize=16)
+            pos = 0
+            for len in 0:10:100
+                write(stream, repeat("x", len))
+                pos += len
+                @test position(stream) == pos
+            end
+        end
+    end
 end

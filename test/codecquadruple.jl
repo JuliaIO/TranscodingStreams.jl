@@ -83,4 +83,28 @@ end
     stream = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
     @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(undef, 13)), 13)
     close(stream)
+
+    @testset "position" begin
+        iob = IOBuffer()
+        sink = IOBuffer()
+        stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
+        @test position(stream) == position(iob)
+        for len in 0:10:100
+            write(stream, repeat("x", len))
+            write(iob, repeat("x", len))
+            @test position(stream) == position(iob)
+        end
+        close(stream)
+        close(iob)
+
+        mktemp() do path, sink
+            stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
+            pos = 0
+            for len in 0:10:100
+                write(stream, repeat("x", len))
+                pos += len
+                @test position(stream) == pos
+            end
+        end
+    end
 end
