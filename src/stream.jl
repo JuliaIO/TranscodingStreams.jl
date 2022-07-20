@@ -360,6 +360,7 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
         m = min(buffersize(buffer), p_end - p)
         copydata!(p, buffer, m)
         p += m
+        GC.safepoint()
     end
     if p < p_end && eof(stream)
         throw(EOFError())
@@ -462,6 +463,7 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
         m = min(marginsize(buffer1), p_end - p)
         copydata!(buffer1, p, m)
         p += m
+        GC.safepoint()
     end
     return Int(p - input)
 end
