@@ -598,6 +598,7 @@ function flushbuffer(stream::TranscodingStream, all::Bool=false)
         writedata!(stream.stream, buffer2)
         Δin, _ = callprocess(stream, buffer1, buffer2)
         nflushed += Δin
+        GC.safepoint()
     end
     return nflushed
 end
