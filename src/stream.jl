@@ -334,7 +334,7 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
             @assert filled == 0
             ret = Vector{UInt8}(undef, sz)
         end
-        copydata!(pointer(ret, filled+1), buffer1, sz)
+        GC.@preserve ret copydata!(pointer(ret, filled+1), buffer1, sz)
         filled += sz
         if found
             if !keep
@@ -377,7 +377,7 @@ function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=
             resize!(b, min(length(b) * 2, nb))
             resized = true
         end
-        filled += unsafe_read(stream, pointer(b, filled+1), min(length(b), nb)-filled)
+        filled += GC.@preserve b unsafe_read(stream, pointer(b, filled+1), min(length(b), nb)-filled)
     end
     if resized
         resize!(b, filled)
@@ -393,7 +393,7 @@ end
 function Base.readavailable(stream::TranscodingStream)
     n = bytesavailable(stream)
     data = Vector{UInt8}(undef, n)
-    unsafe_read(stream, pointer(data), n)
+    GC.@preserve data unsafe_read(stream, pointer(data), n)
     return data
 end
 
@@ -406,7 +406,7 @@ The next `read(stream, sizeof(data))` call will read data that are just
 inserted.
 """
 function unread(stream::TranscodingStream, data::ByteData)
-    unsafe_unread(stream, pointer(data), sizeof(data))
+    GC.@preserve data unsafe_unread(stream, pointer(data), sizeof(data))
 end
 
 """
@@ -638,8 +638,8 @@ end
 function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     state = stream.state
     input = buffermem(inbuf)
-    makemargin!(outbuf, minoutsize(stream.codec, input))
-    Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
+    GC.@preserve inbuf makemargin!(outbuf, minoutsize(stream.codec, input))
+    Δin, Δout, state.code = GC.@preserve inbuf outbuf process(stream.codec, input, marginmem(outbuf), state.error)
     @debug(
         "called process()",
         code = state.code,
@@ -679,7 +679,7 @@ function readdata!(input::IO, output::Buffer)
         navail = bytesavailable(input)
     end
     n = min(navail, marginsize(output))
-    Base.unsafe_read(input, marginptr(output), n)
+    GC.@preserve output Base.unsafe_read(input, marginptr(output), n)
     supplied!(output, n)
     nread += n
     return nread
@@ -693,7 +693,7 @@ function writedata!(output::IO, input::Buffer)
     end
     nwritten::Int = 0
     while buffersize(input) > 0
-        n = Base.unsafe_write(output, bufferptr(input), buffersize(input))
+        n = GC.@preserve input Base.unsafe_write(output, bufferptr(input), buffersize(input))
         consumed!(input, n)
         nwritten += n
         GC.safepoint()
