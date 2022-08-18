@@ -167,7 +167,7 @@ function fillbuffer(stream::NoopStream; eager::Bool = false)
     end
     nfilled::Int = 0
     while ((!eager && buffersize(buffer) == 0) || (eager && makemargin!(buffer, 0, eager = true) > 0)) && !eof(stream.stream)
-        makemargin!(buffer, 1)
+        makemargin!(buffer, max(1, div(length(buffer), 2)))
         nfilled += readdata!(stream.stream, buffer)
     end
     buffer.transcoded += nfilled
