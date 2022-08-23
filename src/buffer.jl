@@ -187,7 +187,7 @@ end
 # Copy data from `data` to `buf`.
 function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
-    unsafe_copyto!(marginptr(buf), data, nbytes)
+    GC.@preserve buf unsafe_copyto!(marginptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
 end
@@ -197,7 +197,7 @@ function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
     # NOTE: It's caller's responsibility to ensure that the buffer has at least
     # nbytes.
     @assert buffersize(buf) ≥ nbytes
-    unsafe_copyto!(data, bufferptr(buf), nbytes)
+    GC.@preserve buf unsafe_copyto!(data, bufferptr(buf), nbytes)
     consumed!(buf, nbytes)
     return data
 end
@@ -206,14 +206,14 @@ end
 function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
     copyto!(buf.data, buf.bufferpos + nbytes, buf.data, buf.bufferpos, buffersize(buf))
-    unsafe_copyto!(bufferptr(buf), data, nbytes)
+    GC.@preserve buf unsafe_copyto!(bufferptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
 end
 
 # Find the first occurrence of a specific byte.
 function findbyte(buf::Buffer, byte::UInt8)
-    p = ccall(
+    p = GC.@preserve buf ccall(
         :memchr,
         Ptr{UInt8},
         (Ptr{UInt8}, Cint, Csize_t),
