@@ -360,7 +360,9 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
         m = min(buffersize(buffer), p_end - p)
         copydata!(p, buffer, m)
         p += m
-        GC.safepoint()
+        @static if VERSION >= v"1.4"
+            GC.safepoint()
+        end
     end
     if p < p_end && eof(stream)
         throw(EOFError())
@@ -463,7 +465,9 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
         m = min(marginsize(buffer1), p_end - p)
         copydata!(buffer1, p, m)
         p += m
-        GC.safepoint()
+        @static if VERSION >= v"1.4"
+            GC.safepoint()
+        end
     end
     return Int(p - input)
 end
@@ -696,9 +700,13 @@ function writedata!(output::IO, input::Buffer)
         n = GC.@preserve input Base.unsafe_write(output, bufferptr(input), buffersize(input))
         consumed!(input, n)
         nwritten += n
+        @static if VERSION >= v"1.4"
+            GC.safepoint()
+        end
+    end
+    @static if VERSION >= v"1.4"
         GC.safepoint()
     end
-    GC.safepoint()
     return nwritten
 end
 
