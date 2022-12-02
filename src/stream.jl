@@ -135,7 +135,9 @@ end
 
 # Split keyword arguments.
 @nospecialize
+@static if isdefined(Base, :Pairs)
 splitkwargs(kwargs::Base.Pairs, ks::Tuple{Vararg{Symbol}}) = splitkwargs(NamedTuple(kwargs), ks)
+end
 function splitkwargs(kwargs::NamedTuple, ks::Tuple{Vararg{Symbol}})
     non_ks = Base.diff_names(keys(kwargs), ks)
     ks = Base.diff_names(keys(kwargs), non_ks)
