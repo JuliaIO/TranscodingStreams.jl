@@ -134,6 +134,15 @@ function Base.show(io::IO, stream::TranscodingStream)
 end
 
 # Split keyword arguments.
+@nospecialize
+@static if isdefined(Base, :Pairs)
+splitkwargs(kwargs::Base.Pairs, ks::Tuple{Vararg{Symbol}}) = splitkwargs(NamedTuple(kwargs), ks)
+end
+function splitkwargs(kwargs::NamedTuple, ks::Tuple{Vararg{Symbol}})
+    non_ks = Base.diff_names(keys(kwargs), ks)
+    ks = Base.diff_names(keys(kwargs), non_ks)
+    return NamedTuple{ks}(kwargs), NamedTuple{non_ks}(kwargs)
+end
 function splitkwargs(kwargs, keys)
     hits = []
     others = []
@@ -142,6 +151,7 @@ function splitkwargs(kwargs, keys)
     end
     return hits, others
 end
+@specialize
 
 # Check that mode is valid.
 macro checkmode(validmodes)
