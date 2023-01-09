@@ -130,14 +130,19 @@ function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
         buf.bufferpos = buf.marginpos = 1
     end
     if marginsize(buf) < minsize || eager
-        # shift data to left
+        # datapos refer to the leftmost position of data that must not be
+        # discarded. We can left-shift to discard all data before this
         if buf.markpos == 0
+            # If data is not marked we must not discard buffered (nonconsumed) data
             datapos = buf.bufferpos
             datasize = buffersize(buf)
         else
+            # Else, we must not consume marked data
+            # (Since markpos ≤ bufferpos, we do not consume buffered data either) 
             datapos = buf.markpos
             datasize = buf.marginpos - buf.markpos
         end
+        # Shift data left in buffer to make space for new data
         copyto!(buf.data, 1, buf.data, datapos, datasize)
         shift = datapos - 1
         if buf.markpos > 0
@@ -146,9 +151,11 @@ function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
         buf.bufferpos -= shift
         buf.marginpos -= shift
     end
+    # If there is still not enough margin, we expand buffer.
+    # At least enough for minsize, but otherwise 1.5 times
     if marginsize(buf) < minsize
-        # expand data buffer
-        resize!(buf.data, buf.marginpos + minsize - 1)
+        datasize = length(buf.data)
+        resize!(buf.data, max(buf.marginpos + minsize - 1, datasize + div(datasize, 2)))
     end
     @assert marginsize(buf) ≥ minsize
     return marginsize(buf)
