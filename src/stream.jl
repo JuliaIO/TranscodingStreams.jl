@@ -591,7 +591,7 @@ function fillbuffer(stream::TranscodingStream; eager::Bool = false)
             end
             callstartproc(stream, :read)
         end
-        makemargin!(buffer2, max(1, div(length(buffer2), 2)))
+        makemargin!(buffer2, 1 + div(buffer2.markpos, 2))
         readdata!(stream.stream, buffer2)
         _, Δout = callprocess(stream, buffer2, buffer1)
         nfilled += Δout
