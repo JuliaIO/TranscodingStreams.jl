@@ -1,6 +1,5 @@
 using TranscodingStreams
 using Test
-using Pkg
 
 include("testtools.jl")
 
