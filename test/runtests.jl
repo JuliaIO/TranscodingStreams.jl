@@ -2,6 +2,8 @@ using TranscodingStreams
 using Test
 using Pkg
 
+include("testtools.jl")
+
 # Tool tests
 # ----------
 
@@ -121,8 +123,3 @@ end
 include("codecnoop.jl")
 include("codecinvalid.jl")
 include("codecquadruple.jl")
-
-# Test third-party codec packages.
-for pkg in ["CodecZlib", "CodecXz", "CodecZstd", "CodecBase"]
-    Pkg.test(pkg)
-end

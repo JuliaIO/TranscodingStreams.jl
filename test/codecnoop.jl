@@ -196,10 +196,10 @@
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
 
-    TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
-    TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
-    TranscodingStreams.test_roundtrip_write(NoopStream, NoopStream)
-    TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
+    test_roundtrip_transcode(Noop, Noop)
+    test_roundtrip_read(NoopStream, NoopStream)
+    test_roundtrip_write(NoopStream, NoopStream)
+    test_roundtrip_lines(NoopStream, NoopStream)
 
     # switch write => read
     stream = NoopStream(IOBuffer(b"foobar", read=true, write=true))

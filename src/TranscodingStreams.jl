@@ -16,6 +16,5 @@ include("stream.jl")
 include("io.jl")
 include("noop.jl")
 include("transcode.jl")
-include("testtools.jl")
 
 end # module

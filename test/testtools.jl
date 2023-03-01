@@ -23,7 +23,7 @@ function test_roundtrip_write(encoder, decoder)
         data = rand(alpha, n)
         file = IOBuffer()
         stream = encoder(decoder(file))
-        write(stream, data, TOKEN_END); flush(stream)
+        write(stream, data, TranscodingStreams.TOKEN_END); flush(stream)
         Test.@test hash(take!(file)) == hash(data)
         close(stream)
     end
@@ -32,16 +32,16 @@ end
 function test_roundtrip_transcode(encode, decode)
     seed!(TEST_RANDOM_SEED)
     encoder = encode()
-    initialize(encoder)
+    TranscodingStreams.initialize(encoder)
     decoder = decode()
-    initialize(decoder)
+    TranscodingStreams.initialize(decoder)
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
         Test.@test hash(transcode(decode, transcode(encode, data))) == hash(data)
         Test.@test hash(transcode(decoder, transcode(encoder, data))) == hash(data)
     end
-    finalize(encoder)
-    finalize(decoder)
+    TranscodingStreams.finalize(encoder)
+    TranscodingStreams.finalize(decoder)
 end
 
 function test_roundtrip_lines(encoder, decoder)
@@ -54,7 +54,7 @@ function test_roundtrip_lines(encoder, decoder)
         println(stream, line)
         push!(lines, line)
     end
-    write(stream, TOKEN_END)
+    write(stream, TranscodingStreams.TOKEN_END)
     flush(stream)
     seekstart(buf)
     Test.@test hash(lines) == hash(readlines(decoder(buf)))
@@ -78,7 +78,7 @@ function test_chunked_read(Encoder, Decoder)
     seed!(TEST_RANDOM_SEED)
     alpha = b"色即是空"
     encoder = Encoder()
-    initialize(encoder)
+    TranscodingStreams.initialize(encoder)
     for _ in 1:500
         chunks = [rand(alpha, rand(0:100)) for _ in 1:rand(1:100)]
         data = mapfoldl(x->transcode(encoder, x), vcat, chunks, init=UInt8[])
@@ -92,20 +92,20 @@ function test_chunked_read(Encoder, Decoder)
         end
         Test.@test ok
     end
-    finalize(encoder)
+    TranscodingStreams.finalize(encoder)
 end
 
 function test_chunked_write(Encoder, Decoder)
     seed!(TEST_RANDOM_SEED)
     alpha = b"空即是色"
     encoder = Encoder()
-    initialize(encoder)
+    TranscodingStreams.initialize(encoder)
     for _ in 1:500
         chunks = [rand(alpha, rand(0:100)) for _ in 1:2]
         data = map(x->transcode(encoder, x), chunks)
         buffer = IOBuffer()
         stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
-        write(stream, vcat(data...))
+        write(stream, vcat(data...))Test
         flush(stream)
         ok = true
         ok &= hash(take!(buffer)) == hash(chunks[1])
@@ -113,5 +113,5 @@ function test_chunked_write(Encoder, Decoder)
         Test.@test ok
         close(stream)
     end
-    finalize(encoder)
+    TranscodingStreams.finalize(encoder)
 end
