@@ -129,3 +129,47 @@ function initial_output_size(codec::Codec, input::Memory)
         8,  # just in case where both minoutsize and expectedsize are foolish
     )
 end
+# Mutates the provided output buffer. Useful for cases when output size is known. 
+# Removed `makemargin!(output, n)` as it's not necessary
+function transcode!(codec::Codec, data::ByteData,output::Buffer)
+    input = Buffer(data)
+    error = Error()
+    code = startproc(codec, :write, error)
+    if code === :error
+        @goto error
+    end
+    n = minoutsize(codec, buffermem(input))
+    @label process
+    Δin, Δout, code = process(codec, buffermem(input), marginmem(output), error)
+    @debug(
+        "called process()",
+        code = code,
+        input_size = buffersize(input),
+        output_size = marginsize(output),
+        input_delta = Δin,
+        output_delta = Δout,
+    )
+    consumed!(input, Δin)
+    supplied!(output, Δout)
+    if code === :error
+        @goto error
+    elseif code === :end
+        if buffersize(input) > 0
+            if startproc(codec, :write, error) === :error
+                @goto error
+            end
+            n = minoutsize(codec, buffermem(input))
+            @goto process
+        end
+        resize!(output.data, output.marginpos - 1)
+        return output.data
+    else
+        n = max(Δout, minoutsize(codec, buffermem(input)))
+        @goto process
+    end
+    @label error
+    if !haserror(error)
+        set_default_error!(error)
+    end
+    throw(error[])
+end
