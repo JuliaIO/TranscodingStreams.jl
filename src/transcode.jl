@@ -130,7 +130,6 @@ function initial_output_size(codec::Codec, input::Memory)
     )
 end
 # Mutates the provided output buffer. Useful for cases when output size is known. 
-# Removed `makemargin!(output, n)` as it's not necessary
 function transcode!(codec::Codec, data::ByteData,output::Buffer)
     input = Buffer(data)
     error = Error()
@@ -138,7 +137,6 @@ function transcode!(codec::Codec, data::ByteData,output::Buffer)
     if code === :error
         @goto error
     end
-    n = minoutsize(codec, buffermem(input))
     @label process
     Δin, Δout, code = process(codec, buffermem(input), marginmem(output), error)
     @debug(
@@ -158,13 +156,11 @@ function transcode!(codec::Codec, data::ByteData,output::Buffer)
             if startproc(codec, :write, error) === :error
                 @goto error
             end
-            n = minoutsize(codec, buffermem(input))
             @goto process
         end
         resize!(output.data, output.marginpos - 1)
         return output.data
     else
-        n = max(Δout, minoutsize(codec, buffermem(input)))
         @goto process
     end
     @label error
