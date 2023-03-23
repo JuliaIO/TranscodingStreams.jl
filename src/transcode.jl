@@ -37,6 +37,49 @@ function Base.transcode(::Type{C}, data::ByteData) where {C<:Codec}
     end
 end
 
+"""
+    transcode(codec::Codec, data::Union{ByteData, Buffer}[, output::Union{ByteData, Buffer}])::ByteData
+
+Transcode `data` by applying `codec`.
+
+If `output` is unspecified, then this method will allocate it.
+
+Note that this method does not initialize or finalize `codec`. This is
+efficient when you transcode a number of pieces of data, but you need to call
+[`TranscodingStreams.initialize`](@ref) and
+[`TranscodingStreams.finalize`](@ref) explicitly.
+
+Examples
+--------
+
+```julia
+julia> using CodecZlib
+
+julia> data = b"abracadabra";
+
+julia> codec = ZlibCompressor();
+
+julia> TranscodingStreams.initialize(codec)
+
+julia> compressed = Vector{UInt8}()
+
+julia> transcode(codec, data, compressed);
+
+julia> TranscodingStreams.finalize(codec)
+
+julia> codec = ZlibDecompressor();
+
+julia> TranscodingStreams.initialize(codec)
+
+julia> decompressed = transcode(codec, compressed);
+
+julia> TranscodingStreams.finalize(codec)
+
+julia> String(decompressed)
+"abracadabra"
+
+```
+"""
 function Base.transcode(
     codec::Codec,
     input::Buffer,
@@ -84,94 +127,13 @@ function Base.transcode(
     throw(error[])
 end
 
-"""
-    transcode(codec::Codec, data::ByteData)::ByteData
+Base.transcode(codec::Codec, data::ByteData, output::ByteData) =
+    transcode(codec, data, Buffer(output))
 
-Transcode `data` by applying `codec`.
-
-Note that this method does not initialize or finalize `codec`. This is
-efficient when you transcode a number of pieces of data, but you need to call
-[`TranscodingStreams.initialize`](@ref) and
-[`TranscodingStreams.finalize`](@ref) explicitly.
-
-Examples
---------
-
-```julia
-julia> using CodecZlib
-
-julia> data = b"abracadabra";
-
-julia> codec = ZlibCompressor();
-
-julia> TranscodingStreams.initialize(codec)
-
-julia> compressed = transcode(codec, data);
-
-julia> TranscodingStreams.finalize(codec)
-
-julia> codec = ZlibDecompressor();
-
-julia> TranscodingStreams.initialize(codec)
-
-julia> decompressed = transcode(codec, compressed);
-
-julia> TranscodingStreams.finalize(codec)
-
-julia> String(decompressed)
-"abracadabra"
-
-```
-"""
 Base.transcode(codec::Codec, data::ByteData) = transcode(codec, Buffer(data))
 
 Base.transcode(codec::Codec, data::ByteData, output::Buffer) =
     transcode(codec, Buffer(data), output)
-
-"""
-    transcode(codec::Codec, data::ByteData, output::ByteData)::ByteData
-
-Transcode `data` by applying `codec` and store the results in `output`.
-
-Note that this method does not initialize or finalize `codec`. This is
-efficient when you transcode a number of pieces of data, but you need to call
-[`TranscodingStreams.initialize`](@ref) and
-[`TranscodingStreams.finalize`](@ref) explicitly.
-
-Examples
---------
-
-```julia
-julia> using CodecZlib
-
-julia> data julia> data = b"abracadabra";
-= b"abracadabra";
-
-julia> codec = ZlibCompressor();
-
-julia> TranscodingStreams.initialize(codec)
-
-julia> compressed = Vector{UInt8}()
-
-julia> transcode(codec, data, compressed);
-
-julia> TranscodingStreams.finalize(codec)
-
-julia> codec = ZlibDecompressor();
-
-julia> TranscodingStreams.initialize(codec)
-
-julia> decompressed = transcode(codec, compressed);
-
-julia> TranscodingStreams.finalize(codec)
-
-julia> String(decompressed)
-"abracadabra"
-
-```
-"""
-Base.transcode(codec::Codec, data::ByteData, output::ByteData) =
-    transcode(codec, data, Buffer(output))
 
 # Return the initial output buffer size.
 function initial_output_size(codec::Codec, input::Memory)
