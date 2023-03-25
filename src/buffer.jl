@@ -199,6 +199,11 @@ function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     return buf
 end
 
+# Copy data from `data` to `buf`.
+function copydata!(buf::Buffer, data::Buffer, nbytes::Integer = length(data))
+    return copydata!(buf, bufferptr(data), nbytes)
+end
+
 # Copy data from `buf` to `data`.
 function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
     # NOTE: It's caller's responsibility to ensure that the buffer has at least
