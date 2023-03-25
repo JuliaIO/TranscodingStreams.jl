@@ -80,10 +80,17 @@ julia> String(decompressed)
 
 ```
 """
+_default_output_buffer(codec, input) = Buffer(
+    initial_output_size(
+        codec,
+        buffermem(input)
+    )
+)
+
 function Base.transcode(
     codec::Codec,
     input::Buffer,
-    output::Buffer = Buffer(initial_output_size(codec, buffermem(input))),
+    output::Buffer = _default_output_buffer(codec, input) ,
 )
     error = Error()
     code = startproc(codec, :write, error)
