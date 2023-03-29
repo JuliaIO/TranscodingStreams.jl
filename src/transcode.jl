@@ -37,6 +37,13 @@ function Base.transcode(::Type{C}, data::ByteData) where {C<:Codec}
     end
 end
 
+_default_output_buffer(codec, input) = Buffer(
+    initial_output_size(
+        codec,
+        buffermem(input)
+    )
+)
+
 """
     transcode(codec::Codec, data::Union{ByteData, Buffer}[, output::Union{ByteData, Buffer}])::ByteData
 
@@ -80,13 +87,6 @@ julia> String(decompressed)
 
 ```
 """
-_default_output_buffer(codec, input) = Buffer(
-    initial_output_size(
-        codec,
-        buffermem(input)
-    )
-)
-
 function Base.transcode(
     codec::Codec,
     input::Buffer,
