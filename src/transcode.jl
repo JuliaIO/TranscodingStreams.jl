@@ -4,7 +4,7 @@
 """
     transcode(
         ::Type{C},
-        data::Union{Vector{UInt8},Base.CodeUnits{UInt8}}
+        data::Union{Vector{UInt8},Base.CodeUnits{UInt8}},
     )::Union{Vector{UInt8},Base.CodeUnits{UInt8}} where {C<:Codec}
 
 Transcode `data` by applying a codec `C()`.
@@ -51,7 +51,7 @@ _default_output_buffer(codec, input) = Buffer(
     transcode(
         codec::Codec,
         data::Union{Vector{UInt8},Base.CodeUnits{UInt8},Buffer},
-        [output::Union{Vector{UInt8},Base.CodeUnits{UInt8},Buffer}]
+        [output::Union{Vector{UInt8},Base.CodeUnits{UInt8},Buffer}],
     )::Union{Vector{UInt8},Base.CodeUnits{UInt8}}
 
 Transcode `data` by applying `codec`.
