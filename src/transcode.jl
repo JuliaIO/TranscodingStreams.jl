@@ -45,7 +45,7 @@ _default_output_buffer(codec, input) = Buffer(
 )
 
 """
-    transcode(codec::Codec, data::Union{ByteData, Buffer}[, output::Union{ByteData, Buffer}])::ByteData
+    transcode(codec::Codec, data::Union{ByteData, Buffer}[, output::Union{Vector{UInt8},Base.CodeUnits{UInt8}, Buffer}])::ByteData
 
 Transcode `data` by applying `codec`.
 
