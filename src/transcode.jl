@@ -2,7 +2,7 @@
 # =========
 
 """
-    transcode(::Type{C}, data::ByteData)::ByteData where {C<:Codec}
+    transcode(::Type{C}, data::Union{Vector{UInt8},Base.CodeUnits{UInt8}})::ByteData where {C<:Codec}
 
 Transcode `data` by applying a codec `C()`.
 
