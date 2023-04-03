@@ -27,7 +27,7 @@ julia> String(decompressed)
 
 ```
 """
-function Base.transcode(::Type{C}, data::ByteData) where {C<:Codec}
+function Base.transcode(::Type{C}, data::Union{Vector{UInt8},Base.CodeUnits{UInt8}}) where {C<:Codec}
     codec = C()
     initialize(codec)
     try
