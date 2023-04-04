@@ -26,6 +26,10 @@ mutable struct Buffer
     # the total number of transcoded bytes
     transcoded::Int64
 
+    function Buffer(size::Integer = 0)
+        return Buffer(Vector{UInt8}(undef, size), 0, 1, 1, 0)
+    end
+
     function Buffer(data::Vector{UInt8})
         return new(data, 0, 1, length(data)+1, 0)
     end
@@ -33,10 +37,6 @@ end
 
 function Buffer(data::Base.CodeUnits{UInt8})
     return Buffer(Vector{UInt8}(data))
-end
-
-function Buffer(size::Integer = 0)
-    return Buffer(Vector{UInt8}(undef, size))
 end
 
 function Base.length(buf::Buffer)
