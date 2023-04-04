@@ -30,19 +30,11 @@ julia> String(decompressed)
 
 ```
 """
-function Base.transcode(::Type{C}, args...)
+function Base.transcode(::Type{C}, args...) where {C<:Codec}
     codec = C()
     initialize(codec)
     try
         return transcode(codec, args...)
-    finally
-        finalize(codec)
-    end
-end```
-    codec = C()
-    initialize(codec)
-    try
-        return transcode(codec, data)
     finally
         finalize(codec)
     end
