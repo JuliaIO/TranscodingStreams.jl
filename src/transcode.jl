@@ -97,7 +97,7 @@ julia> String(decompressed)
 function Base.transcode(
     codec::Codec,
     input::Buffer,
-    output::Buffer = _default_output_buffer(codec, input) ,
+    output::Buffer = _default_output_buffer(codec, input),
 )
     error = Error()
     code = startproc(codec, :write, error)
