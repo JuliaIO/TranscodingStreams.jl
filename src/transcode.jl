@@ -149,13 +149,11 @@ function Base.transcode(
     throw(error[])
 end
 
-Base.transcode(codec::Codec, data::ByteData, output::ByteData) =
+Base.transcode(codec::Codec, data::Buffer, output::ByteData) =
     transcode(codec, data, Buffer(output))
 
-Base.transcode(codec::Codec, data::ByteData) = transcode(codec, Buffer(data))
-
-Base.transcode(codec::Codec, data::ByteData, output::Buffer) =
-    transcode(codec, Buffer(data), output)
+Base.transcode(codec::Codec, data::ByteData, args...) =
+    transcode(codec, Buffer(data), args...)
 
 # Return the initial output buffer size.
 function initial_output_size(codec::Codec, input::Memory)
