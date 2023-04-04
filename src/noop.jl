@@ -120,7 +120,7 @@ function Base.transcode(::Type{Noop}, data::ByteData)
     return transcode(Noop(), data)
 end
 
-function Base.transcode(codec::Noop, input::Buffer, output::Buffer = Buffer(Vector{UInt8}()))
+function Base.transcode(codec::Noop, input::Buffer, output::Buffer = Buffer())
     copydata!(output, input)
     return output.data
 end
