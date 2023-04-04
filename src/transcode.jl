@@ -30,7 +30,15 @@ julia> String(decompressed)
 
 ```
 """
-function Base.transcode(::Type{C}, data::Union{Vector{UInt8},Base.CodeUnits{UInt8}}) where {C<:Codec}
+function Base.transcode(::Type{C}, args...)
+    codec = C()
+    initialize(codec)
+    try
+        return transcode(codec, args...)
+    finally
+        finalize(codec)
+    end
+end```
     codec = C()
     initialize(codec)
     try
