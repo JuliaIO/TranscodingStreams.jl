@@ -99,7 +99,7 @@ function Base.transcode(
     input::Buffer,
     output::Union{Buffer,Nothing} = nothing,
 )
-    output = (isnothing(output) ? _default_output_buffer(codec, input) : initbufer!(output))
+    output = (output === nothing ? _default_output_buffer(codec, input) : initbufer!(output))
     transcode!(output, codec, input)
 end
 
