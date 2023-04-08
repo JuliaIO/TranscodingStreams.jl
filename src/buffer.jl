@@ -27,6 +27,7 @@ mutable struct Buffer
     transcoded::Int64
 
     function Buffer(data::Vector{UInt8}, keepbytes::Integer=length(data))
+        0 <= keepbytes <= length(data) || throw(ArgumentError("invalid keepbytes: keepbytes must be 0 ≤ keepbytes ≤ length(data), got $keepbytes and length(data)=$(length(data))"))
         return new(data, 0, 1, keepbytes+1, 0)
     end
 end
