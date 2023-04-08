@@ -26,18 +26,18 @@ mutable struct Buffer
     # the total number of transcoded bytes
     transcoded::Int64
 
-    function Buffer(data::Vector{UInt8}, keepbytes::Integer=length(data))
-        0 <= keepbytes <= length(data) || throw(ArgumentError("invalid keepbytes: keepbytes must be 0 ≤ keepbytes ≤ length(data), got $keepbytes and length(data)=$(length(data))"))
-        return new(data, 0, 1, keepbytes+1, 0)
+    function Buffer(data::Vector{UInt8}, marginpos::Integer=length(data)+1)
+        @assert 1 <= marginpos <= length(data)+1
+        return new(data, 0, 1, marginpos, 0)
     end
 end
 
 function Buffer(size::Integer = 0)
-    return Buffer(Vector{UInt8}(undef, size), 0)
+    return Buffer(Vector{UInt8}(undef, size), 1)
 end
 
-function Buffer(data::Base.CodeUnits{UInt8}, keepbytes::Integer=length(data))
-    return Buffer(Vector{UInt8}(data), keepbytes)
+function Buffer(data::Base.CodeUnits{UInt8}, args...)
+    return Buffer(Vector{UInt8}(data), args...)
 end
 
 function Base.length(buf::Buffer)
