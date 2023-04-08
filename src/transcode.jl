@@ -103,6 +103,15 @@ function Base.transcode(
     transcode!(output, codec, input)
 end
 
+"""
+    transcode!(output::Buffer, codec::Codec, input::Buffer)
+
+Transcode `input` by applying `codec` and storing the results in `output`.
+Note that this method does not initialize or finalize `codec`. This is
+efficient when you transcode a number of pieces of data, but you need to call
+[`TranscodingStreams.initialize`](@ref) and
+[`TranscodingStreams.finalize`](@ref) explicitly.
+"""
 function transcode!(
     output::Buffer,
     codec::Codec,
