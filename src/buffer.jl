@@ -26,17 +26,18 @@ mutable struct Buffer
     # the total number of transcoded bytes
     transcoded::Int64
 
-    function Buffer(size::Integer)
-        return new(Vector{UInt8}(undef, size), 0, 1, 1, 0)
-    end
-
-    function Buffer(data::Vector{UInt8})
-        return new(data, 0, 1, length(data)+1, 0)
+    function Buffer(data::Vector{UInt8}, marginpos::Integer=length(data)+1)
+        @assert 1 <= marginpos <= length(data)+1
+        return new(data, 0, 1, marginpos, 0)
     end
 end
 
-function Buffer(data::Base.CodeUnits{UInt8})
-    return Buffer(Vector{UInt8}(data))
+function Buffer(size::Integer = 0)
+    return Buffer(Vector{UInt8}(undef, size), 1)
+end
+
+function Buffer(data::Base.CodeUnits{UInt8}, args...)
+    return Buffer(Vector{UInt8}(data), args...)
 end
 
 function Base.length(buf::Buffer)
@@ -197,6 +198,11 @@ function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     GC.@preserve buf unsafe_copyto!(marginptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
+end
+
+# Copy data from `data` to `buf`.
+function copydata!(buf::Buffer, data::Buffer, nbytes::Integer = length(data))
+    return copydata!(buf, bufferptr(data), nbytes)
 end
 
 # Copy data from `buf` to `data`.

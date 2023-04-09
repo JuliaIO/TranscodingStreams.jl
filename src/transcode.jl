@@ -2,7 +2,10 @@
 # =========
 
 """
-    transcode(::Type{C}, data::Vector{UInt8})::Vector{UInt8} where C<:Codec
+    transcode(
+        ::Type{C},
+        data::Union{Vector{UInt8},Base.CodeUnits{UInt8}},
+    )::Vector{UInt8} where {C<:Codec}
 
 Transcode `data` by applying a codec `C()`.
 
@@ -27,20 +30,33 @@ julia> String(decompressed)
 
 ```
 """
-function Base.transcode(::Type{C}, data::ByteData) where C<:Codec
+function Base.transcode(::Type{C}, args...) where {C<:Codec}
     codec = C()
     initialize(codec)
     try
-        return transcode(codec, data)
+        return transcode(codec, args...)
     finally
         finalize(codec)
     end
 end
 
+_default_output_buffer(codec, input) = Buffer(
+    initial_output_size(
+        codec,
+        buffermem(input)
+    )
+)
+
 """
-    transcode(codec::Codec, data::Vector{UInt8})::Vector{UInt8}
+    transcode(
+        codec::Codec,
+        data::Union{Vector{UInt8},Base.CodeUnits{UInt8},Buffer},
+        [output::Union{Vector{UInt8},Base.CodeUnits{UInt8},Buffer}],
+    )::Vector{UInt8}
 
 Transcode `data` by applying `codec`.
+
+If `output` is unspecified, then this method will allocate it.
 
 Note that this method does not initialize or finalize `codec`. This is
 efficient when you transcode a number of pieces of data, but you need to call
@@ -59,7 +75,9 @@ julia> codec = ZlibCompressor();
 
 julia> TranscodingStreams.initialize(codec)
 
-julia> compressed = transcode(codec, data);
+julia> compressed = Vector{UInt8}()
+
+julia> transcode(codec, data, compressed);
 
 julia> TranscodingStreams.finalize(codec)
 
@@ -76,9 +94,29 @@ julia> String(decompressed)
 
 ```
 """
-function Base.transcode(codec::Codec, data::ByteData)
-    input = Buffer(data)
-    output = Buffer(initial_output_size(codec, buffermem(input)))
+function Base.transcode(
+    codec::Codec,
+    input::Buffer,
+    output::Union{Buffer,Nothing} = nothing,
+)
+    output = (output === nothing ? _default_output_buffer(codec, input) : initbuffer!(output))
+    transcode!(output, codec, input)
+end
+
+"""
+    transcode!(output::Buffer, codec::Codec, input::Buffer)
+
+Transcode `input` by applying `codec` and storing the results in `output`.
+Note that this method does not initialize or finalize `codec`. This is
+efficient when you transcode a number of pieces of data, but you need to call
+[`TranscodingStreams.initialize`](@ref) and
+[`TranscodingStreams.finalize`](@ref) explicitly.
+"""
+function transcode!(
+    output::Buffer,
+    codec::Codec,
+    input::Buffer,
+)
     error = Error()
     code = startproc(codec, :write, error)
     if code === :error
@@ -120,6 +158,12 @@ function Base.transcode(codec::Codec, data::ByteData)
     end
     throw(error[])
 end
+
+Base.transcode(codec::Codec, data::Buffer, output::ByteData) =
+    transcode(codec, data, Buffer(output))
+
+Base.transcode(codec::Codec, data::ByteData, args...) =
+    transcode(codec, Buffer(data), args...)
 
 # Return the initial output buffer size.
 function initial_output_size(codec::Codec, input::Memory)

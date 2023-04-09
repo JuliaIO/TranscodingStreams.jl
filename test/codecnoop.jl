@@ -192,9 +192,26 @@
     data = b""
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
+    @test transcode(Noop(), data, Vector{UInt8}()) == data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) == data
+    @test transcode(Noop(), data, Vector{UInt8}()) !== data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) !== data
+    output = Vector{UInt8}()
+    @test transcode(Noop(), data, output) === output
+    output = TranscodingStreams.Buffer(Vector{UInt8}())
+    @test transcode(Noop(), data, output) === output.data
+
     data = b"foo"
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
+    @test transcode(Noop(), data, Vector{UInt8}()) == data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) == data
+    @test transcode(Noop(), data, Vector{UInt8}()) !== data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) !== data
+    output = Vector{UInt8}()
+    @test transcode(Noop(), data, output) === output
+    output = TranscodingStreams.Buffer(Vector{UInt8}())
+    @test transcode(Noop(), data, output) === output.data
 
     TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
     TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
