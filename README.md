@@ -4,7 +4,7 @@ TranscodingStreams.jl
 <!--[![Appveyor Status][appveyor-img]][appveyor-url]-->
 [![Docs Stable][docs-stable-img]][docs-stable-url]
 [![Docs Latest][docs-latest-img]][docs-latest-url]
-[![TravisCI Status][travisci-img]][travisci-url]
+[![Build Status](https://github.com/JuliaIO/TranscodingStreams.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/JuliaIO/TranscodingStreams.jl/actions/workflows/CI.yml?query=branch%3Amaster)
 [![codecov.io][codecov-img]][codecov-url]
 
 ![TranscodingStream](/docs/src/assets/transcodingstream.png)
@@ -54,6 +54,14 @@ array = Vector{UInt8}(text)
 array = transcode(GzipCompressor, array)
 array = transcode(GzipDecompressor, array)
 @assert text == String(array)
+
+# Pre-allocated API
+import TranscodingStreams: Buffer
+compressed_buffer = Buffer(Vector{UInt8}(undef, ncodeunits(text)))
+decompressed_buffer = Buffer(codeunits(text))
+transcode(GzipCompressor, decompressed_buffer, compressed_buffer)
+transcode(GzipDecompressor, compressed_buffer, decompressed_buffer)
+@assert text == String(decompressed_buffer.data)
 ```
 
 Each codec has an alias to its transcoding stream type for ease of use. For
@@ -70,17 +78,17 @@ included in this package except the `Noop` codec, which does nothing to data.
 The user need to install codecs as a plug-in to do something meaningful.
 
 The following codec packages support the protocol suite:
-- [CodecZlib.jl](https://github.com/bicycle1885/CodecZlib.jl)
-- [CodecXz.jl](https://github.com/bicycle1885/CodecXz.jl)
-- [CodecZstd.jl](https://github.com/bicycle1885/CodecZstd.jl)
-- [CodecBase.jl](https://github.com/bicycle1885/CodecBase.jl)
-- [CodecBzip2.jl](https://github.com/bicycle1885/CodecBzip2.jl)
-- [CodecLz4.jl](https://github.com/invenia/CodecLz4.jl) by Invenia.
+- [CodecZlib.jl](https://github.com/JuliaIO/CodecZlib.jl)
+- [CodecXz.jl](https://github.com/JuliaIO/CodecXz.jl)
+- [CodecZstd.jl](https://github.com/JuliaIO/CodecZstd.jl)
+- [CodecBase.jl](https://github.com/JuliaIO/CodecBase.jl)
+- [CodecBzip2.jl](https://github.com/JuliaIO/CodecBzip2.jl)
+- [CodecLz4.jl](https://github.com/JuliaIO/CodecLz4.jl) by Invenia.
 
-[travisci-img]: https://travis-ci.org/bicycle1885/TranscodingStreams.jl.svg?branch=master
-[travisci-url]: https://travis-ci.org/bicycle1885/TranscodingStreams.jl
-[codecov-img]: http://codecov.io/github/bicycle1885/TranscodingStreams.jl/coverage.svg?branch=master
-[codecov-url]: http://codecov.io/github/bicycle1885/TranscodingStreams.jl?branch=master
+[travisci-img]: https://travis-ci.org/JuliaIO/TranscodingStreams.jl.svg?branch=master
+[travisci-url]: https://travis-ci.org/JuliaIO/TranscodingStreams.jl
+[codecov-img]: http://codecov.io/github/JuliaIO/TranscodingStreams.jl/coverage.svg?branch=master
+[codecov-url]: http://codecov.io/github/JuliaIO/TranscodingStreams.jl?branch=master
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://juliaio.github.io/TranscodingStreams.jl/stable/
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
