@@ -6,7 +6,7 @@ makedocs(
     sitename="TranscodingStreams.jl",
     modules=[TranscodingStreams],
     pages=["index.md", "examples.md", "reference.md", "devnotes.md"],
-    assets=["assets/custom.css"],
+    format=Documenter.HTML(; assets=["assets/custom.css"]),
 )
 
-deploydocs(repo="github.com/JuliaIO/TranscodingStreams.jl.git")
+deploydocs(repo="github.com/JuliaIO/TranscodingStreams.jl.git", push_preview=true)
