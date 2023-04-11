@@ -9,4 +9,4 @@ makedocs(
     assets=["assets/custom.css"],
 )
 
-deploydocs(repo="github.com/bicycle1885/TranscodingStreams.jl.git")
+deploydocs(repo="github.com/JuliaIO/TranscodingStreams.jl.git")
