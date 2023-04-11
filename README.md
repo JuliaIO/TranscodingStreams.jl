@@ -58,8 +58,8 @@ array = transcode(GzipDecompressor, array)
 # Pre-allocated API
 import TranscodingStreams: Buffer
 compressed_buffer = Buffer(Vector{UInt8}(undef, ncodeunits(text)))
-decompressed_buffer = Buffer(Vector{UInt8}(undef, ncodeunits(text)))
-transcode(GzipCompressor, array, compressed_buffer)
+decompressed_buffer = Buffer(codeunits(text))
+transcode(GzipCompressor, decompressed_buffer, compressed_buffer)
 transcode(GzipDecompressor, compressed_buffer, decompressed_buffer)
 @assert text == String(decompressed_buffer.data)
 ```
