@@ -4,7 +4,7 @@ TranscodingStreams.jl
 <!--[![Appveyor Status][appveyor-img]][appveyor-url]-->
 [![Docs Stable][docs-stable-img]][docs-stable-url]
 [![Docs Latest][docs-latest-img]][docs-latest-url]
-[![TravisCI Status][travisci-img]][travisci-url]
+[![Build Status](https://github.com/JuliaIO/TranscodingStreams.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/JuliaIO/TranscodingStreams.jl/actions/workflows/CI.yml?query=branch%3Amaster)
 [![codecov.io][codecov-img]][codecov-url]
 
 ![TranscodingStream](/docs/src/assets/transcodingstream.png)
