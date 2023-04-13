@@ -117,7 +117,7 @@ function transcode!(
     codec::Codec,
     input::Buffer,
 )
-    @assert input.data !== output.data "input and outbut buffers must be independent"
+    @assert Base.dataids(input.data) !== Base.dataids(output.data) "input and outbut buffers must be independent"
     error = Error()
     code = startproc(codec, :write, error)
     if code === :error
