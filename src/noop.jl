@@ -116,11 +116,10 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     end
 end
 
-function Base.transcode(::Type{Noop}, data::ByteData)
-    return transcode(Noop(), data)
-end
+initial_output_size(codec::Noop, input::Memory) = length(input)
 
-function Base.transcode(codec::Noop, input::Buffer, output::Buffer = Buffer())
+function transcode!(output::Buffer, codec::Noop, input::Buffer)
+    @assert !Base.mightalias(input.data, output.data) "input and outbut buffers must be independent"
     copydata!(output, input)
     return output.data
 end
