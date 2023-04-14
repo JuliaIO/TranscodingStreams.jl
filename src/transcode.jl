@@ -40,6 +40,12 @@ function Base.transcode(::Type{C}, args...) where {C<:Codec}
     end
 end
 
+# Disambiguate `Base.transcode(::Type{C}, args...)` above from
+# `Base.transcode(T, ::String)` in Julia `Base`
+function Base.transcode(codec::Type{C}, src::String) where {C<:Codec}
+    return invoke(transcode, Tuple{Any, String}, codec, src)
+end
+
 _default_output_buffer(codec, input) = Buffer(
     initial_output_size(
         codec,
