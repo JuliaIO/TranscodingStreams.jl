@@ -106,10 +106,10 @@ end
 """
     transcode!(output::Buffer, codec::Codec, input::Buffer)
 
-Transcode `input` by applying `codec` and storing the results in `output`.
-Note that this method does not initialize or finalize `codec`. This is
-efficient when you transcode a number of pieces of data, but you need to call
-[`TranscodingStreams.initialize`](@ref) and
+Transcode `input` by applying `codec` and storing the results in `output`
+with validation of input and output.  Note that this method does not initialize
+or finalize `codec`. This is efficient when you transcode a number of
+pieces of data, but you need to call [`TranscodingStreams.initialize`](@ref) and
 [`TranscodingStreams.finalize`](@ref) explicitly.
 """
 function transcode!(
@@ -118,6 +118,23 @@ function transcode!(
     input::Buffer,
 )
     @assert !Base.mightalias(input.data, output.data) "input and outbut buffers must be independent"
+    unsafe_transcode!(output, codec, input)
+end
+
+"""
+    unsafe_transcode!(output::Buffer, codec::Codec, input::Buffer)
+
+Transcode `input` by applying `codec` and storing the results in `output`
+without validation of input or output.  Note that this method does not initialize
+or finalize `codec`. This is efficient when you transcode a number of
+pieces of data, but you need to call [`TranscodingStreams.initialize`](@ref) and
+[`TranscodingStreams.finalize`](@ref) explicitly.
+"""
+function unsafe_transcode!(
+    output::Buffer,
+    codec::Codec,
+    input::Buffer,
+)
     error = Error()
     code = startproc(codec, :write, error)
     if code === :error
