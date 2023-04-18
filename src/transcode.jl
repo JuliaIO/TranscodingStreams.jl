@@ -183,6 +183,12 @@ Base.transcode(codec::Codec, data::Buffer, output::ByteData) =
 Base.transcode(codec::Codec, data::ByteData, args...) =
     transcode(codec, Buffer(data), args...)
 
+unsafe_transcode!(codec::Codec, data::Buffer, output::ByteData) =
+    unsafe_transcode!(Buffer(output), codec, data)
+
+unsafe_transcode!(codec::Codec, data::ByteData, args...) =
+    unsafe_transcode!(codec, Buffer(data), args...)
+
 # Return the initial output buffer size.
 function initial_output_size(codec::Codec, input::Memory)
     return max(
