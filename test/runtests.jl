@@ -2,6 +2,9 @@ using TranscodingStreams
 using Test
 using Pkg
 
+@test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
+@test isempty(detect_ambiguities(TranscodingStreams; recursive=true))
+
 # Tool tests
 # ----------
 
