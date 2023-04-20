@@ -213,6 +213,11 @@
     output = TranscodingStreams.Buffer(Vector{UInt8}())
     @test transcode(Noop(), data, output) === output.data
 
+    data = ""
+    @test String(transcode(Noop, data)) == data
+    data = "foo"
+    @test String(transcode(Noop, data)) == data
+
     TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
     TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
     TranscodingStreams.test_roundtrip_write(NoopStream, NoopStream)
