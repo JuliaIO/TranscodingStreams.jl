@@ -2,7 +2,9 @@ using TranscodingStreams
 using Test
 using Pkg
 
-@test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
+if VERSION ≥ v"1.1"
+    @test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
+end
 @test isempty(detect_ambiguities(TranscodingStreams; recursive=true))
 
 # Tool tests
