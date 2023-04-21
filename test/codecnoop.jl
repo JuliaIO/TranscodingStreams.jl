@@ -189,6 +189,9 @@
     @test transcode(Noop, data)  == data
     @test transcode(Noop, data) !== data
 
+    data = Vector{UInt8}()
+    @test TranscodingStreams.unsafe_transcode!(Noop(), data, data) == data
+    @test_throws AssertionError transcode(Noop(), data, data)
     data = b""
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data

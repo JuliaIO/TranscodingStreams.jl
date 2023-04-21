@@ -112,13 +112,31 @@ end
 """
     transcode!(output::Buffer, codec::Codec, input::Buffer)
 
-Transcode `input` by applying `codec` and storing the results in `output`.
-Note that this method does not initialize or finalize `codec`. This is
-efficient when you transcode a number of pieces of data, but you need to call
-[`TranscodingStreams.initialize`](@ref) and
+Transcode `input` by applying `codec` and storing the results in `output`
+with validation of input and output.  Note that this method does not initialize
+or finalize `codec`. This is efficient when you transcode a number of
+pieces of data, but you need to call [`TranscodingStreams.initialize`](@ref) and
 [`TranscodingStreams.finalize`](@ref) explicitly.
 """
 function transcode!(
+    output::Buffer,
+    codec::Codec,
+    input::Buffer,
+)
+    @assert !Base.mightalias(input.data, output.data) "input and outbut buffers must be independent"
+    unsafe_transcode!(output, codec, input)
+end
+
+"""
+    unsafe_transcode!(output::Buffer, codec::Codec, input::Buffer)
+
+Transcode `input` by applying `codec` and storing the results in `output`
+without validation of input or output.  Note that this method does not initialize
+or finalize `codec`. This is efficient when you transcode a number of
+pieces of data, but you need to call [`TranscodingStreams.initialize`](@ref) and
+[`TranscodingStreams.finalize`](@ref) explicitly.
+"""
+function unsafe_transcode!(
     output::Buffer,
     codec::Codec,
     input::Buffer,
@@ -170,6 +188,12 @@ Base.transcode(codec::Codec, data::Buffer, output::ByteData) =
 
 Base.transcode(codec::Codec, data::ByteData, args...) =
     transcode(codec, Buffer(data), args...)
+
+unsafe_transcode!(codec::Codec, data::Buffer, output::ByteData) =
+    unsafe_transcode!(Buffer(output), codec, data)
+
+unsafe_transcode!(codec::Codec, data::ByteData, args...) =
+    unsafe_transcode!(codec, Buffer(data), args...)
 
 # Return the initial output buffer size.
 function initial_output_size(codec::Codec, input::Memory)
