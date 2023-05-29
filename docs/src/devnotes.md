@@ -15,7 +15,7 @@ in the design of the package.
 
 A codec will be implemented by package developers and only a special codec
 `Noop` is defined in this package.  A stream can be any object that implements
-at least `Base.isopen`, `Base.eof`, `Base.close`, `Base.nb_available`,
+at least `Base.isopen`, `Base.eof`, `Base.close`, `Base.bytesavailable`,
 `Base.unsafe_read`, and `Base.unsafe_write`.  All mutable fields are delegated
 to `state` and hence the stream type itself is immutable.
 
