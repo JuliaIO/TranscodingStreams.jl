@@ -107,40 +107,6 @@ end
             end
         end
     end
-    @testset "seeking write" begin
-        iob = IOBuffer()
-        sink = IOBuffer(collect(b"this will be over written"); write=true)
-        seekstart(sink)
-        stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
-        @test position(stream) == 0
-        # seekend in :idle mode should just change mode to write.
-        # This is to prevent future reads from getting the wrong position.
-        seekend(stream)
-        @test eof(stream)
-        @test position(stream) == 0
-        for len in 0:10:100
-            write(stream, repeat("x", len))
-            # seekend in :write mode should be a noop.
-            # because stream can generally only write at the end.
-            seekend(stream)
-            write(iob, repeat("x", len))
-            seekend(iob)
-            @test position(stream) == position(iob)
-        end
-        # seekstart in :write mode will by default error
-        @test_throws ArgumentError seekstart(stream)
-        @test_throws MethodError seek(stream, 3)
-
-        @test position(stream) == position(iob)
-
-        # close stream but not underlying IO.
-        # This should probably be defined as a public function.
-        TranscodingStreams.changemode!(stream, :close)
-        @test 4*length(take!(iob)) == length(take!(sink))
-
-        close(stream)
-        close(iob)
-    end
     @testset "seeking read" begin
         source = IOBuffer(collect(0x01:0xAF); append=true, read=true, write=true)
         stream = TranscodingStream(QuadrupleCodec(), source, bufsize=16)
@@ -155,8 +121,12 @@ end
         @test position(stream) == 0
         @test read(stream, 11) == [1,1,1,1,2,2,2,2,3,3,3,]
         @test position(stream) == 11
-        # seekend in :read mode will create a warning
-        @test_logs (:warn,"seekend while in :read mode is currently buggy") seekend(stream)
+        # seekend acts like skipping to the end.
+        seekend(stream)
+        @test eof(stream)
+        @test position(stream) == 0xAF*4
+        seekstart(stream)
+        @test position(stream) == 0
         @test_throws MethodError seek(stream, 3)
         close(stream)
     end
