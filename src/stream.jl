@@ -200,7 +200,7 @@ function Base.eof(stream::TranscodingStream)
     elseif mode == :read
         return buffersize(stream.state.buffer1) == 0 && fillbuffer(stream) == 0
     elseif mode == :write
-        return eof(stream.stream)
+        return true
     elseif mode == :close
         return true
     elseif mode == :stop
@@ -286,11 +286,11 @@ end
 
 function Base.seekstart(stream::TranscodingStream)
     mode = stream.state.mode
-    @checkmode (:idle, :read, :write)
-    if mode == :read || mode == :write
+    @checkmode (:idle, :read)
+    if mode == :read
         callstartproc(stream, mode)
-        emptybuffer!(stream.state.buffer1)
-        emptybuffer!(stream.state.buffer2)
+        initbuffer!(stream.state.buffer1)
+        initbuffer!(stream.state.buffer2)
     end
     seekstart(stream.stream)
     return stream
@@ -298,13 +298,22 @@ end
 
 function Base.seekend(stream::TranscodingStream)
     mode = stream.state.mode
-    @checkmode (:idle, :read, :write)
-    if mode == :read || mode == :write
-        callstartproc(stream, mode)
-        emptybuffer!(stream.state.buffer1)
-        emptybuffer!(stream.state.buffer2)
+    @checkmode (:idle, :write, :read)
+    if mode == :read
+        # Maybe the following commented out
+        # code is what seekend should do in :read mode?
+        # But if so, what should happen in :idle mode?
+        # # skip to end,
+        # # but to get the right position, 
+        # # the rest of the input must be transcoded.
+        # while !eof(stream)
+        #     emptybuffer!(buffer1)
+        # end
+        @warn "seekend while in :read mode is currently buggy"
     end
-    seekend(stream.stream)
+    if mode == :idle
+        changemode!(stream, :write)
+    end
     return stream
 end
 
