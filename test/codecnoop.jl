@@ -189,12 +189,37 @@
     @test transcode(Noop, data)  == data
     @test transcode(Noop, data) !== data
 
+    data = Vector{UInt8}()
+    @test TranscodingStreams.unsafe_transcode!(Noop(), data, data) == data
+    @test_throws AssertionError transcode(Noop(), data, data)
     data = b""
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
+    @test transcode(Noop(), data, Vector{UInt8}()) == data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) == data
+    @test transcode(Noop(), data, Vector{UInt8}()) !== data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) !== data
+    output = Vector{UInt8}()
+    @test transcode(Noop(), data, output) === output
+    output = TranscodingStreams.Buffer(Vector{UInt8}())
+    @test transcode(Noop(), data, output) === output.data
+
     data = b"foo"
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
+    @test transcode(Noop(), data, Vector{UInt8}()) == data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) == data
+    @test transcode(Noop(), data, Vector{UInt8}()) !== data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) !== data
+    output = Vector{UInt8}()
+    @test transcode(Noop(), data, output) === output
+    output = TranscodingStreams.Buffer(Vector{UInt8}())
+    @test transcode(Noop(), data, output) === output.data
+
+    data = ""
+    @test String(transcode(Noop, data)) == data
+    data = "foo"
+    @test String(transcode(Noop, data)) == data
 
     test_roundtrip_transcode(Noop, Noop)
     test_roundtrip_read(NoopStream, NoopStream)

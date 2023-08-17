@@ -10,8 +10,10 @@ TranscodingStream
 
 ```@docs
 TranscodingStream(codec::Codec, stream::IO)
-transcode(::Type{<:Codec}, data::ByteData)
-transcode(codec::Codec, data::ByteData)
+transcode(::Type{C}, args...) where {C<:Codec}
+transcode(::Codec, ::Buffer, ::Union{Buffer,Nothing})
+
+TranscodingStreams.transcode!
 TranscodingStreams.TOKEN_END
 TranscodingStreams.unsafe_read
 TranscodingStreams.unread
@@ -33,6 +35,7 @@ Codec
 ```@docs
 TranscodingStreams.Noop
 TranscodingStreams.NoopStream
+Base.position(::NoopStream)
 ```
 
 ```@docs

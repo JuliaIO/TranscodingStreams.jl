@@ -3,6 +3,11 @@ using Test
 
 include("testtools.jl")
 
+if VERSION ≥ v"1.1"
+    @test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
+end
+@test isempty(detect_ambiguities(TranscodingStreams; recursive=true))
+
 # Tool tests
 # ----------
 
