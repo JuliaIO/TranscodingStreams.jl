@@ -189,12 +189,37 @@
     @test transcode(Noop, data)  == data
     @test transcode(Noop, data) !== data
 
+    data = Vector{UInt8}()
+    @test TranscodingStreams.unsafe_transcode!(Noop(), data, data) == data
+    @test_throws AssertionError transcode(Noop(), data, data)
     data = b""
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
+    @test transcode(Noop(), data, Vector{UInt8}()) == data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) == data
+    @test transcode(Noop(), data, Vector{UInt8}()) !== data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) !== data
+    output = Vector{UInt8}()
+    @test transcode(Noop(), data, output) === output
+    output = TranscodingStreams.Buffer(Vector{UInt8}())
+    @test transcode(Noop(), data, output) === output.data
+
     data = b"foo"
     @test transcode(Noop(), data)  == data
     @test transcode(Noop(), data) !== data
+    @test transcode(Noop(), data, Vector{UInt8}()) == data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) == data
+    @test transcode(Noop(), data, Vector{UInt8}()) !== data
+    @test transcode(Noop(), data, TranscodingStreams.Buffer(Vector{UInt8}())) !== data
+    output = Vector{UInt8}()
+    @test transcode(Noop(), data, output) === output
+    output = TranscodingStreams.Buffer(Vector{UInt8}())
+    @test transcode(Noop(), data, output) === output.data
+
+    data = ""
+    @test String(transcode(Noop, data)) == data
+    data = "foo"
+    @test String(transcode(Noop, data)) == data
 
     TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
     TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
@@ -283,4 +308,29 @@
     @test_throws ArgumentError NoopStream(let s = IOBuffer(); close(s); s; end)
     @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), bufsize=0)
     @test_throws ArgumentError TranscodingStream(Noop(), IOBuffer(), sharedbuf=true)
+
+    @testset "position" begin
+        iob = IOBuffer()
+        sink = IOBuffer()
+        stream = NoopStream(sink, bufsize=16)
+        @test position(stream) == position(iob)
+        for len in 0:10:100
+            write(stream, repeat("x", len))
+            write(iob, repeat("x", len))
+            @test position(stream) == position(iob)
+        end
+        @test position(stream) == position(sink) == position(iob)
+        close(stream)
+        close(iob)
+
+        mktemp() do path, sink
+            stream = NoopStream(sink, bufsize=16)
+            pos = 0
+            for len in 0:10:100
+                write(stream, repeat("x", len))
+                pos += len
+                @test position(stream) == pos
+            end
+        end
+    end
 end

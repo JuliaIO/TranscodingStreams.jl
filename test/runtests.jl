@@ -2,6 +2,11 @@ using TranscodingStreams
 using Test
 using Pkg
 
+if VERSION ≥ v"1.1"
+    @test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
+end
+@test isempty(detect_ambiguities(TranscodingStreams; recursive=true))
+
 # Tool tests
 # ----------
 
@@ -58,9 +63,10 @@ using TranscodingStreams:
     writebyte!(buf, 0x34)
     @test makemargin!(buf, 0) === 15
     writebyte!(buf, 0x99)
-    @test makemargin!(buf, 20) === 20
+    margin_size = makemargin!(buf, 20) 
+    @test margin_size >= 20
     emptybuffer!(buf)
-    @test makemargin!(buf, 0) === 22
+    @test makemargin!(buf, 0) === margin_size + 2
 end
 
 @testset "Memory" begin

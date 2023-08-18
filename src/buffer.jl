@@ -26,17 +26,18 @@ mutable struct Buffer
     # the total number of transcoded bytes
     transcoded::Int64
 
-    function Buffer(size::Integer)
-        return new(Vector{UInt8}(undef, size), 0, 1, 1, 0)
-    end
-
-    function Buffer(data::Vector{UInt8})
-        return new(data, 0, 1, length(data)+1, 0)
+    function Buffer(data::Vector{UInt8}, marginpos::Integer=length(data)+1)
+        @assert 1 <= marginpos <= length(data)+1
+        return new(data, 0, 1, marginpos, 0)
     end
 end
 
-function Buffer(data::Base.CodeUnits{UInt8})
-    return Buffer(Vector{UInt8}(data))
+function Buffer(size::Integer = 0)
+    return Buffer(Vector{UInt8}(undef, size), 1)
+end
+
+function Buffer(data::Base.CodeUnits{UInt8}, args...)
+    return Buffer(Vector{UInt8}(data), args...)
 end
 
 function Base.length(buf::Buffer)
@@ -130,14 +131,19 @@ function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
         buf.bufferpos = buf.marginpos = 1
     end
     if marginsize(buf) < minsize || eager
-        # shift data to left
+        # datapos refer to the leftmost position of data that must not be
+        # discarded. We can left-shift to discard all data before this
         if buf.markpos == 0
+            # If data is not marked we must not discard buffered (nonconsumed) data
             datapos = buf.bufferpos
             datasize = buffersize(buf)
         else
+            # Else, we must not consume marked data
+            # (Since markpos ≤ bufferpos, we do not consume buffered data either) 
             datapos = buf.markpos
             datasize = buf.marginpos - buf.markpos
         end
+        # Shift data left in buffer to make space for new data
         copyto!(buf.data, 1, buf.data, datapos, datasize)
         shift = datapos - 1
         if buf.markpos > 0
@@ -146,9 +152,11 @@ function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
         buf.bufferpos -= shift
         buf.marginpos -= shift
     end
+    # If there is still not enough margin, we expand buffer.
+    # At least enough for minsize, but otherwise 1.5 times
     if marginsize(buf) < minsize
-        # expand data buffer
-        resize!(buf.data, buf.marginpos + minsize - 1)
+        datasize = length(buf.data)
+        resize!(buf.data, max(buf.marginpos + minsize - 1, datasize + div(datasize, 2)))
     end
     @assert marginsize(buf) ≥ minsize
     return marginsize(buf)
@@ -187,9 +195,14 @@ end
 # Copy data from `data` to `buf`.
 function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
-    unsafe_copyto!(marginptr(buf), data, nbytes)
+    GC.@preserve buf unsafe_copyto!(marginptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
+end
+
+# Copy data from `data` to `buf`.
+function copydata!(buf::Buffer, data::Buffer, nbytes::Integer = length(data))
+    return copydata!(buf, bufferptr(data), nbytes)
 end
 
 # Copy data from `buf` to `data`.
@@ -197,7 +210,7 @@ function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
     # NOTE: It's caller's responsibility to ensure that the buffer has at least
     # nbytes.
     @assert buffersize(buf) ≥ nbytes
-    unsafe_copyto!(data, bufferptr(buf), nbytes)
+    GC.@preserve buf unsafe_copyto!(data, bufferptr(buf), nbytes)
     consumed!(buf, nbytes)
     return data
 end
@@ -206,14 +219,14 @@ end
 function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
     copyto!(buf.data, buf.bufferpos + nbytes, buf.data, buf.bufferpos, buffersize(buf))
-    unsafe_copyto!(bufferptr(buf), data, nbytes)
+    GC.@preserve buf unsafe_copyto!(bufferptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
 end
 
 # Find the first occurrence of a specific byte.
 function findbyte(buf::Buffer, byte::UInt8)
-    p = ccall(
+    p = GC.@preserve buf ccall(
         :memchr,
         Ptr{UInt8},
         (Ptr{UInt8}, Cint, Csize_t),

@@ -51,7 +51,16 @@ Note that this method may return a wrong position when
 - the position of the wrapped stream has been changed outside of this package.
 """
 function Base.position(stream::NoopStream)
-    return position(stream.stream) - buffersize(stream.state.buffer1)
+    mode = stream.state.mode
+    @checkmode (:idle, :read, :write)
+    if mode === :idle
+        return Int64(0)
+    elseif mode === :write
+        return position(stream.stream) + buffersize(stream.state.buffer1)
+    elseif mode === :read
+        return position(stream.stream) - buffersize(stream.state.buffer1)
+    end
+    @assert false "unreachable"
 end
 
 function Base.seek(stream::NoopStream, pos::Integer)
@@ -107,16 +116,14 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     end
 end
 
-function Base.transcode(::Type{Noop}, data::ByteData)
-    return transcode(Noop(), data)
-end
+initial_output_size(codec::Noop, input::Memory) = length(input)
 
-function Base.transcode(::Noop, data::ByteData)
-    # Copy data because the caller may expect the return object is not the same
-    # as from the input.
-    return Vector{UInt8}(data)
+function process(codec::Noop, input::Memory, output::Memory, error::Error)
+    iszero(length(input)) && return (0, 0, :end)
+    n = min(length(input), length(output))
+    unsafe_copyto!(output.ptr, input.ptr, n)
+    (n, n, :ok)
 end
-
 
 # Stats
 # -----
@@ -126,7 +133,7 @@ function stats(stream::NoopStream)
     mode = state.mode
     @checkmode (:idle, :read, :write)
     buffer = state.buffer1
-    @assert buffer == stream.state.buffer2
+    @assert buffer === stream.state.buffer2
     if mode == :idle
         consumed = supplied = 0
     elseif mode == :read

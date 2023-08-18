@@ -101,8 +101,7 @@ julia> using CodecZlib
 
 julia> file = open(joinpath(dirname(pathof(CodecZlib)), "..", "test", "abra.gz"));
 
-julia> stream = TranscodingStream(GzipDecompressor(), file)
-TranscodingStream{GzipDecompressor,IOStream}(<mode=idle>)
+julia> stream = TranscodingStream(GzipDecompressor(), file);
 
 julia> String(read(stream))
 "abracadabra"
@@ -135,6 +134,15 @@ function Base.show(io::IO, stream::TranscodingStream)
 end
 
 # Split keyword arguments.
+@nospecialize
+@static if isdefined(Base, :Pairs)
+splitkwargs(kwargs::Base.Pairs, ks::Tuple{Vararg{Symbol}}) = splitkwargs(NamedTuple(kwargs), ks)
+end
+function splitkwargs(kwargs::NamedTuple, ks::Tuple{Vararg{Symbol}})
+    non_ks = Base.diff_names(keys(kwargs), ks)
+    ks = Base.diff_names(keys(kwargs), non_ks)
+    return NamedTuple{ks}(kwargs), NamedTuple{non_ks}(kwargs)
+end
 function splitkwargs(kwargs, keys)
     hits = []
     others = []
@@ -143,6 +151,7 @@ function splitkwargs(kwargs, keys)
     end
     return hits, others
 end
+@specialize
 
 # Check that mode is valid.
 macro checkmode(validmodes)
@@ -326,7 +335,7 @@ function Base.seekstart(stream::TranscodingStream)
         emptybuffer!(stream.state.buffer2)
     end
     seekstart(stream.stream)
-    return
+    return stream
 end
 
 function Base.seekend(stream::TranscodingStream)
@@ -338,7 +347,7 @@ function Base.seekend(stream::TranscodingStream)
         emptybuffer!(stream.state.buffer2)
     end
     seekend(stream.stream)
-    return
+    return stream
 end
 
 
@@ -377,7 +386,7 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
             @assert filled == 0
             ret = Vector{UInt8}(undef, sz)
         end
-        copydata!(pointer(ret, filled+1), buffer1, sz)
+        GC.@preserve ret copydata!(pointer(ret, filled+1), buffer1, sz)
         filled += sz
         if found
             if !keep
@@ -403,6 +412,9 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
         m = min(buffersize(buffer), p_end - p)
         copydata!(p, buffer, m)
         p += m
+        @static if VERSION >= v"1.4"
+            GC.safepoint()
+        end
     end
     if p < p_end && eof(stream)
         throw(EOFError())
@@ -419,7 +431,7 @@ function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=
             resize!(b, min(length(b) * 2, nb))
             resized = true
         end
-        filled += unsafe_read(stream, pointer(b, filled+1), min(length(b), nb)-filled)
+        filled += GC.@preserve b unsafe_read(stream, pointer(b, filled+1), min(length(b), nb)-filled)
     end
     if resized
         resize!(b, filled)
@@ -435,7 +447,7 @@ end
 function Base.readavailable(stream::TranscodingStream)
     n = bytesavailable(stream)
     data = Vector{UInt8}(undef, n)
-    unsafe_read(stream, pointer(data), n)
+    GC.@preserve data unsafe_read(stream, pointer(data), n)
     return data
 end
 
@@ -448,7 +460,7 @@ The next `read(stream, sizeof(data))` call will read data that are just
 inserted.
 """
 function unread(stream::TranscodingStream, data::ByteData)
-    unsafe_unread(stream, pointer(data), sizeof(data))
+    GC.@preserve data unsafe_unread(stream, pointer(data), sizeof(data))
 end
 
 """
@@ -505,6 +517,9 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
         m = min(marginsize(buffer1), p_end - p)
         copydata!(buffer1, p, m)
         p += m
+        @static if VERSION >= v"1.4"
+            GC.safepoint()
+        end
     end
     return Int(p - input)
 end
@@ -679,8 +694,8 @@ end
 function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     state = stream.state
     input = buffermem(inbuf)
-    makemargin!(outbuf, minoutsize(stream.codec, input))
-    Δin, Δout, state.code = process(stream.codec, input, marginmem(outbuf), state.error)
+    GC.@preserve inbuf makemargin!(outbuf, minoutsize(stream.codec, input))
+    Δin, Δout, state.code = GC.@preserve inbuf outbuf process(stream.codec, input, marginmem(outbuf), state.error)
     @debug(
         "called process()",
         code = state.code,
@@ -720,7 +735,7 @@ function readdata!(input::IO, output::Buffer)
         navail = bytesavailable(input)
     end
     n = min(navail, marginsize(output))
-    Base.unsafe_read(input, marginptr(output), n)
+    GC.@preserve output Base.unsafe_read(input, marginptr(output), n)
     supplied!(output, n)
     nread += n
     return nread
@@ -734,9 +749,15 @@ function writedata!(output::IO, input::Buffer)
     end
     nwritten::Int = 0
     while buffersize(input) > 0
-        n = Base.unsafe_write(output, bufferptr(input), buffersize(input))
+        n = GC.@preserve input Base.unsafe_write(output, bufferptr(input), buffersize(input))
         consumed!(input, n)
         nwritten += n
+        @static if VERSION >= v"1.4"
+            GC.safepoint()
+        end
+    end
+    @static if VERSION >= v"1.4"
+        GC.safepoint()
     end
     return nwritten
 end
