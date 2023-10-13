@@ -1,6 +1,5 @@
 using TranscodingStreams
 using Test
-using Pkg
 
 if VERSION ≥ v"1.1"
     @test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
@@ -126,8 +125,3 @@ end
 include("codecnoop.jl")
 include("codecinvalid.jl")
 include("codecquadruple.jl")
-
-# Test third-party codec packages.
-for pkg in ["CodecZlib", "CodecXz", "CodecZstd", "CodecBase"]
-    Pkg.test(pkg)
-end
