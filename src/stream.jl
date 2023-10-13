@@ -97,17 +97,14 @@ Examples
 ```jldoctest
 julia> using TranscodingStreams
 
-julia> using CodecZlib
+julia> file = open(joinpath(dirname(dirname(pathof(TranscodingStreams))), "README.md"));
 
-julia> file = open(joinpath(dirname(pathof(CodecZlib)), "..", "test", "abra.gz"));
+julia> stream = NoopStream(file);
 
-julia> stream = TranscodingStream(GzipDecompressor(), file);
-
-julia> String(read(stream))
-"abracadabra"
+julia> readline(file)
+"TranscodingStreams.jl"
 
 julia> close(stream)
-
 ```
 """
 function TranscodingStream(codec::Codec, stream::IO;

@@ -10,8 +10,8 @@ TranscodingStream
 
 ```@docs
 TranscodingStream(codec::Codec, stream::IO)
-transcode(::Type{C}, args...) where {C<:Codec}
-transcode(::Codec, ::Buffer, ::Union{Buffer,Nothing})
+transcode
+TranscodingStreams.unsafe_transcode!
 
 TranscodingStreams.transcode!
 TranscodingStreams.TOKEN_END
