@@ -27,7 +27,6 @@ julia> decompressed = transcode(ZlibDecompressor, compressed);
 
 julia> String(decompressed)
 "abracadabra"
-
 ```
 """
 function Base.transcode(::Type{C}, args...) where {C<:Codec}
