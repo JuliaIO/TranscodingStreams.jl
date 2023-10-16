@@ -72,13 +72,13 @@
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
-    seek(stream, 2)
+    @test stream == seek(stream, 2)
     @test read(stream, 3) == b"oba"
     seek(stream, 0)
     @test read(stream, 3) == b"foo"
-    seekstart(stream)
+    @test stream == seekstart(stream)
     @test read(stream, 3) == b"foo"
-    seekend(stream)
+    @test stream == seekend(stream)
     @test eof(stream)
     close(stream)
 
@@ -97,7 +97,7 @@
     data = collect(0x00:0x0f)
     stream = TranscodingStream(Noop(), IOBuffer(data), bufsize=2)
     @test read(stream, UInt8) == data[1]
-    skip(stream, 4)
+    @test stream == skip(stream, 4)
     @test read(stream, UInt8) == data[6]
     skip(stream, 3)
     @test read(stream, UInt8) == data[10]

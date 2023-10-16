@@ -66,19 +66,19 @@ end
 function Base.seek(stream::NoopStream, pos::Integer)
     seek(stream.stream, pos)
     initbuffer!(stream.state.buffer1)
-    return
+    return stream
 end
 
 function Base.seekstart(stream::NoopStream)
     seekstart(stream.stream)
     initbuffer!(stream.state.buffer1)
-    return
+    return stream
 end
 
 function Base.seekend(stream::NoopStream)
     seekend(stream.stream)
     initbuffer!(stream.state.buffer1)
-    return
+    return stream
 end
 
 function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
