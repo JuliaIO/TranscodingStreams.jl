@@ -252,7 +252,7 @@ function Base.skip(stream::TranscodingStream, offset::Integer)
         # TODO: support skip in write mode
         throw(ArgumentError("not in read mode"))
     end
-    return
+    return stream
 end
 
 """
