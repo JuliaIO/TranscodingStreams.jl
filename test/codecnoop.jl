@@ -333,4 +333,20 @@
             end
         end
     end
+
+    @testset "seekstart doesn't delete data" begin
+        sink = IOBuffer()
+        stream = NoopStream(sink, bufsize=16)
+        write(stream, "x")
+        # seekstart must not delete user data even if it errors.
+        try
+            seekstart(stream)
+        catch e
+            e isa ArgumentError || rethrow()
+        end
+        write(stream, TranscodingStreams.TOKEN_END)
+        flush(stream)
+        @test_broken take!(sink) == b"x"
+        close(stream)
+    end
 end
