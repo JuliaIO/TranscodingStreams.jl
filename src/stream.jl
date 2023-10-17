@@ -282,7 +282,6 @@ end
 # ---------------
 
 function Base.seekstart(stream::TranscodingStream)
-    checkmode(stream)
     mode = stream.state.mode
     @checkmode (:idle, :read)
     if mode == :read
