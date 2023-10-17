@@ -282,9 +282,10 @@ end
 # ---------------
 
 function Base.seekstart(stream::TranscodingStream)
+    checkmode(stream)
     mode = stream.state.mode
-    @checkmode (:idle, :read, :write)
-    if mode == :read || mode == :write
+    @checkmode (:idle, :read)
+    if mode == :read
         callstartproc(stream, mode)
         emptybuffer!(stream.state.buffer1)
         emptybuffer!(stream.state.buffer2)

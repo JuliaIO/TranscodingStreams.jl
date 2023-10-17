@@ -113,14 +113,10 @@ end
         stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
         write(stream, "x")
         # seekstart must not delete user data even if it errors.
-        try
-            seekstart(stream)
-        catch e
-            e isa ArgumentError || rethrow()
-        end
+        @test_throws ArgumentError seekstart(stream)
         write(stream, TranscodingStreams.TOKEN_END)
         flush(stream)
-        @test_broken take!(sink) == b"xxxx"
+        @test take!(sink) == b"xxxx"
         close(stream)
     end
 end
