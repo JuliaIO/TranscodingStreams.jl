@@ -122,7 +122,9 @@ function transcode!(
     codec::Codec,
     input::Buffer,
 )
-    @assert !Base.mightalias(input.data, output.data) "input and outbut buffers must be independent"
+    Base.mightalias(input.data, output.data) && error(
+        "input and outbut buffers must be independent"
+    )
     unsafe_transcode!(output, codec, input)
 end
 
