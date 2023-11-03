@@ -108,19 +108,30 @@ end
         end
     end
 
+    @testset "seekstart" begin
+        data = Vector(b"abracadabra")
+        source = IOBuffer(data)
+        seekend(source)
+        stream = TranscodingStream(QuadrupleCodec(), source, bufsize=16)
+        @test seekstart(stream) == stream
+        @test position(stream) == 0
+        @test read(stream, 5) == b"aaaab"
+        @test position(stream) == 5
+        @test seekstart(stream) == stream
+        @test_broken position(stream) == 0
+        @test read(stream, 5) == b"aaaab"
+        @test_broken position(stream) == 5
+    end
+
     @testset "seekstart doesn't delete data" begin
         sink = IOBuffer()
         stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
         write(stream, "x")
         # seekstart must not delete user data even if it errors.
-        try
-            seekstart(stream)
-        catch e
-            e isa ArgumentError || rethrow()
-        end
+        @test_throws ArgumentError seekstart(stream)
         write(stream, TranscodingStreams.TOKEN_END)
         flush(stream)
-        @test_broken take!(sink) == b"xxxx"
+        @test take!(sink) == b"xxxx"
         close(stream)
     end
 end
