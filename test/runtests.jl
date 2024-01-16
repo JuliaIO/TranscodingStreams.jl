@@ -1,4 +1,5 @@
 using TranscodingStreams
+using Random
 using Test
 
 if VERSION ≥ v"1.1"
