@@ -53,7 +53,7 @@ function buffersize(buf::Buffer)
 end
 
 function buffermem(buf::Buffer)
-    return Memory(bufferptr(buf), buffersize(buf))
+    return Memory(buf.data, buf.bufferpos, buffersize(buf))
 end
 
 function marginptr(buf::Buffer)
@@ -65,7 +65,7 @@ function marginsize(buf::Buffer)
 end
 
 function marginmem(buf::Buffer)
-    return Memory(marginptr(buf), marginsize(buf))
+    return Memory(buf.data, buf.marginpos, marginsize(buf))
 end
 
 function ismarked(buf::Buffer)

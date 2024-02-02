@@ -377,7 +377,7 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
     return
 end
 
-function Base.readbytes!(stream::TranscodingStream, b::AbstractArray{UInt8}, nb=length(b))
+function Base.readbytes!(stream::TranscodingStream, b::DenseArray{UInt8}, nb=length(b))
     ready_to_read!(stream)
     filled = 0
     resized = false

@@ -121,7 +121,7 @@ initial_output_size(codec::Noop, input::Memory) = length(input)
 function process(codec::Noop, input::Memory, output::Memory, error::Error)
     iszero(length(input)) && return (0, 0, :end)
     n = min(length(input), length(output))
-    unsafe_copyto!(output.ptr, input.ptr, n)
+    GC.@preserve input output unsafe_copyto!(output.ptr, input.ptr, n)
     (n, n, :ok)
 end
 
