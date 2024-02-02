@@ -7,18 +7,19 @@ A contiguous view into other memory.
 This type works like a `SubVector` method.
 """
 struct Memory # <: AbstractVector{UInt8}
-    # n.b. In Julia v1.11, we could replace this whole struct with a Memory{UInt8} object, possibly with the owner field set
-    # but it might cost an extra allocation to gc-track that arrangement
-    data::ByteData
+    data::Vector{UInt8}
     first::Int
     size::Int
-    function Memory(data::ByteData)
+    function Memory(data::Vector{UInt8})
         return new(data, 1, sizeof(data))
     end
-    function Memory(data::ByteData, first, length)
+    function Memory(data::Vector{UInt8}, first, length)
         checkbounds(data, first:(first - 1 + length))
         return new(data, first, length)
     end
+end
+function Memory(data::Base.CodeUnits{UInt8}, args...)
+    return Memory(unsafe_wrap(Vector{UInt8}, String(data)), args...)
 end
 
 @inline function Base.getproperty(mem::Memory, field::Symbol)
