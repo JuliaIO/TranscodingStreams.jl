@@ -183,26 +183,12 @@ function skipbuffer!(buf::Buffer, n::Integer)
     return buf
 end
 
-# Take the ownership of the marked data.
-function takemarked!(buf::Buffer)
-    @assert buf.markpos > 0
-    sz = buf.marginpos - buf.markpos
-    copyto!(buf.data, 1, buf.data, buf.markpos, sz)
-    initbuffer!(buf)
-    return resize!(buf.data, sz)
-end
-
 # Copy data from `data` to `buf`.
 function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     makemargin!(buf, nbytes)
     GC.@preserve buf unsafe_copyto!(marginptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
-end
-
-# Copy data from `data` to `buf`.
-function copydata!(buf::Buffer, data::Buffer, nbytes::Integer = length(data))
-    return copydata!(buf, bufferptr(data), nbytes)
 end
 
 # Copy data from `buf` to `data`.
