@@ -196,9 +196,8 @@ end
 function Base.eof(stream::TranscodingStream)
     eof = buffersize(stream.buffer1) == 0
     state = stream.state
-    if (state.mode == :read || state.mode == :close) && !eof
-        eof = false
-    else
+    mode = state.mode
+    if !(mode == :read || mode == :stop) || eof
         eof = sloweof(stream)
     end
     return eof
@@ -326,8 +325,14 @@ end
 # --------------
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
-    ready_to_read!(stream)
-    if eof(stream)
+    # eof and ready_to_read! are inlined here because ready_to_read! is very slow and eof is broken
+    eof = buffersize(stream.buffer1) == 0
+    state = stream.state
+    mode = state.mode
+    if !(mode == :read || mode == :stop)
+        changemode!(stream, :read)
+    end
+    if eof && sloweof(stream)
         throw(EOFError())
     end
     return readbyte!(stream.buffer1)
