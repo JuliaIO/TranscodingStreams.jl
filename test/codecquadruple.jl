@@ -69,14 +69,14 @@ end
     # Buffers are shared.
     stream1 = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
     stream2 = TranscodingStream(QuadrupleCodec(), stream1)
-    @test stream1.state.buffer1 === stream2.state.buffer2
+    @test stream1.buffer1 === stream2.buffer2
     close(stream1)
     close(stream2)
 
     # Explicitly unshare buffers.
     stream1 = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
     stream2 = TranscodingStream(QuadrupleCodec(), stream1, sharedbuf=false)
-    @test stream1.state.buffer1 !== stream2.state.buffer2
+    @test stream1.buffer1 !== stream2.buffer2
     close(stream1)
     close(stream2)
 

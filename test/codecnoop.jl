@@ -123,12 +123,12 @@
     # unmarked
     stream = TranscodingStream(Noop(), IOBuffer(data), bufsize=7)
     @test hash(read(stream)) == hash(data)
-    @test length(stream.state.buffer1.data) == 7
+    @test length(stream.buffer1.data) == 7
     # marked
     stream = TranscodingStream(Noop(), IOBuffer(data), bufsize=7)
     mark(stream)
     @test hash(read(stream)) == hash(data)
-    @test hash(stream.state.buffer1.data[1:length(data)]) == hash(data)
+    @test hash(stream.buffer1.data[1:length(data)]) == hash(data)
     close(stream)
 
     stream = NoopStream(NoopStream(IOBuffer("foobar")))
@@ -141,15 +141,15 @@
 
     # Two buffers are the same object.
     stream = NoopStream(IOBuffer("foo"))
-    @test stream.state.buffer1 === stream.state.buffer2
+    @test stream.buffer1 === stream.buffer2
 
     # Nested NoopStreams share the same buffer.
     s0 = IOBuffer("foo")
     s1 = NoopStream(s0)
     s2 = NoopStream(s1)
     s3 = NoopStream(s2)
-    @test s1.state.buffer1 === s2.state.buffer1 === s3.state.buffer1 ===
-          s1.state.buffer2 === s2.state.buffer2 === s3.state.buffer2
+    @test s1.buffer1 === s2.buffer1 === s3.buffer1 ===
+          s1.buffer2 === s2.buffer2 === s3.buffer2
 
     stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
     @test TranscodingStreams.stats(stream).in === Int64(0)
