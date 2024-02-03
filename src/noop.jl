@@ -34,7 +34,7 @@ function TranscodingStream(codec::Noop, stream::IO;
     checkbufsize(bufsize)
     checksharedbuf(sharedbuf, stream)
     if sharedbuf
-        buffer = stream.state.buffer1
+        buffer = stream.buffer1
     else
         buffer = Buffer(bufsize)
     end
@@ -56,34 +56,34 @@ function Base.position(stream::NoopStream)
     if mode === :idle
         return Int64(0)
     elseif mode === :write
-        return position(stream.stream) + buffersize(stream.state.buffer1)
+        return position(stream.stream) + buffersize(stream.buffer1)
     elseif mode === :read
-        return position(stream.stream) - buffersize(stream.state.buffer1)
+        return position(stream.stream) - buffersize(stream.buffer1)
     end
     @assert false "unreachable"
 end
 
 function Base.seek(stream::NoopStream, pos::Integer)
     seek(stream.stream, pos)
-    initbuffer!(stream.state.buffer1)
+    initbuffer!(stream.buffer1)
     return stream
 end
 
 function Base.seekstart(stream::NoopStream)
     seekstart(stream.stream)
-    initbuffer!(stream.state.buffer1)
+    initbuffer!(stream.buffer1)
     return stream
 end
 
 function Base.seekend(stream::NoopStream)
     seekend(stream.stream)
-    initbuffer!(stream.state.buffer1)
+    initbuffer!(stream.buffer1)
     return stream
 end
 
 function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :read)
-    buffer = stream.state.buffer1
+    buffer = stream.buffer1
     p = output
     p_end = output + nbytes
     while p < p_end && !eof(stream)
@@ -105,7 +105,7 @@ end
 
 function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :write)
-    buffer = stream.state.buffer1
+    buffer = stream.buffer1
     if marginsize(buffer) ≥ nbytes
         copydata!(buffer, input, nbytes)
         return Int(nbytes)
@@ -132,8 +132,8 @@ function stats(stream::NoopStream)
     state = stream.state
     mode = state.mode
     @checkmode (:idle, :read, :write)
-    buffer = state.buffer1
-    @assert buffer === stream.state.buffer2
+    buffer = stream.buffer1
+    @assert buffer === stream.buffer2
     if mode == :idle
         consumed = supplied = 0
     elseif mode == :read
@@ -157,9 +157,9 @@ end
 
 function fillbuffer(stream::NoopStream; eager::Bool = false)
     changemode!(stream, :read)
-    buffer = stream.state.buffer1
-    @assert buffer === stream.state.buffer2
-    if stream.stream isa TranscodingStream && buffer === stream.stream.state.buffer1
+    buffer = stream.buffer1
+    @assert buffer === stream.buffer2
+    if stream.stream isa TranscodingStream && buffer === stream.buffer1
         # Delegate the operation when buffers are shared.
         return fillbuffer(stream.stream, eager = eager)
     end
@@ -174,8 +174,8 @@ end
 
 function flushbuffer(stream::NoopStream, all::Bool=false)
     changemode!(stream, :write)
-    buffer = stream.state.buffer1
-    @assert buffer === stream.state.buffer2
+    buffer = stream.buffer1
+    @assert buffer === stream.buffer2
     nflushed::Int = 0
     if all
         while buffersize(buffer) > 0
@@ -190,6 +190,6 @@ function flushbuffer(stream::NoopStream, all::Bool=false)
 end
 
 function flushuntilend(stream::NoopStream)
-    stream.state.buffer1.transcoded += writedata!(stream.stream, stream.state.buffer1)
+    stream.buffer1.transcoded += writedata!(stream.stream, stream.buffer1)
     return
 end
