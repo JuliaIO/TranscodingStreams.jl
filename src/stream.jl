@@ -328,7 +328,6 @@ end
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
     if eof(stream)
-        ready_to_read!(stream)
         if eof(stream)
             throw(EOFError())
         end
