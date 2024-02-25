@@ -328,9 +328,7 @@ end
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
     if eof(stream)
-        if eof(stream)
-            throw(EOFError())
-        end
+        throw(EOFError())
     end
     return readbyte!(stream.buffer1)
 end
