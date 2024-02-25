@@ -126,3 +126,4 @@ end
 include("codecnoop.jl")
 include("codecinvalid.jl")
 include("codecquadruple.jl")
+include("codecdoubleframe.jl")

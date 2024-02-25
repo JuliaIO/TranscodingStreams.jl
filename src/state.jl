@@ -9,12 +9,12 @@ See Developer's notes for details.
 """
 mutable struct State
     # current stream mode
-    mode::Symbol  # {:idle, :read, :write, :stop, :close, :panic}
+    mode::Symbol  # {:idle, :read, :write, :stop, :done, :close, :panic}
 
     # return code of the last method call
     code::Symbol  # {:ok, :end, :error}
 
-    # flag to go :stop on :end
+    # flag to go :stop or :done on :end
     stop_on_end::Bool
 
     # exception thrown while data processing

@@ -12,17 +12,19 @@ digraph modes {
     "read" -> "panic";
 
     "write" -> "write";
-    "write" -> "stop";
+    "write" -> "done";
     "write" -> "close";
     "write" -> "panic";
 
     "stop" -> "close";
+    "done" -> "close";
 
     "start" [ shape = point ];
     "idle"  [ shape = circle ];
     "read"  [ shape = circle ];
     "write" [ shape = circle ];
     "stop"  [ shape = circle; style=bold; ];
+    "done"  [ shape = circle; style=bold; ];
     "close" [ shape = circle; style=bold; ];
     "panic" [ shape = circle; style=bold; ];
 }
