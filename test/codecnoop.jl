@@ -229,9 +229,9 @@
 
     # switch write => read
     stream = NoopStream(IOBuffer(b"foobar", read=true, write=true))
-    @test_throws ArgumentError begin
+    begin
         write(stream, b"xyz")
-        read(stream, 3)
+        @test isempty(read(stream, 3))
     end
 
     # switch read => write
