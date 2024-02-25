@@ -140,7 +140,7 @@ end
         stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
         write(stream, "x")
         @test eof(stream)
-        @test_throws ArgumentError read(stream, UInt8)
+        @test_throws EOFError read(stream, UInt8)
         @test eof(stream)
         write(stream, "y")
         @test eof(stream)
@@ -151,5 +151,6 @@ end
         @test take!(sink) == b"xxxxyyyy"
         close(stream)
         @test eof(stream)
+        @test_throws EOFError read(stream, UInt8)
     end
 end
