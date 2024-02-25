@@ -208,7 +208,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         stream = TranscodingStream(DoubleFrameDecoder(), sink, stop_on_end=true)
         @test_broken write(stream, "[ yy ]sdfsadfasdfdf") == 4
         @test eof(stream)
-        @test_throws EOFError read(stream, UInt8)
+        @test_throws ArgumentError read(stream, UInt8)
         flush(stream)
         @test take!(sink) == b"y"
         close(stream)

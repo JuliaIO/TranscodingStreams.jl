@@ -328,12 +328,16 @@ end
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
     if eof(stream)
-        throw(EOFError())
+        ready_to_read!(stream)
+        if eof(stream)
+            throw(EOFError())
+        end
     end
     return readbyte!(stream.buffer1)
 end
 
 function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=false)
+    ready_to_read!(stream)
     buffer1 = stream.buffer1
     # delay initialization so as to reduce the number of buffer resizes
     local ret::Vector{UInt8}
@@ -374,6 +378,7 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
 end
 
 function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes::UInt)
+    ready_to_read!(stream)
     buffer = stream.buffer1
     p = output
     p_end = output + nbytes
@@ -392,6 +397,7 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
 end
 
 function Base.readbytes!(stream::TranscodingStream, b::DenseArray{UInt8}, nb=length(b))
+    ready_to_read!(stream)
     filled = 0
     resized = false
     while filled < nb && !eof(stream)
@@ -407,12 +413,9 @@ function Base.readbytes!(stream::TranscodingStream, b::DenseArray{UInt8}, nb=len
     return filled
 end
 
-function Base.bytesavailable(stream::TranscodingStream)::Int
-    if stream.state.mode ∉ (:read, :stop)
-        0
-    else
-        buffersize(stream.buffer1)
-    end
+function Base.bytesavailable(stream::TranscodingStream)
+    ready_to_read!(stream)
+    return buffersize(stream.buffer1)
 end
 
 function Base.readavailable(stream::TranscodingStream)
@@ -446,12 +449,18 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     if nbytes < 0
         throw(ArgumentError("negative nbytes"))
     end
+    ready_to_read!(stream)
+    insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
+    return nothing
+end
+
+# Ready to read data from the stream.
+function ready_to_read!(stream::TranscodingStream)
     mode = stream.state.mode
     if mode ∉ (:read, :stop)
         changemode!(stream, :read)
     end
-    insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
-    return nothing
+    return
 end
 
 
