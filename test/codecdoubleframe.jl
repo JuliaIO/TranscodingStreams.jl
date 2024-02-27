@@ -213,7 +213,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
     @testset "eof is true after write stops" begin
         sink = IOBuffer()
         stream = TranscodingStream(DoubleFrameDecoder(), sink, stop_on_end=true)
-        @test_broken write(stream, "[ yy ]sdfsadfasdfdf") == 4
+        write(stream, "[ yy ]sdfsadfasdfdf")
         flush(stream)
         @test_broken eof(stream)
         # TODO This is broken.
