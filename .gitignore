@@ -1,6 +1,13 @@
+#Mac OS X
+*.DS_Store
+
+#VS Code
+/.vscode/
+
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+/test/Manifest.toml
 /Manifest.toml
 /docs/build/
 /docs/Manifest.toml
