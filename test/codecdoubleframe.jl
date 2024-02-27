@@ -101,7 +101,7 @@ function TranscodingStreams.process(
     Δout::Int = 0
 
     function do_read(ref)
-        iszero(input.size) && error("Expected byte")
+        iszero(input.size) && error("expected byte")
         if Δin + 1 ≤ lastindex(input)
             Δin += 1
             ref[] = input[Δin]
@@ -134,6 +134,10 @@ function TranscodingStreams.process(
             @goto state4
         elseif oldstate == 5
             @goto state5
+        elseif oldstate == 6
+            error("cannot process after ending")
+        elseif oldstate == 7
+            error("cannot process after erroring")
         else
             error("unexpected state $(oldstate)")
         end
@@ -158,8 +162,10 @@ function TranscodingStreams.process(
                 error("expected matching bytes or space and ]")
             end
         end
+        codec.state[]=6
         return Δin, Δout, :end
     catch e
+        codec.state[]=7
         e isa ErrorException || rethrow()
         error[] = e
         return Δin, Δout, :error
