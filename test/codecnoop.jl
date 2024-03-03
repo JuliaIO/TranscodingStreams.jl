@@ -339,15 +339,18 @@
         sink = IOBuffer()
         stream = NoopStream(sink, bufsize=16)
         write(stream, "x")
-        # seekstart must not delete user data even if it errors.
-        try
-            seekstart(stream)
-        catch e
-            e isa ArgumentError || rethrow()
-        end
-        write(stream, TranscodingStreams.TOKEN_END)
+        seekstart(stream)
         flush(stream)
-        @test_broken take!(sink) == b"x"
+        @test take!(sink) == b"x"
+        close(stream)
+
+        sink = IOBuffer()
+        stream = NoopStream(sink, bufsize=16)
+        write(stream, "abc")
+        seekstart(stream)
+        write(stream, "d")
+        flush(stream)
+        @test take!(sink) == b"dbc"
         close(stream)
     end
 end

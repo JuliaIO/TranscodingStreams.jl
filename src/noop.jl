@@ -64,18 +64,30 @@ function Base.position(stream::NoopStream)
 end
 
 function Base.seek(stream::NoopStream, pos::Integer)
+    mode = stream.state.mode
+    if mode === :write
+        flushbuffer(stream)
+    end
     seek(stream.stream, pos)
     initbuffer!(stream.buffer1)
     return stream
 end
 
 function Base.seekstart(stream::NoopStream)
+    mode = stream.state.mode
+    if mode === :write
+        flushbuffer(stream)
+    end
     seekstart(stream.stream)
     initbuffer!(stream.buffer1)
     return stream
 end
 
 function Base.seekend(stream::NoopStream)
+    mode = stream.state.mode
+    if mode === :write
+        flushbuffer(stream)
+    end
     seekend(stream.stream)
     initbuffer!(stream.buffer1)
     return stream

@@ -135,6 +135,19 @@ end
         close(stream)
     end
 
+    @testset "seekstart doesn't delete data in a NoopStream wrapped TranscodingStream" begin
+        sink = IOBuffer()
+        stream1 = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
+        stream2 = NoopStream(stream1, bufsize=16)
+        write(stream2, "x")
+        # seekstart must not delete user data even if it errors.
+        @test_throws ArgumentError seekstart(stream2)
+        write(stream2, TranscodingStreams.TOKEN_END)
+        flush(stream2)
+        @test take!(sink) == b"xxxx"
+        close(stream2)
+    end
+
     @testset "eof is true after write" begin
         sink = IOBuffer()
         stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
