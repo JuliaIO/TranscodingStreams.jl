@@ -26,12 +26,12 @@ using TranscodingStreams:
     data = Vector{UInt8}(b"foobar")
     buf = Buffer(data)
     @test buf isa Buffer
-    @test bufferptr(buf) === pointer(data)
+    @test bufferptr(buf) === pointer(data) === buffermem(buf).ptr
     @test buffersize(buf) === 6
-    @test buffermem(buf) === Memory(pointer(data), 6)
-    @test marginptr(buf) === pointer(data) + 6
+    @test buffermem(buf) === Memory(data, 1, 6)
+    @test marginptr(buf) === pointer(data) + 6 === marginmem(buf).ptr
     @test marginsize(buf) === 0
-    @test marginmem(buf) === Memory(pointer(data)+6, 0)
+    @test marginmem(buf) === Memory(data, 7, 0)
 
     buf = Buffer(2)
     writebyte!(buf, 0x34)
@@ -71,11 +71,11 @@ end
 
 @testset "Memory" begin
     data = Vector{UInt8}(b"foobar")
-    mem = TranscodingStreams.Memory(pointer(data), sizeof(data))
+    mem = TranscodingStreams.Memory(data, 1, sizeof(data))
     @test mem isa TranscodingStreams.Memory
     @test mem.ptr === pointer(data)
-    @test mem.size === length(mem) === UInt(sizeof(data))
-    @test lastindex(mem) === 6
+    @test length(mem) === UInt(sizeof(data))
+    @test mem.size === lastindex(mem) === 6
     @test mem[1] === UInt8('f')
     @test mem[2] === UInt8('o')
     @test mem[3] === UInt8('o')

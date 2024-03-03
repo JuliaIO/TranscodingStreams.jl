@@ -26,9 +26,13 @@ mutable struct Buffer
     # the total number of transcoded bytes
     transcoded::Int64
 
+    # a flag to indicate if writing to it should be an error
+    # an application could choose to copy the data field and clear this flag
+    immutable::Bool
+
     function Buffer(data::Vector{UInt8}, marginpos::Integer=length(data)+1)
         @assert 1 <= marginpos <= length(data)+1
-        return new(data, 0, 1, marginpos, 0)
+        return new(data, 0, 1, marginpos, 0, false)
     end
 end
 
@@ -37,7 +41,9 @@ function Buffer(size::Integer = 0)
 end
 
 function Buffer(data::Base.CodeUnits{UInt8}, args...)
-    return Buffer(Vector{UInt8}(data), args...)
+    buf = Buffer(unsafe_wrap(Vector{UInt8}, String(data)), args...)
+    buf.immutable = true # application should try not to accidentally corrupt this String
+    return buf
 end
 
 function Base.length(buf::Buffer)
@@ -53,7 +59,7 @@ function buffersize(buf::Buffer)
 end
 
 function buffermem(buf::Buffer)
-    return Memory(bufferptr(buf), buffersize(buf))
+    return Memory(buf.data, buf.bufferpos, buffersize(buf))
 end
 
 function marginptr(buf::Buffer)
@@ -65,7 +71,8 @@ function marginsize(buf::Buffer)
 end
 
 function marginmem(buf::Buffer)
-    return Memory(marginptr(buf), marginsize(buf))
+    buf.immutable && throw(ArgumentError("Buffer is immutable"))
+    return Memory(buf.data, buf.marginpos, marginsize(buf))
 end
 
 function ismarked(buf::Buffer)
@@ -126,6 +133,7 @@ end
 # Make margin with ≥`minsize` and return the size of it.
 # If eager is true, it tries to move data even when the buffer has enough margin.
 function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
+    buf.immutable && throw(ArgumentError("Buffer is immutable"))
     @assert minsize ≥ 0
     if buffersize(buf) == 0 && buf.markpos == 0
         buf.bufferpos = buf.marginpos = 1
@@ -171,6 +179,7 @@ end
 
 # Write a byte.
 function writebyte!(buf::Buffer, b::UInt8)
+    buf.immutable && throw(ArgumentError("Buffer is immutable"))
     buf.data[buf.marginpos] = b
     supplied!(buf, 1)
     return 1

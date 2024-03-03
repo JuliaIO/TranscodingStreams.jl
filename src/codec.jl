@@ -106,10 +106,10 @@ abstract type Codec end
 
 Return the expected size of the transcoded `input` with `codec`.
 
-The default method returns `input.size`.
+The default method returns `length(input)`.
 """
 function expectedsize(codec::Codec, input::Memory)::Int
-    return input.size
+    return length(input)
 end
 
 """
@@ -117,10 +117,10 @@ end
 
 Return the minimum output size to be ensured when calling `process`.
 
-The default method returns `max(1, div(input.size, 4))`.
+The default method returns `max(1, div(length(input), 4))`.
 """
 function minoutsize(codec::Codec, input::Memory)::Int
-    return max(1, div(input.size, 4))
+    return max(1, div(length(input), 4))
 end
 
 """
