@@ -335,7 +335,7 @@
         end
     end
 
-    @testset "seekstart doesn't delete data" begin
+    @testset "seek doesn't delete data" begin
         sink = IOBuffer()
         stream = NoopStream(sink, bufsize=16)
         write(stream, "x")
@@ -344,13 +344,20 @@
         @test take!(sink) == b"x"
         close(stream)
 
-        sink = IOBuffer()
-        stream = NoopStream(sink, bufsize=16)
-        write(stream, "abc")
-        seekstart(stream)
-        write(stream, "d")
-        flush(stream)
-        @test take!(sink) == b"dbc"
-        close(stream)
+        op_expected = [
+            (seekstart, b"dbc"),
+            (seekend, b"abcd"),
+            (Base.Fix2(seek, 1), b"adc"),
+        ]
+        @testset "$op" for (op, expected) in op_expected
+            sink = IOBuffer()
+            stream = NoopStream(sink, bufsize=16)
+            write(stream, "abc")
+            @test op(stream) === stream
+            write(stream, "d")
+            flush(stream)
+            @test take!(sink) == expected
+            close(stream)
+        end
     end
 end
