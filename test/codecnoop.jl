@@ -335,19 +335,29 @@
         end
     end
 
-    @testset "seekstart doesn't delete data" begin
+    @testset "seek doesn't delete data" begin
         sink = IOBuffer()
         stream = NoopStream(sink, bufsize=16)
         write(stream, "x")
-        # seekstart must not delete user data even if it errors.
-        try
-            seekstart(stream)
-        catch e
-            e isa ArgumentError || rethrow()
-        end
-        write(stream, TranscodingStreams.TOKEN_END)
+        seekstart(stream)
         flush(stream)
-        @test_broken take!(sink) == b"x"
+        @test take!(sink) == b"x"
         close(stream)
+
+        op_expected = [
+            (seekstart, b"dbc"),
+            (seekend, b"abcd"),
+            (Base.Fix2(seek, 1), b"adc"),
+        ]
+        @testset "$op" for (op, expected) in op_expected
+            sink = IOBuffer()
+            stream = NoopStream(sink, bufsize=16)
+            write(stream, "abc")
+            @test op(stream) === stream
+            write(stream, "d")
+            flush(stream)
+            @test take!(sink) == expected
+            close(stream)
+        end
     end
 end

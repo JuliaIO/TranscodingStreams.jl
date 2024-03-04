@@ -124,15 +124,22 @@ end
     end
 
     @testset "seekstart doesn't delete data" begin
-        sink = IOBuffer()
-        stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
-        write(stream, "x")
-        # seekstart must not delete user data even if it errors.
-        @test_throws ArgumentError seekstart(stream)
-        write(stream, TranscodingStreams.TOKEN_END)
-        flush(stream)
-        @test take!(sink) == b"xxxx"
-        close(stream)
+        for n in 0:3
+            sink = IOBuffer()
+            # wrap stream in NoopStream n times.
+            stream = foldl(
+                (s,_) -> NoopStream(s),
+                1:n;
+                init=TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
+            )
+            write(stream, "x")
+            # seekstart must not delete user data even if it errors.
+            @test_throws ArgumentError seekstart(stream)
+            write(stream, TranscodingStreams.TOKEN_END)
+            flush(stream)
+            @test take!(sink) == b"xxxx"
+            close(stream)
+        end
     end
 
     @testset "eof is true after write" begin
