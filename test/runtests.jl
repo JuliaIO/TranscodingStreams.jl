@@ -1,10 +1,11 @@
 using TranscodingStreams
 using Random
 using Test
+using Aqua: Aqua
 
-if VERSION ≥ v"1.1"
-    @test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
-end
+Aqua.test_all(TranscodingStreams)
+
+@test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
 @test isempty(detect_ambiguities(TranscodingStreams; recursive=true))
 
 # Tool tests

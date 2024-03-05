@@ -22,10 +22,12 @@ jobs:
           - {user: JuliaIO, repo: CodecZstd.jl, group: TranscodingStreams}
           - {user: JuliaIO, repo: CodecBase.jl, group: TranscodingStreams}
           - {user: JuliaIO, repo: CodecXz.jl, group: TranscodingStreams}
-          - {user: JuliaIO, repo: ZipArchives.jl, group: TranscodingStreams}
           - {user: JuliaIO, repo: CodecBzip2.jl, group: TranscodingStreams}
+          - {user: JuliaIO, repo: ZipArchives.jl, group: TranscodingStreams}
+          - {user: JuliaIO, repo: JLD2.jl, group: TranscodingStreams}
           - {user: BioJulia, repo: Automa.jl, group: TranscodingStreams}
           - {user: BioJulia, repo: FASTX.jl, group: TranscodingStreams}
+          - {user: JuliaVTK, repo: WriteVTK.jl, group: TranscodingStreams}
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1
