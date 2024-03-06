@@ -183,8 +183,9 @@ function Base.isopen(stream::TranscodingStream)
 end
 
 function Base.close(stream::TranscodingStream)
-    stopped = stream.state.mode == :stop
-    if stream.state.mode != :panic
+    mode = stream.state.mode
+    stopped = mode === :stop || mode === :done
+    if mode != :panic
         changemode!(stream, :close)
     end
     if !stopped
@@ -212,6 +213,8 @@ end
             changemode!(stream, :read)
             continue
         elseif mode == :write
+            return eof(stream.stream)
+        elseif mode == :done
             return eof(stream.stream)
         elseif mode == :close
             return true
@@ -252,7 +255,7 @@ function Base.skip(stream::TranscodingStream, offset::Integer)
     mode = stream.state.mode
     buffer1 = stream.buffer1
     skipped = 0
-    if mode == :read
+    if mode === :read || mode === :stop
         while !eof(stream) && buffersize(buffer1) < offset - skipped
             n = buffersize(buffer1)
             emptybuffer!(buffer1)
@@ -619,7 +622,7 @@ function flushbuffer(stream::TranscodingStream, all::Bool=false)
     buffer1 = stream.buffer1
     buffer2 = stream.buffer2
     nflushed::Int = 0
-    while (all ? buffersize(buffer1) != 0 : makemargin!(buffer1, 0) == 0) && state.mode != :stop
+    while (all ? buffersize(buffer1) != 0 : makemargin!(buffer1, 0) == 0) && state.mode != :done
         if state.code == :end
             callstartproc(stream, :write)
         end
@@ -684,7 +687,11 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
         # When no progress, expand the output buffer.
         makemargin!(outbuf, max(16, marginsize(outbuf) * 2))
     elseif state.code == :end && state.stop_on_end
-        changemode!(stream, :stop)
+        if stream.state.mode == :read
+            changemode!(stream, :stop)
+        else
+            changemode!(stream, :done)
+        end
     end
     return Δin, Δout
 end
@@ -738,8 +745,6 @@ end
 function changemode!(stream::TranscodingStream, newmode::Symbol)
     state = stream.state
     mode = state.mode
-    buffer1 = stream.buffer1
-    buffer2 = stream.buffer2
     if mode == newmode
         # mode does not change
         return
@@ -770,7 +775,7 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             return
         end
     elseif mode == :write
-        if newmode == :close || newmode == :stop
+        if newmode == :close || newmode == :done
             if newmode == :close
                 flushbufferall(stream)
                 flushuntilend(stream)
@@ -780,6 +785,11 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             return
         end
     elseif mode == :stop
+        if newmode == :close
+            state.mode = newmode
+            return
+        end
+    elseif mode == :done
         if newmode == :close
             state.mode = newmode
             return
