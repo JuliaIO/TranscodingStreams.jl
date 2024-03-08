@@ -248,4 +248,5 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
     test_roundtrip_transcode(DoubleFrameEncoder, DoubleFrameDecoder)
     test_roundtrip_fileio(DoubleFrameEncoder, DoubleFrameDecoder)
     test_chunked_read(DoubleFrameEncoder, DoubleFrameDecoder)
+    test_chunked_write(DoubleFrameEncoder, DoubleFrameDecoder)
 end

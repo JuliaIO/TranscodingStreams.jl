@@ -97,4 +97,24 @@ function TranscodingStreams.test_chunked_read(Encoder, Decoder)
     finalize(encoder)
 end
 
+function TranscodingStreams.test_chunked_write(Encoder, Decoder)
+    seed!(TEST_RANDOM_SEED)
+    alpha = b"空即是色"
+    encoder = Encoder()
+    initialize(encoder)
+    for _ in 1:500
+        chunks = [rand(alpha, rand(0:100)) for _ in 1:2]
+        data = map(x->transcode(encoder, x), chunks)
+        buffer = IOBuffer()
+        stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
+        write(stream, vcat(data...))
+        close(stream)
+        ok = true
+        ok &= hash(take!(buffer)) == hash(vcat(chunks...))
+        ok &= buffersize(stream.state.buffer1) == 0
+        Test.@test ok
+    end
+    finalize(encoder)
+end
+
 end # module
