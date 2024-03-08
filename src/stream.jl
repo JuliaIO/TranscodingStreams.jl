@@ -85,10 +85,10 @@ Arguments
     The initial buffer size (the default size is 16KiB). The buffer may be
     extended whenever `codec` requests so.
 - `stop_on_end`:
-    The flag to stop transcoding on `:end` return code from `codec`.  The
+    The flag to stop reading on `:end` return code from `codec`.  The
     transcoded data are readable even after stopping transcoding process.  With
     this flag on, `stream` is not closed when the wrapper stream is closed with
-    `close`.  Note that some extra data may be read from `stream` into an
+    `close`.  Note that if reading some extra data may be read from `stream` into an
     internal buffer, and thus `stream` must be a `TranscodingStream` object and
     `sharedbuf` must be `true` to reuse `stream`.
 - `sharedbuf`:
@@ -184,11 +184,10 @@ end
 
 function Base.close(stream::TranscodingStream)
     mode = stream.state.mode
-    stopped = mode === :stop || mode === :done
     if mode != :panic
         changemode!(stream, :close)
     end
-    if !stopped
+    if !stream.state.stop_on_end
         close(stream.stream)
     end
     return nothing
@@ -213,8 +212,6 @@ end
             changemode!(stream, :read)
             continue
         elseif mode == :write
-            return eof(stream.stream)
-        elseif mode == :done
             return eof(stream.stream)
         elseif mode == :close
             return true
@@ -517,6 +514,9 @@ const TOKEN_END = EndToken()
 
 function Base.write(stream::TranscodingStream, ::EndToken)
     changemode!(stream, :write)
+    if stream.state.code == :end
+        callstartproc(stream, :write)
+    end
     flushbufferall(stream)
     flushuntilend(stream)
     return 0
@@ -622,7 +622,7 @@ function flushbuffer(stream::TranscodingStream, all::Bool=false)
     buffer1 = stream.buffer1
     buffer2 = stream.buffer2
     nflushed::Int = 0
-    while (all ? buffersize(buffer1) != 0 : makemargin!(buffer1, 0) == 0) && state.mode != :done
+    while (all ? buffersize(buffer1) != 0 : makemargin!(buffer1, 0) == 0)
         if state.code == :end
             callstartproc(stream, :write)
         end
@@ -689,8 +689,6 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     elseif state.code == :end && state.stop_on_end
         if stream.state.mode == :read
             changemode!(stream, :stop)
-        else
-            changemode!(stream, :done)
         end
     end
     return Δin, Δout
@@ -775,21 +773,14 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             return
         end
     elseif mode == :write
-        if newmode == :close || newmode == :done
-            if newmode == :close
-                flushbufferall(stream)
-                flushuntilend(stream)
-            end
+        if newmode == :close
+            flushbufferall(stream)
+            flushuntilend(stream)
             state.mode = newmode
             finalize_codec(stream.codec, state.error)
             return
         end
     elseif mode == :stop
-        if newmode == :close
-            state.mode = newmode
-            return
-        end
-    elseif mode == :done
         if newmode == :close
             state.mode = newmode
             return

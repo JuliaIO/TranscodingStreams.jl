@@ -360,4 +360,14 @@
             close(stream)
         end
     end
+
+    @testset "stop_on_end=true prevents underlying stream closing" begin
+        sink = IOBuffer()
+        stream = NoopStream(sink, stop_on_end=true)
+        write(stream, "abcd")
+        close(stream)
+        @test isopen(sink)
+        @test take!(sink) == b"abcd"
+    end
+
 end
