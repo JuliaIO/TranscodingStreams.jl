@@ -228,7 +228,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         end == "[ HHeelllloo,,  wwoorrlldd..\n\n ]"
     end
 
-    @testset "TOKEN_END repeated creates empty frames" begin
+    @testset "TOKEN_END repeated doesn't create more empty frames" begin
         sink = IOBuffer()
         stream = TranscodingStream(DoubleFrameEncoder(), sink, stop_on_end=true)
         write(stream, TranscodingStreams.TOKEN_END)
@@ -237,9 +237,10 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         write(stream, TranscodingStreams.TOKEN_END)
         write(stream, "de")
         write(stream, TranscodingStreams.TOKEN_END)
+        write(stream, "") # This doesn't create an empty frame
         write(stream, TranscodingStreams.TOKEN_END)
         close(stream)
-        @test String(take!(sink)) == "[  ][  ][ aabbcc ][ ddee ][  ]"
+        @test String(take!(sink)) == "[  ][ aabbcc ][ ddee ]"
     end
 
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)

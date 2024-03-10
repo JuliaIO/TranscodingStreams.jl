@@ -514,9 +514,6 @@ const TOKEN_END = EndToken()
 
 function Base.write(stream::TranscodingStream, ::EndToken)
     changemode!(stream, :write)
-    if stream.state.code == :end
-        callstartproc(stream, :write)
-    end
     flushbufferall(stream)
     flushuntilend(stream)
     return 0
