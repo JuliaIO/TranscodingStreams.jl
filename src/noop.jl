@@ -30,6 +30,7 @@ end
 
 function TranscodingStream(codec::Noop, stream::IO;
                            bufsize::Integer=DEFAULT_BUFFER_SIZE,
+                           stop_on_end::Bool=false,
                            sharedbuf::Bool=(stream isa TranscodingStream))
     checkbufsize(bufsize)
     checksharedbuf(sharedbuf, stream)
@@ -38,7 +39,9 @@ function TranscodingStream(codec::Noop, stream::IO;
     else
         buffer = Buffer(bufsize)
     end
-    return TranscodingStream(codec, stream, State(buffer, buffer))
+    state = State(buffer, buffer)
+    state.stop_on_end = stop_on_end
+    return TranscodingStream(codec, stream, state)
 end
 
 """

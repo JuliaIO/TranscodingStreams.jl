@@ -108,12 +108,11 @@ function TranscodingStreams.test_chunked_write(Encoder, Decoder)
         buffer = IOBuffer()
         stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
         write(stream, vcat(data...))
-        flush(stream)
-        ok = true
-        ok &= hash(take!(buffer)) == hash(chunks[1])
-        ok &= buffersize(stream.state.buffer1) == length(data[2])
-        Test.@test ok
         close(stream)
+        ok = true
+        ok &= hash(take!(buffer)) == hash(vcat(chunks...))
+        ok &= buffersize(stream.state.buffer1) == 0
+        Test.@test ok
     end
     finalize(encoder)
 end

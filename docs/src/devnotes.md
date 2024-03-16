@@ -47,7 +47,6 @@ The `mode` field may be one of the following value:
 - `:read` : being ready to read data, data may be buffered
 - `:write`: being ready to write data, data may be buffered
 - `:stop` : transcoding is stopped after read, data may be buffered
-- `:done` : transcoding is stopped after write, data may be buffered
 - `:close`: closed, no buffered data
 - `:panic`: an exception has been thrown in codec, data may be buffered but we
             cannot do anything

@@ -210,15 +210,37 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
     @test transcode(DoubleFrameDecoder, b"[   ]] ]") == b" ]"
     @test transcode(DoubleFrameDecoder, b"[ aa ][ bb ]") == b"ab"
 
-    @testset "eof is true after write stops" begin
+    @testset "stop_on_end=true prevents underlying stream closing" begin
         sink = IOBuffer()
         stream = TranscodingStream(DoubleFrameDecoder(), sink, stop_on_end=true)
-        write(stream, "[ yy ]sdfsadfasdfdf")
-        flush(stream)
-        @test eof(stream)
-        @test_throws ArgumentError read(stream, UInt8)
-        @test take!(sink) == b"y"
+        write(stream, "[ yy ]")
+        write(stream, "[ xx ]")
         close(stream)
+        @test isopen(sink)
+        @test take!(sink) == b"yx"
+    end
+
+    @testset "Issue #95" begin
+        @test sprint() do outer
+            inner = TranscodingStream(DoubleFrameEncoder(), outer, stop_on_end = true)
+            println(inner, "Hello, world.")
+            close(inner)
+        end == "[ HHeelllloo,,  wwoorrlldd..\n\n ]"
+    end
+
+    @testset "TOKEN_END repeated doesn't create more empty frames" begin
+        sink = IOBuffer()
+        stream = TranscodingStream(DoubleFrameEncoder(), sink, stop_on_end=true)
+        write(stream, TranscodingStreams.TOKEN_END)
+        write(stream, TranscodingStreams.TOKEN_END)
+        write(stream, "abc")
+        write(stream, TranscodingStreams.TOKEN_END)
+        write(stream, "de")
+        write(stream, TranscodingStreams.TOKEN_END)
+        write(stream, "") # This doesn't create an empty frame
+        write(stream, TranscodingStreams.TOKEN_END)
+        close(stream)
+        @test String(take!(sink)) == "[  ][ aabbcc ][ ddee ]"
     end
 
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
