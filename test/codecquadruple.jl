@@ -142,6 +142,25 @@ end
         end
     end
 
+    @testset "seekend doesn't delete data" begin
+        for n in 0:3
+            sink = IOBuffer()
+            # wrap stream in NoopStream n times.
+            stream = foldl(
+                (s,_) -> NoopStream(s),
+                1:n;
+                init=TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
+            )
+            write(stream, "x")
+            # seekend must not delete user data even if it errors.
+            @test_throws Exception seekend(stream)
+            write(stream, TranscodingStreams.TOKEN_END)
+            flush(stream)
+            @test take!(sink) == b"xxxx"
+            close(stream)
+        end
+    end
+
     @testset "eof is true after write" begin
         sink = IOBuffer()
         stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
