@@ -28,6 +28,7 @@ jobs:
           - {user: BioJulia, repo: Automa.jl, group: TranscodingStreams}
           - {user: BioJulia, repo: FASTX.jl, group: TranscodingStreams}
           - {user: JuliaVTK, repo: WriteVTK.jl, group: TranscodingStreams}
+          - {user: JuliaData, repo: RData.jl, group: TranscodingStreams}
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1
