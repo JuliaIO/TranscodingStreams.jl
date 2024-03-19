@@ -322,6 +322,8 @@
         end
         @test position(stream) == position(sink) == position(iob)
         close(stream)
+        @test_throws ArgumentError position(stream)
+        @test_throws ArgumentError TranscodingStreams.stats(stream)
         close(iob)
 
         mktemp() do path, sink
