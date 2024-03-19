@@ -26,20 +26,20 @@ function TranscodingStreams.process(
         codec  :: DoubleFrameEncoder,
         input  :: TranscodingStreams.Memory,
         output :: TranscodingStreams.Memory,
-        error  :: TranscodingStreams.Error,
+        error_ref  :: TranscodingStreams.Error,
     )
     if input.size == 0
         codec.got_stop_msg[] = true
     end
 
     if output.size < 2
-        error[] = ErrorException("requires a minimum of 2 bytes of output space")
+        error_ref[] = ErrorException("requires a minimum of 2 bytes of output space")
         return 0, 0, :error
     elseif codec.stopped[]
-        error[] = ErrorException("cannot process after stopped")
+        error_ref[] = ErrorException("cannot process after stopped")
         return 0, 0, :error
     elseif codec.got_stop_msg[] && input.size != 0
-        error[] = ErrorException("cannot accept more input after getting stop message")
+        error_ref[] = ErrorException("cannot accept more input after getting stop message")
         return 0, 0, :error
     elseif !codec.opened[]
         output[1] = UInt8('[')
@@ -95,7 +95,7 @@ function TranscodingStreams.process(
         codec  :: DoubleFrameDecoder,
         input  :: TranscodingStreams.Memory,
         output :: TranscodingStreams.Memory,
-        error  :: TranscodingStreams.Error,
+        error_ref  :: TranscodingStreams.Error,
     )
     Δin::Int = 0
     Δout::Int = 0
@@ -167,7 +167,7 @@ function TranscodingStreams.process(
     catch e
         codec.state[]=7
         e isa ErrorException || rethrow()
-        error[] = e
+        error_ref[] = e
         return Δin, Δout, :error
     end
 end
@@ -241,6 +241,27 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         write(stream, TranscodingStreams.TOKEN_END)
         close(stream)
         @test String(take!(sink)) == "[  ][ aabbcc ][ ddee ]"
+    end
+
+    @testset "Issue #160 Safely close stream after failure" begin
+        sink = IOBuffer()
+        stream = TranscodingStream(DoubleFrameDecoder(), sink)
+        write(stream, "abc")
+        @test_throws ErrorException("expected [") close(stream)
+        @test !isopen(stream)
+        @test !isopen(sink)
+
+        @testset "nested decoders" begin
+            sink = IOBuffer()
+            stream = TranscodingStream(DoubleFrameDecoder(), sink)
+            stream2 = TranscodingStream(DoubleFrameDecoder(), stream)
+            write(stream2, "abc")
+            # "expected byte" error with caused by "expected ["
+            @test_throws ErrorException("expected byte") close(stream2)
+            @test !isopen(stream2)
+            @test !isopen(stream)
+            @test !isopen(sink)
+        end
     end
 
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
