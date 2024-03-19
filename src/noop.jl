@@ -55,13 +55,14 @@ Note that this method may return a wrong position when
 """
 function Base.position(stream::NoopStream)
     mode = stream.state.mode
-    @checkmode (:idle, :read, :write)
     if mode === :idle
         return Int64(0)
     elseif mode === :write
         return position(stream.stream) + buffersize(stream.buffer1)
     elseif mode === :read
         return position(stream.stream) - buffersize(stream.buffer1)
+    else
+        throw_invalid_mode(mode)
     end
     @assert false "unreachable"
 end
@@ -146,19 +147,18 @@ end
 function stats(stream::NoopStream)
     state = stream.state
     mode = state.mode
-    @checkmode (:idle, :read, :write)
     buffer = stream.buffer1
     @assert buffer === stream.buffer2
-    if mode == :idle
+    if mode === :idle
         consumed = supplied = 0
-    elseif mode == :read
+    elseif mode === :read
         supplied = buffer.transcoded
         consumed = supplied - buffersize(buffer)
-    elseif mode == :write
+    elseif mode === :write
         supplied = buffer.transcoded + buffersize(buffer)
         consumed = buffer.transcoded
     else
-        @assert false "unreachable"
+        throw_invalid_mode(mode)
     end
     return Stats(consumed, supplied, supplied, supplied)
 end
