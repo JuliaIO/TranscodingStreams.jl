@@ -208,17 +208,11 @@ end
         mode = state.mode
         if mode == :read
             return (buffersize(stream.buffer1) == 0 && fillbuffer(stream) == 0)
-        elseif mode == :idle
-            changemode!(stream, :read)
-            continue
-        elseif mode == :write
-            return eof(stream.stream)
-        elseif mode == :close
-            return true
         elseif mode == :stop
             return buffersize(stream.buffer1) == 0
-        elseif mode == :panic
-            throw_panic_error()
+        else
+            changemode!(stream, :read)
+            continue
         end
         @assert false
     end
@@ -325,21 +319,13 @@ end
 # --------------
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
-    # eof and ready_to_read! are inlined here because ready_to_read! is very slow and eof is broken
-    eof = buffersize(stream.buffer1) == 0
-    state = stream.state
-    mode = state.mode
-    if !(mode == :read || mode == :stop)
-        changemode!(stream, :read)
-    end
-    if eof && sloweof(stream)
+    if eof(stream)
         throw(EOFError())
     end
     return readbyte!(stream.buffer1)
 end
 
 function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=false)
-    ready_to_read!(stream)
     buffer1 = stream.buffer1
     # delay initialization so as to reduce the number of buffer resizes
     local ret::Vector{UInt8}
@@ -380,7 +366,6 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
 end
 
 function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes::UInt)
-    ready_to_read!(stream)
     buffer = stream.buffer1
     p = output
     p_end = output + nbytes
@@ -397,7 +382,6 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
 end
 
 function Base.readbytes!(stream::TranscodingStream, b::DenseArray{UInt8}, nb=length(b))
-    ready_to_read!(stream)
     filled = 0
     resized = false
     while filled < nb && !eof(stream)
@@ -414,8 +398,12 @@ function Base.readbytes!(stream::TranscodingStream, b::DenseArray{UInt8}, nb=len
 end
 
 function Base.bytesavailable(stream::TranscodingStream)
-    ready_to_read!(stream)
-    return buffersize(stream.buffer1)
+    mode = stream.state.mode
+    if mode === :read || mode === :stop
+        buffersize(stream.buffer1)
+    else
+        0
+    end
 end
 
 function Base.readavailable(stream::TranscodingStream)
@@ -449,18 +437,12 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     if nbytes < 0
         throw(ArgumentError("negative nbytes"))
     end
-    ready_to_read!(stream)
-    insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
-    return nothing
-end
-
-# Ready to read data from the stream.
-function ready_to_read!(stream::TranscodingStream)
     mode = stream.state.mode
     if !(mode == :read || mode == :stop)
         changemode!(stream, :read)
     end
-    return
+    insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
+    return nothing
 end
 
 
