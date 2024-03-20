@@ -103,7 +103,7 @@ julia> using TranscodingStreams
 
 julia> file = open(joinpath(dirname(dirname(pathof(TranscodingStreams))), "README.md"));
 
-julia> stream = NoopStream(file);
+julia> stream = TranscodingStream(Noop(), file);
 
 julia> readline(file)
 "TranscodingStreams.jl"
@@ -180,6 +180,16 @@ end
 
 function Base.isopen(stream::TranscodingStream)
     return stream.state.mode != :close && stream.state.mode != :panic
+end
+
+function Base.isreadable(stream::TranscodingStream)::Bool
+    mode = stream.state.mode
+    (mode === :idle || mode === :read || mode === :stop) && isreadable(stream.stream)
+end
+
+function Base.iswritable(stream::TranscodingStream)::Bool
+    mode = stream.state.mode
+    (mode === :idle || mode === :write) && iswritable(stream.stream)
 end
 
 function Base.close(stream::TranscodingStream)
