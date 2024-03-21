@@ -24,8 +24,14 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
     buffer1::Buffer
     buffer2::Buffer
 
+    # relative start position in underlying stream
+    offset::Int64
+
+    # true if sharing buffer with stream
+    sharedbuf::Bool
+
     function TranscodingStream{C,S}(
-            codec::C, stream::S, state::State, initialized::Bool) where {C<:Codec,S<:IO}
+            codec::C, stream::S, state::State, initialized::Bool, sharedbuf::Bool=false) where {C<:Codec,S<:IO}
         if !isopen(stream)
             throw(ArgumentError("closed stream"))
         elseif state.mode != :idle
@@ -34,13 +40,14 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
         if !initialized
             initialize(codec)
         end
-        return new(codec, stream, state, state.buffer1, state.buffer2)
+        offset = position(stream)
+        return new(codec, stream, state, state.buffer1, state.buffer2, offset, sharedbuf)
     end
 end
 
 function TranscodingStream(codec::C, stream::S, state::State;
-                           initialized::Bool=false) where {C<:Codec,S<:IO}
-    return TranscodingStream{C,S}(codec, stream, state, initialized)
+                           initialized::Bool=false, sharedbuf::Bool=false) where {C<:Codec,S<:IO}
+    return TranscodingStream{C,S}(codec, stream, state, initialized, sharedbuf)
 end
 
 const DEFAULT_BUFFER_SIZE = 16 * 2^10  # 16KiB
@@ -127,7 +134,7 @@ function TranscodingStream(codec::Codec, stream::IO;
         state = State(bufsize)
     end
     state.stop_on_end = stop_on_end
-    return TranscodingStream(codec, stream, state)
+    return TranscodingStream(codec, stream, state; sharedbuf)
 end
 
 function Base.show(io::IO, stream::TranscodingStream)
@@ -284,16 +291,13 @@ function Base.seekstart(stream::TranscodingStream)
         emptybuffer!(stream.buffer1)
         emptybuffer!(stream.buffer2)
     end
-    p::Int64 = position(stream.stream)
-    start_offset = p - stream.state.underlying_position
     # use seekstart on underlying stream if possible
-    if iszero(start_offset)
+    if iszero(stream.offset)
         seekstart(stream.stream)
     else
-        seek(stream.stream, start_offset)
+        seek(stream.stream, stream.offset)
     end
     stream.state.position = 0
-    stream.state.underlying_position = 0
     return stream
 end
 
@@ -362,7 +366,7 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
         p += m
         GC.safepoint()
     end
-    if p < p_end && eof(stream)
+    if p < p_end
         throw(EOFError())
     end
     return
@@ -427,10 +431,6 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     mode = stream.state.mode
     if !(mode == :read || mode == :stop)
         changemode!(stream, :read)
-    end
-    if nbytes > stream.state.position
-        # TODO maybe negative position is OK
-        throw(ArgumentError("negative position"))
     end
     insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
     stream.state.position -= nbytes

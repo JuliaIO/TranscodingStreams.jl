@@ -111,16 +111,16 @@ end
     @testset "seekstart" begin
         data = Vector(b"abracadabra")
         source = IOBuffer(data)
-        seekend(source)
+        seekstart(source)
         stream = TranscodingStream(QuadrupleCodec(), source, bufsize=16)
         @test seekstart(stream) == stream
         @test position(stream) == 0
         @test read(stream, 5) == b"aaaab"
         @test position(stream) == 5
         @test seekstart(stream) == stream
-        @test_broken position(stream) == 0
+        @test position(stream) == 0
         @test read(stream, 5) == b"aaaab"
-        @test_broken position(stream) == 5
+        @test position(stream) == 5
     end
 
     @testset "seekstart doesn't delete data" begin

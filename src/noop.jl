@@ -41,7 +41,7 @@ function TranscodingStream(codec::Noop, stream::IO;
     end
     state = State(buffer, buffer)
     state.stop_on_end = stop_on_end
-    return TranscodingStream(codec, stream, state)
+    return TranscodingStream(codec, stream, state; sharedbuf)
 end
 
 function Base.seek(stream::NoopStream, pos::Integer)
@@ -50,11 +50,8 @@ function Base.seek(stream::NoopStream, pos::Integer)
         flushbuffer(stream)
     end
     initbuffer!(stream.buffer1)
-    p::Int64 = position(stream.stream)
-    start_offset = p - stream.state.underlying_position
-    seek(stream.stream, start_offset + pos)
+    seek(stream.stream, stream.offset + pos)
     stream.state.position = pos
-    stream.state.underlying_position = pos
     return stream
 end
 
@@ -64,16 +61,13 @@ function Base.seekstart(stream::NoopStream)
         flushbuffer(stream)
     end
     initbuffer!(stream.buffer1)
-    p::Int64 = position(stream.stream)
-    start_offset = p - stream.state.underlying_position
     # use seekstart on underlying stream if possible
-    if iszero(start_offset)
+    if iszero(stream.offset)
         seekstart(stream.stream)
     else
-        seek(stream.stream, start_offset)
+        seek(stream.stream, stream.offset)
     end
     stream.state.position = 0
-    stream.state.underlying_position = 0
     return stream
 end
 
@@ -83,37 +77,10 @@ function Base.seekend(stream::NoopStream)
         flushbuffer(stream)
     end
     initbuffer!(stream.buffer1)
-    p::Int64 = position(stream.stream)
-    start_offset = p - stream.state.underlying_position
     seekend(stream.stream)
     p_end::Int64 = position(stream.stream)
-    stream.state.position = p_end - start_offset
-    stream.state.underlying_position = p_end - start_offset
+    stream.state.position = p_end - stream.offset
     return stream
-end
-
-function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
-    changemode!(stream, :read)
-    buffer = stream.buffer1
-    p = output
-    p_end = output + nbytes
-    while p < p_end && !eof(stream)
-        if buffersize(buffer) > 0
-            m = min(buffersize(buffer), p_end - p)
-            copydata!(p, buffer, m)
-        else
-            # directly read data from the underlying stream
-            m = p_end - p
-            # TODO update stream.state.underlying_position
-            Base.unsafe_read(stream.stream, p, m)
-        end
-        stream.state.position += m
-        p += m
-    end
-    if p < p_end && eof(stream)
-        throw(EOFError())
-    end
-    return
 end
 
 function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
@@ -121,11 +88,17 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     buffer = stream.buffer1
     if marginsize(buffer) ≥ nbytes
         copydata!(buffer, input, nbytes)
+        stream.state.position += nbytes
+        if stream.sharedbuf
+            stream.stream.state.position += nbytes
+        end
         return Int(nbytes)
     else
         flushbuffer(stream)
         # directly write data to the underlying stream
-        return unsafe_write(stream.stream, input, nbytes)
+        m = unsafe_write(stream.stream, input, nbytes)
+        stream.state.position += m
+        m
     end
 end
 
@@ -172,11 +145,13 @@ function fillbuffer(stream::NoopStream; eager::Bool = false)
     changemode!(stream, :read)
     buffer = stream.buffer1
     @assert buffer === stream.buffer2
+    nfilled::Int = 0
     if stream.stream isa TranscodingStream && buffer === stream.buffer1
         # Delegate the operation when buffers are shared.
-        return fillbuffer(stream.stream, eager = eager)
+        nfilled = fillbuffer(stream.stream, eager = eager)
+
+        return nfilled
     end
-    nfilled::Int = 0
     while ((!eager && buffersize(buffer) == 0) || (eager && makemargin!(buffer, 0, eager = true) > 0)) && !eof(stream.stream)
         makemargin!(buffer, 1)
         nfilled += readdata!(stream.stream, buffer)
