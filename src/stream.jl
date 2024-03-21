@@ -246,44 +246,30 @@ function Base.skip(stream::TranscodingStream, offset::Integer)
     mode = stream.state.mode
     buffer1 = stream.buffer1
     skipped = 0
-    if mode === :read || mode === :stop
-        while !eof(stream) && buffersize(buffer1) < offset - skipped
-            n = buffersize(buffer1)
-            emptybuffer!(buffer1)
-            skipped += n
-        end
-        if eof(stream)
-            emptybuffer!(buffer1)
-        else
-            skipbuffer!(buffer1, offset - skipped)
-        end
+    while !eof(stream) && buffersize(buffer1) < offset - skipped
+        n = buffersize(buffer1)
+        emptybuffer!(buffer1)
+        skipped += n
+    end
+    if eof(stream)
+        stream.state.position += skipped
+        emptybuffer!(buffer1)
     else
-        # TODO: support skip in write mode
-        throw(ArgumentError("not in read mode"))
+        stream.state.position += offset
+        skipbuffer!(buffer1, offset - skipped)
     end
     return stream
 end
 
-"""
-    position(stream::TranscodingStream)
-
-Return the number of bytes read from or written to `stream`.
-
-Note that the returned value will be different from that of the underlying
-stream wrapped by `stream`.  This is because `stream` buffers some data and the
-codec may change the length of data.
-"""
-function Base.position(stream::TranscodingStream)
+function Base.position(stream::TranscodingStream)::Int64
     mode = stream.state.mode
-    @checkmode (:idle, :read, :write)
-    if mode === :idle
-        return Int64(0)
-    elseif mode === :read
-        return stats(stream).out
-    elseif mode === :write
-        return stats(stream).in
+    if mode === :close
+        throw(ArgumentError("stream closed"))
+    elseif mode === :panic
+        throw_panic_error()
+    else
+        stream.state.position
     end
-    @assert false "unreachable"
 end
 
 
@@ -298,7 +284,16 @@ function Base.seekstart(stream::TranscodingStream)
         emptybuffer!(stream.buffer1)
         emptybuffer!(stream.buffer2)
     end
-    seekstart(stream.stream)
+    p::Int64 = position(stream.stream)
+    start_offset = p - stream.state.underlying_position
+    # use seekstart on underlying stream if possible
+    if iszero(start_offset)
+        seekstart(stream.stream)
+    else
+        seek(stream.stream, start_offset)
+    end
+    stream.state.position = 0
+    stream.state.underlying_position = 0
     return stream
 end
 
@@ -310,6 +305,7 @@ function Base.read(stream::TranscodingStream, ::Type{UInt8})
     if eof(stream)
         throw(EOFError())
     end
+    stream.state.position += 1
     return readbyte!(stream.buffer1)
 end
 
@@ -341,6 +337,7 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
         if found
             if !keep
                 # skip the delimiter
+                stream.state.position += 1
                 skipbuffer!(buffer1, 1)
             end
             break
@@ -350,6 +347,7 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
         # special case: stream is empty
         ret = UInt8[]
     end
+    stream.state.position += length(ret)
     return ret
 end
 
@@ -359,6 +357,7 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
     p_end = output + nbytes
     while p < p_end && !eof(stream)
         m = min(buffersize(buffer), p_end - p)
+        stream.state.position += m
         copydata!(p, buffer, m)
         p += m
         GC.safepoint()
@@ -429,7 +428,12 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     if !(mode == :read || mode == :stop)
         changemode!(stream, :read)
     end
+    if nbytes > stream.state.position
+        # TODO maybe negative position is OK
+        throw(ArgumentError("negative position"))
+    end
     insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
+    stream.state.position -= nbytes
     return nothing
 end
 
@@ -448,12 +452,12 @@ function Base.write(stream::TranscodingStream, b::UInt8)
     if marginsize(stream.buffer1) == 0 && flushbuffer(stream) == 0
         return 0
     end
+    stream.state.position += 1
     return writebyte!(stream.buffer1, b)
 end
 
 function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :write)
-    state = stream.state
     buffer1 = stream.buffer1
     p = input
     p_end = p + nbytes
@@ -463,7 +467,9 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
         p += m
         GC.safepoint()
     end
-    return Int(p - input)
+    r = Int(p - input)
+    stream.state.position += r
+    r
 end
 
 # A singleton type of end token.

@@ -44,35 +44,17 @@ function TranscodingStream(codec::Noop, stream::IO;
     return TranscodingStream(codec, stream, state)
 end
 
-"""
-    position(stream::NoopStream)
-
-Get the current poition of `stream`.
-
-Note that this method may return a wrong position when
-- some data have been inserted by `TranscodingStreams.unread`, or
-- the position of the wrapped stream has been changed outside of this package.
-"""
-function Base.position(stream::NoopStream)
-    mode = stream.state.mode
-    @checkmode (:idle, :read, :write)
-    if mode === :idle
-        return Int64(0)
-    elseif mode === :write
-        return position(stream.stream) + buffersize(stream.buffer1)
-    elseif mode === :read
-        return position(stream.stream) - buffersize(stream.buffer1)
-    end
-    @assert false "unreachable"
-end
-
 function Base.seek(stream::NoopStream, pos::Integer)
     mode = stream.state.mode
     if mode === :write
         flushbuffer(stream)
     end
-    seek(stream.stream, pos)
     initbuffer!(stream.buffer1)
+    p::Int64 = position(stream.stream)
+    start_offset = p - stream.state.underlying_position
+    seek(stream.stream, start_offset + pos)
+    stream.state.position = pos
+    stream.state.underlying_position = pos
     return stream
 end
 
@@ -81,8 +63,17 @@ function Base.seekstart(stream::NoopStream)
     if mode === :write
         flushbuffer(stream)
     end
-    seekstart(stream.stream)
     initbuffer!(stream.buffer1)
+    p::Int64 = position(stream.stream)
+    start_offset = p - stream.state.underlying_position
+    # use seekstart on underlying stream if possible
+    if iszero(start_offset)
+        seekstart(stream.stream)
+    else
+        seek(stream.stream, start_offset)
+    end
+    stream.state.position = 0
+    stream.state.underlying_position = 0
     return stream
 end
 
@@ -91,8 +82,13 @@ function Base.seekend(stream::NoopStream)
     if mode === :write
         flushbuffer(stream)
     end
-    seekend(stream.stream)
     initbuffer!(stream.buffer1)
+    p::Int64 = position(stream.stream)
+    start_offset = p - stream.state.underlying_position
+    seekend(stream.stream)
+    p_end::Int64 = position(stream.stream)
+    stream.state.position = p_end - start_offset
+    stream.state.underlying_position = p_end - start_offset
     return stream
 end
 
@@ -108,8 +104,10 @@ function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
         else
             # directly read data from the underlying stream
             m = p_end - p
+            # TODO update stream.state.underlying_position
             Base.unsafe_read(stream.stream, p, m)
         end
+        stream.state.position += m
         p += m
     end
     if p < p_end && eof(stream)
