@@ -139,6 +139,19 @@
     @test read(stream) == b"foobar"
     close(stream)
 
+    stream = NoopStream(NoopStream(IOBuffer("foobar")); sharedbuf=false)
+    @test read(stream) == b"foobar"
+    close(stream)
+
+    stream = NoopStream(NoopStream(IOBuffer("foobar")); sharedbuf=false)
+    @test map(x->read(stream, UInt8), 1:6) == b"foobar"
+    @test eof(stream)
+    close(stream)
+
+    stream = NoopStream(NoopStream(NoopStream(IOBuffer("foobar")); sharedbuf=false))
+    @test read(stream) == b"foobar"
+    close(stream)
+
     # Two buffers are the same object.
     stream = NoopStream(IOBuffer("foo"))
     @test stream.buffer1 === stream.buffer2

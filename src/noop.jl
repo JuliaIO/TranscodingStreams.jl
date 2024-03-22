@@ -174,7 +174,7 @@ function fillbuffer(stream::NoopStream; eager::Bool = false)
     changemode!(stream, :read)
     buffer = stream.buffer1
     @assert buffer === stream.buffer2
-    if stream.stream isa TranscodingStream && buffer === stream.buffer1
+    if stream.stream isa TranscodingStream && buffer === stream.stream.buffer1
         # Delegate the operation when buffers are shared.
         return fillbuffer(stream.stream, eager = eager)
     end
