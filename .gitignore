@@ -11,3 +11,5 @@
 /Manifest.toml
 /docs/build/
 /docs/Manifest.toml
+/fuzz/test/
+/fuzz/Manifest.toml

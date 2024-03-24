@@ -243,6 +243,26 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         @test String(take!(sink)) == "[  ][ aabbcc ][ ddee ]"
     end
 
+    @testset "stop_on_end=true in nested streams" begin
+        s1 = DoubleFrameDecoderStream(DoubleFrameEncoderStream(
+            DoubleFrameDecoderStream(
+                DoubleFrameEncoderStream(IOBuffer(b"")); 
+                stop_on_end=true,
+            )
+        ))
+        @test_broken read(s1) == b""
+        @test_broken eof(s1)
+
+        s2 = NoopStream(
+            DoubleFrameDecoderStream(
+                DoubleFrameEncoderStream(IOBuffer(b"")); 
+                stop_on_end=true,
+            )
+        )
+        @test read(s2) == b""
+        @test_broken eof(s2)
+    end
+
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_write(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_lines(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
