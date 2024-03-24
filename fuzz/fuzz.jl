@@ -22,17 +22,14 @@ const datas = Data.Vectors(Data.Integers{UInt8}())
 const noopcodecs = Data.Vectors(Data.Just(Noop); max_size=3)
 
 function codecwrap(child)
-    map(child) do cs
+    map(child) do x
         DataType[
             DoubleFrameEncoder;
-            cs;
+            x;
             DoubleFrameDecoder;
         ]
-    end | map(child) do cs
-        DataType[
-            cs;
-            produce!(child);
-        ]
+    end | map(Data.Vectors(child; min_size=2, max_size=2)) do x
+        reduce(vcat, x)
     end
 end
 
