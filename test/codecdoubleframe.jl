@@ -250,8 +250,8 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
                 stop_on_end=true,
             )
         ))
-        @test_broken read(s1) == b""
-        @test_broken eof(s1)
+        @test read(s1) == b""
+        @test eof(s1)
 
         s2 = NoopStream(
             DoubleFrameDecoderStream(
@@ -260,7 +260,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
             )
         )
         @test read(s2) == b""
-        @test_broken eof(s2)
+        @test eof(s2)
     end
 
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)

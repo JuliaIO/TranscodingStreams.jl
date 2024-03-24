@@ -707,10 +707,15 @@ end
 
 # Read as much data as possbile from `input` to the margin of `output`.
 # This function will not block if `input` has buffered data.
-function readdata!(input::IO, output::Buffer)
+function readdata!(input::IO, output::Buffer)::Int
     if input isa TranscodingStream && input.buffer1 === output
         # Delegate the operation to the underlying stream for shared buffers.
-        return fillbuffer(input)
+        mode::Symbol = input.state.mode
+        if mode === :idle || mode === :read
+            return fillbuffer(input)
+        else
+            return 0
+        end
     end
     nread::Int = 0
     navail = bytesavailable(input)
