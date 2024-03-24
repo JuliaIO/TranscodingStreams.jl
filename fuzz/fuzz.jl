@@ -61,14 +61,20 @@ function wrap_stream(codecs_kws, io::IO)::IO
     end
 end
 
-@check db=false function read_byte_data(kws=read_codecs_kws, data=datas)
+@check function read_byte_data(
+        kws=read_codecs_kws,
+        data=datas,
+    )
     stream = wrap_stream(kws, IOBuffer(data))
     for i in eachindex(data)
         read(stream, UInt8) == data[i] || return false
     end
     eof(stream)
 end
-@check db=false function read_byte_data(kws=read_codecs_kws, data=datas)
+@check function read_data(
+        kws=read_codecs_kws,
+        data=datas,
+    )
     stream = wrap_stream(kws, IOBuffer(data))
     read(stream) == data || return false
     eof(stream)
@@ -87,7 +93,7 @@ end
 
 const write_codecs_kws = map(reverse, read_codecs_kws)
 
-@check db=false function write_data(
+@check function write_data(
         kws=write_codecs_kws,
         data=datas,
     )
@@ -95,7 +101,7 @@ const write_codecs_kws = map(reverse, read_codecs_kws)
     write(stream, data) == length(data) || return false
     take_all(stream) == data
 end
-@check db=false function write_byte_data(
+@check function write_byte_data(
         kws=write_codecs_kws,
         data=datas,
     )
