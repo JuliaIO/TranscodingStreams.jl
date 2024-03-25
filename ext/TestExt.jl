@@ -90,6 +90,7 @@ function TranscodingStreams.test_chunked_read(Encoder, Decoder)
             stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
             ok &= hash(read(stream)) == hash(chunk)
             ok &= eof(stream)
+            ok &= isreadable(stream)
             close(stream)
         end
         Test.@test ok

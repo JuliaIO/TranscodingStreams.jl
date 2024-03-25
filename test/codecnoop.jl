@@ -139,6 +139,19 @@
     @test read(stream) == b"foobar"
     close(stream)
 
+    stream = NoopStream(NoopStream(IOBuffer("foobar")); sharedbuf=false)
+    @test read(stream) == b"foobar"
+    close(stream)
+
+    stream = NoopStream(NoopStream(IOBuffer("foobar")); sharedbuf=false)
+    @test map(x->read(stream, UInt8), 1:6) == b"foobar"
+    @test eof(stream)
+    close(stream)
+
+    stream = NoopStream(NoopStream(NoopStream(IOBuffer("foobar")); sharedbuf=false))
+    @test read(stream) == b"foobar"
+    close(stream)
+
     # Two buffers are the same object.
     stream = NoopStream(IOBuffer("foo"))
     @test stream.buffer1 === stream.buffer2
@@ -227,18 +240,26 @@
     TranscodingStreams.test_roundtrip_write(NoopStream, NoopStream)
     TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
 
-    # switch write => read
-    stream = NoopStream(IOBuffer(b"foobar", read=true, write=true))
-    @test_throws ArgumentError begin
-        write(stream, b"xyz")
-        read(stream, 3)
+    @testset "switch write => read" begin
+        stream = NoopStream(IOBuffer(collect(b"foobar"), read=true, write=true))
+        @test isreadable(stream)
+        @test iswritable(stream)
+        @test_throws ArgumentError begin
+            write(stream, b"xyz")
+            read(stream, 3)
+        end
+        @test !isreadable(stream)
+        @test iswritable(stream)
     end
 
-    # switch read => write
-    stream = NoopStream(IOBuffer(b"foobar", read=true, write=true))
-    @test_throws ArgumentError begin
-        read(stream, 3)
-        write(stream, b"xyz")
+    @testset "switch read => write" begin
+        stream = NoopStream(IOBuffer(collect(b"foobar"), read=true, write=true))
+        @test_throws ArgumentError begin
+            read(stream, 3)
+            write(stream, b"xyz")
+        end
+        @test isreadable(stream)
+        @test !iswritable(stream)
     end
 
     stream = NoopStream(IOBuffer(""))
@@ -322,6 +343,8 @@
         end
         @test position(stream) == position(sink) == position(iob)
         close(stream)
+        @test_throws ArgumentError position(stream)
+        @test_throws ArgumentError TranscodingStreams.stats(stream)
         close(iob)
 
         mktemp() do path, sink

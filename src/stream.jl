@@ -103,7 +103,7 @@ julia> using TranscodingStreams
 
 julia> file = open(joinpath(dirname(dirname(pathof(TranscodingStreams))), "README.md"));
 
-julia> stream = NoopStream(file);
+julia> stream = TranscodingStream(Noop(), file);
 
 julia> readline(file)
 "TranscodingStreams.jl"
@@ -154,16 +154,8 @@ function splitkwargs(kwargs, keys)
 end
 @specialize
 
-# Check that mode is valid.
-macro checkmode(validmodes)
-    mode = esc(:mode)
-    validmodes = Any[arg for arg in validmodes.args]
-    quote
-        if !$(foldr((x, y) -> :($(mode) === $x || $(y)), validmodes, init=false))
-            throw(ArgumentError(string("invalid mode :", $(mode))))
-        end
-    end
-end
+# throw ArgumentError that mode is invalid.
+throw_invalid_mode(mode) = throw(ArgumentError(string("invalid mode :", mode)))
 
 
 # Base IO Functions
@@ -180,6 +172,16 @@ end
 
 function Base.isopen(stream::TranscodingStream)
     return stream.state.mode != :close && stream.state.mode != :panic
+end
+
+function Base.isreadable(stream::TranscodingStream)::Bool
+    mode = stream.state.mode
+    (mode === :idle || mode === :read || mode === :stop) && isreadable(stream.stream)
+end
+
+function Base.iswritable(stream::TranscodingStream)::Bool
+    mode = stream.state.mode
+    (mode === :idle || mode === :write) && iswritable(stream.stream)
 end
 
 function Base.close(stream::TranscodingStream)
@@ -284,13 +286,14 @@ codec may change the length of data.
 """
 function Base.position(stream::TranscodingStream)
     mode = stream.state.mode
-    @checkmode (:idle, :read, :write)
     if mode === :idle
         return Int64(0)
     elseif mode === :read
         return stats(stream).out
     elseif mode === :write
         return stats(stream).in
+    else
+        throw_invalid_mode(mode)
     end
     @assert false "unreachable"
 end
@@ -301,11 +304,13 @@ end
 
 function Base.seekstart(stream::TranscodingStream)
     mode = stream.state.mode
-    @checkmode (:idle, :read)
-    if mode == :read
+    if mode === :read
         callstartproc(stream, mode)
         emptybuffer!(stream.buffer1)
         emptybuffer!(stream.buffer2)
+    elseif mode === :idle
+    else
+        throw_invalid_mode(mode)
     end
     seekstart(stream.stream)
     return stream
@@ -313,11 +318,13 @@ end
 
 function Base.seekend(stream::TranscodingStream)
     mode = stream.state.mode
-    @checkmode (:idle, :read)
     if mode == :read
         callstartproc(stream, mode)
         emptybuffer!(stream.buffer1)
         emptybuffer!(stream.buffer2)
+    elseif mode === :idle
+    else
+        throw_invalid_mode(mode)
     end
     seekend(stream.stream)
     return stream
@@ -571,23 +578,22 @@ Create an I/O statistics object of `stream`.
 function stats(stream::TranscodingStream)
     state = stream.state
     mode = state.mode
-    @checkmode (:idle, :read, :write)
     buffer1 = stream.buffer1
     buffer2 = stream.buffer2
-    if mode == :idle
+    if mode === :idle
         transcoded_in = transcoded_out = in = out = 0
-    elseif mode == :read
+    elseif mode === :read
         transcoded_in = buffer2.transcoded
         transcoded_out = buffer1.transcoded
         in = transcoded_in + buffersize(buffer2)
         out = transcoded_out - buffersize(buffer1)
-    elseif mode == :write
+    elseif mode === :write
         transcoded_in = buffer1.transcoded
         transcoded_out = buffer2.transcoded
         in = transcoded_in + buffersize(buffer1)
         out = transcoded_out - buffersize(buffer2)
     else
-        @assert false "unreachable"
+        throw_invalid_mode(mode)
     end
     return Stats(in, out, transcoded_in, transcoded_out)
 end
