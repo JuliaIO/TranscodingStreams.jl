@@ -186,11 +186,14 @@ end
 
 function Base.close(stream::TranscodingStream)
     mode = stream.state.mode
-    if mode != :panic
-        changemode!(stream, :close)
-    end
-    if !stream.state.stop_on_end
-        close(stream.stream)
+    try
+        if mode != :panic
+            changemode!(stream, :close)
+        end
+    finally
+        if !stream.state.stop_on_end
+            close(stream.stream)
+        end
     end
     return nothing
 end
