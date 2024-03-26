@@ -23,10 +23,10 @@ end
 DoubleFrameEncoder() = DoubleFrameEncoder(Ref(false), Ref(false), Ref(false))
 
 function TranscodingStreams.process(
-        codec  :: DoubleFrameEncoder,
-        input  :: TranscodingStreams.Memory,
-        output :: TranscodingStreams.Memory,
-        error_ref  :: TranscodingStreams.Error,
+        codec     :: DoubleFrameEncoder,
+        input     :: TranscodingStreams.Memory,
+        output    :: TranscodingStreams.Memory,
+        error_ref :: TranscodingStreams.Error,
     )
     if input.size == 0
         codec.got_stop_msg[] = true
@@ -92,10 +92,10 @@ end
 DoubleFrameDecoder() = DoubleFrameDecoder(Ref(1), Ref(0x00), Ref(0x00))
 
 function TranscodingStreams.process(
-        codec  :: DoubleFrameDecoder,
-        input  :: TranscodingStreams.Memory,
-        output :: TranscodingStreams.Memory,
-        error_ref  :: TranscodingStreams.Error,
+        codec     :: DoubleFrameDecoder,
+        input     :: TranscodingStreams.Memory,
+        output    :: TranscodingStreams.Memory,
+        error_ref :: TranscodingStreams.Error,
     )
     Δin::Int = 0
     Δout::Int = 0
