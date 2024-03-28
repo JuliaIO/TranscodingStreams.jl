@@ -195,6 +195,14 @@
     @test readavailable(stream) == b"oobar"
     close(stream)
 
+    # issue #193
+    stream = NoopStream(IOBuffer("foobar"))
+    data = UInt8[]
+    @test readbytes!(stream, data, 1) === 1
+    @test data == b"f"
+    @test position(stream) == 1
+    close(stream)
+
     data = b""
     @test transcode(Noop, data)  == data
     @test transcode(Noop, data) !== data
