@@ -113,16 +113,16 @@ end
     @testset "seekstart" begin
         data = Vector(b"abracadabra")
         source = IOBuffer(data)
-        seekend(source)
+        seekstart(source)
         stream = TranscodingStream(QuadrupleCodec(), source, bufsize=16)
         @test seekstart(stream) == stream
         @test position(stream) == 0
         @test read(stream, 5) == b"aaaab"
         @test position(stream) == 5
         @test seekstart(stream) == stream
-        @test_broken position(stream) == 0
+        @test position(stream) == 0
         @test read(stream, 5) == b"aaaab"
-        @test_broken position(stream) == 5
+        @test position(stream) == 5
     end
 
     @testset "seekstart doesn't delete data" begin
@@ -167,17 +167,17 @@ end
         sink = IOBuffer()
         stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
         write(stream, "x")
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         @test_throws ArgumentError read(stream, UInt8)
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         write(stream, "y")
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         write(stream, TranscodingStreams.TOKEN_END)
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         flush(stream)
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         @test take!(sink) == b"xxxxyyyy"
         close(stream)
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
     end
 end

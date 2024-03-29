@@ -44,91 +44,92 @@ function TranscodingStream(codec::Noop, stream::IO;
     return TranscodingStream(codec, stream, state)
 end
 
-"""
-    position(stream::NoopStream)
-
-Get the current poition of `stream`.
-
-Note that this method may return a wrong position when
-- some data have been inserted by `TranscodingStreams.unread`, or
-- the position of the wrapped stream has been changed outside of this package.
-"""
-function Base.position(stream::NoopStream)
+function Base.position(stream::NoopStream)::Int64
     mode = stream.state.mode
-    if mode === :idle
-        return Int64(0)
-    elseif mode === :write
-        return position(stream.stream) + buffersize(stream.buffer1)
-    elseif mode === :read
-        return position(stream.stream) - buffersize(stream.buffer1)
+    if has_sharedbuf(stream)
+        if mode === :idle || mode === :read || mode === :write
+            return position(stream.stream) - stream.state.offset
+        else
+            throw_invalid_mode(mode)
+        end
     else
-        throw_invalid_mode(mode)
+        buffer1 = stream.buffer1
+        if mode === :idle
+            return Int64(0)
+        elseif mode === :write
+            return buffer1.shifted + buffer1.marginpos - 1
+        elseif mode === :read
+            return buffer1.shifted + buffer1.bufferpos - 1
+        else
+            throw_invalid_mode(mode)
+        end
     end
-    @assert false "unreachable"
 end
 
 function Base.seek(stream::NoopStream, pos::Integer)
-    mode = stream.state.mode
-    if mode === :write
-        flushbuffer(stream)
+    if has_sharedbuf(stream)
+        seek(stream.stream, stream.state.offset + pos)
+    else
+        mode = stream.state.mode
+        if mode === :write
+            flushbuffer(stream)
+        end
+        seek(stream.stream, stream.state.offset + pos)
+        initbuffer!(stream.buffer1)
+        stream.buffer1.shifted = pos
     end
-    seek(stream.stream, pos)
-    initbuffer!(stream.buffer1)
+    # update offset incase seek decided to go somewhere unexpected
+    stream.state.offset = position(stream.stream) - pos
     return stream
 end
 
 function Base.seekstart(stream::NoopStream)
-    mode = stream.state.mode
-    if mode === :write
-        flushbuffer(stream)
+    if has_sharedbuf(stream)
+        seek_offset(stream)
+    else
+        mode = stream.state.mode
+        if mode === :write
+            flushbuffer(stream)
+        end
+        seek_offset(stream)
+        initbuffer!(stream.buffer1)
     end
-    seekstart(stream.stream)
-    initbuffer!(stream.buffer1)
+    # update offset incase seek decided to go somewhere unexpected
+    stream.state.offset = position(stream.stream)
     return stream
 end
 
 function Base.seekend(stream::NoopStream)
-    mode = stream.state.mode
-    if mode === :write
-        flushbuffer(stream)
-    end
-    seekend(stream.stream)
-    initbuffer!(stream.buffer1)
-    return stream
-end
-
-function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
-    changemode!(stream, :read)
-    buffer = stream.buffer1
-    p = output
-    p_end = output + nbytes
-    while p < p_end && !eof(stream)
-        if buffersize(buffer) > 0
-            m = min(buffersize(buffer), p_end - p)
-            copydata!(p, buffer, m)
-        else
-            # directly read data from the underlying stream
-            m = p_end - p
-            Base.unsafe_read(stream.stream, p, m)
+    if has_sharedbuf(stream)
+        seekend(stream.stream)
+    else
+        mode = stream.state.mode
+        if mode === :write
+            flushbuffer(stream)
         end
-        p += m
+        seekend(stream.stream)
+        initbuffer!(stream.buffer1)
+        stream.buffer1.shifted = position(stream.stream) - stream.state.offset
     end
-    if p < p_end && eof(stream)
-        throw(EOFError())
-    end
-    return
+    return stream
 end
 
 function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :write)
-    buffer = stream.buffer1
-    if marginsize(buffer) ≥ nbytes
-        copydata!(buffer, input, nbytes)
-        return Int(nbytes)
-    else
-        flushbuffer(stream)
-        # directly write data to the underlying stream
+    if has_sharedbuf(stream)
         return unsafe_write(stream.stream, input, nbytes)
+    else
+        buffer = stream.buffer1
+        if marginsize(buffer) ≥ nbytes
+            copydata!(buffer, input, nbytes)
+            return Int(nbytes)
+        else
+            flushbuffer(stream)
+            # directly write data to the underlying stream
+            n = unsafe_write(stream.stream, input, nbytes)
+            buffer.shifted += n
+            return n
+        end
     end
 end
 
@@ -147,20 +148,18 @@ end
 function stats(stream::NoopStream)
     state = stream.state
     mode = state.mode
-    buffer = stream.buffer1
-    @assert buffer === stream.buffer2
     if mode === :idle
         consumed = supplied = 0
     elseif mode === :read
-        supplied = buffer.transcoded
-        consumed = supplied - buffersize(buffer)
+        supplied = position(stream.stream) - stream.state.offset
+        consumed = position(stream)
     elseif mode === :write
-        supplied = buffer.transcoded + buffersize(buffer)
-        consumed = buffer.transcoded
+        supplied = position(stream)
+        consumed = position(stream.stream) - stream.state.offset
     else
         throw_invalid_mode(mode)
     end
-    return Stats(consumed, supplied, supplied, supplied)
+    return Stats(supplied, consumed, supplied, supplied)
 end
 
 
@@ -170,26 +169,26 @@ end
 # These methods are overloaded for the `Noop` codec because it has only one
 # buffer for efficiency.
 
-function fillbuffer(stream::NoopStream; eager::Bool = false)::Int
+@noinline function sloweof(stream::NoopStream)::Bool
     changemode!(stream, :read)
     buffer = stream.buffer1
-    @assert buffer === stream.buffer2
-    if stream.stream isa TranscodingStream && buffer === stream.stream.buffer1
-        # Delegate the operation when buffers are shared.
-        underlying_mode::Symbol = stream.stream.state.mode
-        if underlying_mode === :idle || underlying_mode === :read
-            return fillbuffer(stream.stream, eager = eager)
-        else
-            return 0
+    iszero(buffersize(buffer)) || return false
+    # fill buffer1
+    eof(stream.stream) && return true
+    if !has_sharedbuf(stream)
+        makemargin!(buffer, 1)
+        navail = bytesavailable(stream.stream)
+        if navail == 0
+            writebyte!(buffer, read(stream.stream, UInt8))
+            navail = bytesavailable(stream.stream)
+        end
+        n = min(navail, marginsize(buffer))
+        if !iszero(n)
+            GC.@preserve buffer Base.unsafe_read(stream.stream, marginptr(buffer), n)
+            supplied!(buffer, n)
         end
     end
-    nfilled::Int = 0
-    while ((!eager && buffersize(buffer) == 0) || (eager && makemargin!(buffer, 0, eager = true) > 0)) && !eof(stream.stream)
-        makemargin!(buffer, 1)
-        nfilled += readdata!(stream.stream, buffer)
-    end
-    buffer.transcoded += nfilled
-    return nfilled
+    return false
 end
 
 function flushbuffer(stream::NoopStream, all::Bool=false)
@@ -205,11 +204,11 @@ function flushbuffer(stream::NoopStream, all::Bool=false)
         nflushed += writedata!(stream.stream, buffer)
         makemargin!(buffer, 0)
     end
-    buffer.transcoded += nflushed
+    # buffer.transcoded += nflushed
     return nflushed
 end
 
 function flushuntilend(stream::NoopStream)
-    stream.buffer1.transcoded += writedata!(stream.stream, stream.buffer1)
+    writedata!(stream.stream, stream.buffer1)
     return
 end

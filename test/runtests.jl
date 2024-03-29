@@ -17,7 +17,7 @@ using TranscodingStreams:
     marginptr, marginsize, marginmem,
     readbyte!, writebyte!,
     #=ismarked,=# mark!, unmark!, reset!,
-    makemargin!, emptybuffer!
+    makemargin!
 
 @testset "Buffer" begin
     buf = Buffer(1024)
@@ -66,8 +66,6 @@ using TranscodingStreams:
     writebyte!(buf, 0x99)
     margin_size = makemargin!(buf, 20) 
     @test margin_size >= 20
-    emptybuffer!(buf)
-    @test makemargin!(buf, 0) === margin_size + 2
 end
 
 @testset "Memory" begin

@@ -14,7 +14,7 @@
 #   position   1   markpos     bufferpos   marginpos  lastindex(data)
 #
 # `markpos` is positive iff there are marked data; otherwise it is set to zero.
-# `markpos` ≤ `bufferpos` ≤ `marginpos` must hold whenever possible.
+# `markpos` ≤ `marginpos` and `bufferpos` ≤ `marginpos` must hold.
 
 mutable struct Buffer
     # data and positions (see above)
@@ -23,8 +23,9 @@ mutable struct Buffer
     bufferpos::Int
     marginpos::Int
 
-    # the total number of transcoded bytes
-    transcoded::Int64
+    # total number of bytes shifted by makemargin!
+    # used to keep track of stream position
+    shifted::Int64
 
     function Buffer(data::Vector{UInt8}, marginpos::Integer=length(data)+1)
         @assert 1 <= marginpos <= length(data)+1
@@ -93,33 +94,21 @@ function reset!(buf::Buffer)
 end
 
 # Notify that `n` bytes are consumed from `buf`.
-function consumed!(buf::Buffer, n::Integer; transcode::Bool = false)
+function consumed!(buf::Buffer, n::Integer)
     buf.bufferpos += n
-    if transcode
-        buf.transcoded += n
-    end
     return buf
 end
 
 # Notify that `n` bytes are supplied to `buf`.
-function supplied!(buf::Buffer, n::Integer; transcode::Bool = false)
+function supplied!(buf::Buffer, n::Integer)
     buf.marginpos += n
-    if transcode
-        buf.transcoded += n
-    end
     return buf
 end
 
 # Discard buffered data and initialize positions.
 function initbuffer!(buf::Buffer)
-    buf.markpos = buf.transcoded = 0
+    buf.markpos = buf.shifted = 0
     buf.bufferpos = buf.marginpos = 1
-    return buf
-end
-
-# Remove all buffered data.
-function emptybuffer!(buf::Buffer)
-    buf.marginpos = buf.bufferpos
     return buf
 end
 
@@ -128,6 +117,7 @@ end
 function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
     @assert minsize ≥ 0
     if buffersize(buf) == 0 && buf.markpos == 0
+        buf.shifted += buf.bufferpos - 1
         buf.bufferpos = buf.marginpos = 1
     end
     if marginsize(buf) < minsize || eager
@@ -138,10 +128,9 @@ function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
             datapos = buf.bufferpos
             datasize = buffersize(buf)
         else
-            # Else, we must not consume marked data
-            # (Since markpos ≤ bufferpos, we do not consume buffered data either) 
-            datapos = buf.markpos
-            datasize = buf.marginpos - buf.markpos
+            # Else, we must not consume marked data or buffered data
+            datapos = min(buf.markpos, buf.bufferpos)
+            datasize = buf.marginpos - datapos
         end
         # Shift data left in buffer to make space for new data
         copyto!(buf.data, 1, buf.data, datapos, datasize)
@@ -151,6 +140,7 @@ function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
         end
         buf.bufferpos -= shift
         buf.marginpos -= shift
+        buf.shifted += shift
     end
     # If there is still not enough margin, we expand buffer.
     # At least enough for minsize, but otherwise 1.5 times
@@ -203,10 +193,29 @@ end
 
 # Insert data to the current buffer.
 function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
-    makemargin!(buf, nbytes)
-    copyto!(buf.data, buf.bufferpos + nbytes, buf.data, buf.bufferpos, buffersize(buf))
+    front_space_needed = nbytes - buf.bufferpos + 1
+    if front_space_needed > 0
+        if front_space_needed > marginsize(buf)
+            # make more space
+            resize!(buf.data, buf.marginpos + front_space_needed - 1)
+        end
+        @assert front_space_needed ≤ marginsize(buf)
+        # make space in front by shifting data to margin
+        for i in (buf.marginpos-1 + front_space_needed):-1:(1+nbytes)
+            buf.data[i] = buf.data[i-front_space_needed]
+        end
+        if buf.markpos > 0
+            buf.markpos += front_space_needed
+        end
+        buf.bufferpos += front_space_needed
+        buf.marginpos += front_space_needed
+        buf.shifted -= front_space_needed
+    end
+    # here is the really spooky part where sometimes `markpos` > `bufferpos`
+    buf.bufferpos -= nbytes
+    @assert buf.bufferpos > 0
+    @assert buffersize(buf) ≥ nbytes
     GC.@preserve buf unsafe_copyto!(bufferptr(buf), data, nbytes)
-    supplied!(buf, nbytes)
     return buf
 end
 

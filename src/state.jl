@@ -9,12 +9,12 @@ See Developer's notes for details.
 """
 mutable struct State
     # current stream mode
-    mode::Symbol  # {:idle, :read, :write, :stop, :close, :panic}
+    mode::Symbol  # {:idle, :read, :write, :close, :panic}
 
     # return code of the last method call
     code::Symbol  # {:ok, :end, :error}
 
-    # flag to go :stop on :end while reading
+    # flag to go eof on :end while reading
     stop_on_end::Bool
 
     # exception thrown while data processing
@@ -24,8 +24,11 @@ mutable struct State
     buffer1::Buffer
     buffer2::Buffer
 
+    # relative start position in underlying stream
+    offset::Int64
+
     function State(buffer1::Buffer, buffer2::Buffer)
-        return new(:idle, :ok, false, Error(), buffer1, buffer2)
+        return new(:idle, :ok, false, Error(), buffer1, buffer2, 0)
     end
 end
 

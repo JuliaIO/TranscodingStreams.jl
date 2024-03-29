@@ -34,6 +34,7 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
         if !initialized
             initialize(codec)
         end
+        state.offset = position(stream)
         return new(codec, stream, state, state.buffer1, state.buffer2)
     end
 end
@@ -157,6 +158,11 @@ end
 # throw ArgumentError that mode is invalid.
 throw_invalid_mode(mode) = throw(ArgumentError(string("invalid mode :", mode)))
 
+# Return true if the stream shares buffers with underlying stream
+function has_sharedbuf(stream::TranscodingStream)::Bool
+    stream.stream isa TranscodingStream && stream.buffer2 === stream.stream.buffer1
+end
+
 
 # Base IO Functions
 # -----------------
@@ -176,7 +182,7 @@ end
 
 function Base.isreadable(stream::TranscodingStream)::Bool
     mode = stream.state.mode
-    (mode === :idle || mode === :read || mode === :stop) && isreadable(stream.stream)
+    (mode === :idle || mode === :read) && isreadable(stream.stream)
 end
 
 function Base.iswritable(stream::TranscodingStream)::Bool
@@ -202,75 +208,76 @@ function Base.eof(stream::TranscodingStream)
     eof = buffersize(stream.buffer1) == 0
     state = stream.state
     mode = state.mode
-    if !(mode == :read || mode == :stop) || eof
+    if mode !== :read || eof
         eof = sloweof(stream)
     end
     return eof
 end
-@noinline function sloweof(stream::TranscodingStream)
-    while true
-        state = stream.state
-        mode = state.mode
-        if mode == :read
-            return (buffersize(stream.buffer1) == 0 && fillbuffer(stream) == 0)
-        elseif mode == :idle
-            changemode!(stream, :read)
-            continue
-        elseif mode == :write
-            return eof(stream.stream)
-        elseif mode == :close
-            return true
-        elseif mode == :stop
-            return buffersize(stream.buffer1) == 0
-        elseif mode == :panic
-            throw_panic_error()
+@noinline function sloweof(stream::TranscodingStream)::Bool
+    changemode!(stream, :read)
+    buffer1 = stream.buffer1
+    buffer2 = stream.buffer2
+    state = stream.state
+    stop_on_end = state.stop_on_end
+    # fill buffer1
+    while iszero(buffersize(buffer1))
+        if state.code == :end
+            if stop_on_end || (iszero(buffersize(buffer2)) && eof(stream.stream))
+                return true
+            end
+            callstartproc(stream, :read)
         end
-        @assert false
+        # fill buffer2 if underlying stream isn't eof.
+        # if stream is sharing a buffer with stream.stream
+        # eof(stream.stream) will fill buffer2 if there is any data left.
+        if !eof(stream.stream) && !has_sharedbuf(stream)
+            makemargin!(buffer2, 1)
+            navail = bytesavailable(stream.stream)
+            if navail == 0
+                writebyte!(buffer2, read(stream.stream, UInt8))
+                navail = bytesavailable(stream.stream)
+            end
+            n = min(navail, marginsize(buffer2))
+            if !iszero(n)
+                GC.@preserve buffer2 Base.unsafe_read(stream.stream, marginptr(buffer2), n)
+                supplied!(buffer2, n)
+            end
+        end
+        _, Δout = callprocess(stream, buffer2, buffer1)
     end
+    return false
 end
 
 function Base.ismarked(stream::TranscodingStream)
-    checkmode(stream)
+    changemode!(stream, :read)
     return ismarked(stream.buffer1)
 end
 
 function Base.mark(stream::TranscodingStream)
-    checkmode(stream)
+    changemode!(stream, :read)
     return mark!(stream.buffer1)
 end
 
 function Base.unmark(stream::TranscodingStream)
-    checkmode(stream)
+    changemode!(stream, :read)
     return unmark!(stream.buffer1)
 end
 
 function Base.reset(stream::TranscodingStream)
-    checkmode(stream)
+    changemode!(stream, :read)
     return reset!(stream.buffer1)
 end
 
 function Base.skip(stream::TranscodingStream, offset::Integer)
-    checkmode(stream)
     if offset < 0
         throw(ArgumentError("negative offset"))
     end
-    mode = stream.state.mode
     buffer1 = stream.buffer1
     skipped = 0
-    if mode === :read || mode === :stop
-        while !eof(stream) && buffersize(buffer1) < offset - skipped
-            n = buffersize(buffer1)
-            emptybuffer!(buffer1)
-            skipped += n
-        end
-        if eof(stream)
-            emptybuffer!(buffer1)
-        else
-            skipbuffer!(buffer1, offset - skipped)
-        end
-    else
-        # TODO: support skip in write mode
-        throw(ArgumentError("not in read mode"))
+    while !eof(stream) && skipped < offset
+        n = min(buffersize(buffer1), offset - skipped)
+        skipbuffer!(buffer1, n)
+        skipped += n
     end
     return stream
 end
@@ -284,14 +291,15 @@ Note that the returned value will be different from that of the underlying
 stream wrapped by `stream`.  This is because `stream` buffers some data and the
 codec may change the length of data.
 """
-function Base.position(stream::TranscodingStream)
+function Base.position(stream::TranscodingStream)::Int64
     mode = stream.state.mode
+    buffer1 = stream.buffer1
     if mode === :idle
         return Int64(0)
     elseif mode === :read
-        return stats(stream).out
+        return buffer1.shifted + buffer1.bufferpos - 1
     elseif mode === :write
-        return stats(stream).in
+        return buffer1.shifted + buffer1.marginpos - 1
     else
         throw_invalid_mode(mode)
     end
@@ -302,31 +310,32 @@ end
 # Seek Operations
 # ---------------
 
-function Base.seekstart(stream::TranscodingStream)
-    mode = stream.state.mode
-    if mode === :read
-        callstartproc(stream, mode)
-        emptybuffer!(stream.buffer1)
-        emptybuffer!(stream.buffer2)
-    elseif mode === :idle
+# Seek the underlying stream to the position where `stream` was made.
+# Try to use seekstart if possible.
+function seek_offset(stream::TranscodingStream)
+    if iszero(stream.state.offset)
+        seekstart(stream.stream)
     else
-        throw_invalid_mode(mode)
+        seek(stream.stream, stream.state.offset)
     end
-    seekstart(stream.stream)
-    return stream
+    nothing
 end
 
-function Base.seekend(stream::TranscodingStream)
+function Base.seekstart(stream::TranscodingStream)
     mode = stream.state.mode
-    if mode == :read
-        callstartproc(stream, mode)
-        emptybuffer!(stream.buffer1)
-        emptybuffer!(stream.buffer2)
-    elseif mode === :idle
-    else
+    if !(mode === :read || mode === :idle)
         throw_invalid_mode(mode)
     end
-    seekend(stream.stream)
+    if mode === :read
+        seek_offset(stream)
+        callstartproc(stream, mode)
+        initbuffer!(stream.buffer1)
+        if !has_sharedbuf(stream)
+            initbuffer!(stream.buffer2)
+        end
+    end
+    # update offset incase seek decided to go somewhere unexpected
+    stream.state.offset = position(stream.stream)
     return stream
 end
 
@@ -335,21 +344,13 @@ end
 # --------------
 
 function Base.read(stream::TranscodingStream, ::Type{UInt8})
-    # eof and ready_to_read! are inlined here because ready_to_read! is very slow and eof is broken
-    eof = buffersize(stream.buffer1) == 0
-    state = stream.state
-    mode = state.mode
-    if !(mode == :read || mode == :stop)
-        changemode!(stream, :read)
-    end
-    if eof && sloweof(stream)
+    if eof(stream)
         throw(EOFError())
     end
     return readbyte!(stream.buffer1)
 end
 
 function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=false)
-    ready_to_read!(stream)
     buffer1 = stream.buffer1
     # delay initialization so as to reduce the number of buffer resizes
     local ret::Vector{UInt8}
@@ -390,61 +391,24 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
 end
 
 function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes::UInt)
-    ready_to_read!(stream)
     buffer = stream.buffer1
     p = output
     p_end = output + nbytes
-    while p < p_end && !eof(stream)
+    while !eof(stream) && p < p_end
         m = min(buffersize(buffer), p_end - p)
         copydata!(p, buffer, m)
         p += m
         GC.safepoint()
     end
-    if p < p_end && eof(stream)
+    if p < p_end
         throw(EOFError())
     end
     return
 end
 
-function Base.readbytes!(stream::TranscodingStream, b::DenseArray{UInt8}, nb=length(b))
-    ready_to_read!(stream)
-    filled = 0
-    resized = false
-    while filled < nb && !eof(stream)
-        if length(b) == filled
-            resize!(b, min(max(length(b) * 2, 8), nb))
-            resized = true
-        end
-        filled += GC.@preserve b unsafe_read(stream, pointer(b, filled+1), min(length(b), nb)-filled)
-    end
-    if resized
-        resize!(b, filled)
-    end
-    return filled
-end
-
 function Base.bytesavailable(stream::TranscodingStream)
-    ready_to_read!(stream)
+    changemode!(stream, :read)
     return buffersize(stream.buffer1)
-end
-
-function Base.readavailable(stream::TranscodingStream)
-    n = bytesavailable(stream)
-    data = Vector{UInt8}(undef, n)
-    GC.@preserve data unsafe_read(stream, pointer(data), n)
-    return data
-end
-
-"""
-    unread(stream::TranscodingStream, data::Vector{UInt8})
-
-Insert `data` to the current reading position of `stream`.
-
-The next `read(stream, sizeof(data))` call will read data that are just
-inserted.
-"""
-function unread(stream::TranscodingStream, data::ByteData)
-    GC.@preserve data unsafe_unread(stream, pointer(data), sizeof(data))
 end
 
 """
@@ -459,18 +423,9 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     if nbytes < 0
         throw(ArgumentError("negative nbytes"))
     end
-    ready_to_read!(stream)
+    changemode!(stream, :read)
     insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
     return nothing
-end
-
-# Ready to read data from the stream.
-function ready_to_read!(stream::TranscodingStream)
-    mode = stream.state.mode
-    if !(mode == :read || mode == :stop)
-        changemode!(stream, :read)
-    end
-    return
 end
 
 
@@ -583,15 +538,23 @@ function stats(stream::TranscodingStream)
     if mode === :idle
         transcoded_in = transcoded_out = in = out = 0
     elseif mode === :read
-        transcoded_in = buffer2.transcoded
-        transcoded_out = buffer1.transcoded
-        in = transcoded_in + buffersize(buffer2)
-        out = transcoded_out - buffersize(buffer1)
+        in = position(stream.stream) - stream.state.offset
+        out = position(stream)
+        transcoded_in = if has_sharedbuf(stream)
+            in # don't double count buffer2 if it is shared
+        else
+            in - buffersize(buffer2)
+        end
+        transcoded_out = out + buffersize(buffer1)
     elseif mode === :write
-        transcoded_in = buffer1.transcoded
-        transcoded_out = buffer2.transcoded
-        in = transcoded_in + buffersize(buffer1)
-        out = transcoded_out - buffersize(buffer2)
+        in = position(stream)
+        out = position(stream.stream) - stream.state.offset
+        transcoded_in = in - buffersize(buffer1)
+        transcoded_out = if has_sharedbuf(stream)
+            out # don't double count buffer2 if it is shared
+        else
+            out + buffersize(buffer2)
+        end
     else
         throw_invalid_mode(mode)
     end
@@ -601,26 +564,6 @@ end
 
 # Buffering
 # ---------
-
-function fillbuffer(stream::TranscodingStream; eager::Bool = false)
-    changemode!(stream, :read)
-    buffer1 = stream.buffer1
-    buffer2 = stream.buffer2
-    nfilled::Int = 0
-    while ((!eager && buffersize(buffer1) == 0) || (eager && makemargin!(buffer1, 0, eager = true) > 0)) && stream.state.mode != :stop
-        if stream.state.code == :end
-            if buffersize(buffer2) == 0 && eof(stream.stream)
-                break
-            end
-            callstartproc(stream, :read)
-        end
-        makemargin!(buffer2, 1)
-        readdata!(stream.stream, buffer2)
-        _, Δout = callprocess(stream, buffer2, buffer1)
-        nfilled += Δout
-    end
-    return nfilled
-end
 
 function flushbuffer(stream::TranscodingStream, all::Bool=false)
     changemode!(stream, :write)
@@ -685,17 +628,13 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
         input_delta = Δin,
         output_delta = Δout,
     )
-    consumed!(inbuf, Δin, transcode = true)
-    supplied!(outbuf, Δout, transcode = true)
+    consumed!(inbuf, Δin)
+    supplied!(outbuf, Δout)
     if state.code == :error
         changemode!(stream, :panic)
     elseif state.code == :ok && Δin == Δout == 0
         # When no progress, expand the output buffer.
         makemargin!(outbuf, max(16, marginsize(outbuf) * 2))
-    elseif state.code == :end && state.stop_on_end
-        if stream.state.mode == :read
-            changemode!(stream, :stop)
-        end
     end
     return Δin, Δout
 end
@@ -704,30 +643,6 @@ end
 # I/O operations
 # --------------
 
-# Read as much data as possbile from `input` to the margin of `output`.
-# This function will not block if `input` has buffered data.
-function readdata!(input::IO, output::Buffer)::Int
-    if input isa TranscodingStream && input.buffer1 === output
-        # Delegate the operation to the underlying stream for shared buffers.
-        mode::Symbol = input.state.mode
-        if mode === :idle || mode === :read
-            return fillbuffer(input)
-        else
-            return 0
-        end
-    end
-    nread::Int = 0
-    navail = bytesavailable(input)
-    if navail == 0 && marginsize(output) > 0 && !eof(input)
-        nread += writebyte!(output, read(input, UInt8))
-        navail = bytesavailable(input)
-    end
-    n = min(navail, marginsize(output))
-    GC.@preserve output Base.unsafe_read(input, marginptr(output), n)
-    supplied!(output, n)
-    nread += n
-    return nread
-end
 
 # Write all data to `output` from the buffer of `input`.
 function writedata!(output::IO, input::Buffer)
@@ -778,7 +693,7 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             return
         end
     elseif mode == :read
-        if newmode == :close || newmode == :stop
+        if newmode == :close
             state.mode = newmode
             finalize_codec(stream.codec, state.error)
             return
@@ -789,11 +704,6 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
             flushuntilend(stream)
             state.mode = newmode
             finalize_codec(stream.codec, state.error)
-            return
-        end
-    elseif mode == :stop
-        if newmode == :close
-            state.mode = newmode
             return
         end
     elseif mode == :panic

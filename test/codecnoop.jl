@@ -298,11 +298,17 @@
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))
+    @test position(stream) == 0
     @test read(stream, 3) == b"foo"
+    @test position(stream) == 3
     @test read(stream, 3) == b"bar"
+    @test position(stream) == 6
     @test TranscodingStreams.unread(stream, b"baz") === nothing
+    @test position(stream) == 3
     @test read(stream, 3) == b"baz"
+    @test position(stream) == 6
     @test eof(stream)
+    @test position(stream) == 6
     close(stream)
 
     stream = NoopStream(IOBuffer("foobar"))
@@ -311,9 +317,9 @@
 
     stream = NoopStream(IOBuffer(""))
     unsafe_write(stream, C_NULL, 0)
-    @test eof(stream)  # write
+    @test_throws ArgumentError eof(stream)  # write
     close(stream)
-    @test eof(stream)  # close
+    @test_throws ArgumentError eof(stream)  # close
 
     @testset "readuntil" begin
         stream = NoopStream(IOBuffer(""))

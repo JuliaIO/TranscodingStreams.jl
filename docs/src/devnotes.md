@@ -46,13 +46,10 @@ The `mode` field may be one of the following value:
 - `:idle` : initial and intermediate mode, no buffered data
 - `:read` : being ready to read data, data may be buffered
 - `:write`: being ready to write data, data may be buffered
-- `:stop` : transcoding is stopped after read, data may be buffered
 - `:close`: closed, no buffered data
 - `:panic`: an exception has been thrown in codec, data may be buffered but we
             cannot do anything
 
-Note that `mode=:stop` does not mean there is no data available in the stream.
-This is because transcoded data may be left in the buffer.
 
 The initial mode is `:idle` and mode transition happens as shown in the
 following diagram:
