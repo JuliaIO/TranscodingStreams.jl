@@ -48,7 +48,7 @@ function Base.position(stream::NoopStream)::Int64
     mode = stream.state.mode
     if has_sharedbuf(stream)
         if mode === :idle || mode === :read || mode === :write
-            return position(stream.stream) - stream.state.offset
+            return position(stream.stream) - something(stream.state.offset)
         else
             throw_invalid_mode(mode)
         end
@@ -98,6 +98,7 @@ function Base.seekstart(stream::NoopStream)
 end
 
 function Base.seekend(stream::NoopStream)
+    isnothing(stream.state.offset) && throw_invalid_offset(stream.stream)
     if has_sharedbuf(stream)
         seekend(stream.stream)
     else
@@ -107,7 +108,7 @@ function Base.seekend(stream::NoopStream)
         end
         seekend(stream.stream)
         initbuffer!(stream.buffer1)
-        stream.buffer1.shifted = position(stream.stream) - stream.state.offset
+        stream.buffer1.shifted = position(stream.stream) - something(stream.state.offset)
     end
     return stream
 end
@@ -149,11 +150,13 @@ function stats(stream::NoopStream)
     if mode === :idle
         consumed = supplied = 0
     elseif mode === :read
-        supplied = position(stream.stream) - stream.state.offset
+        isnothing(stream.state.offset) && throw_invalid_offset(stream.stream)
+        supplied = position(stream.stream) - something(stream.state.offset)
         consumed = position(stream)
     elseif mode === :write
+        isnothing(stream.state.offset) && throw_invalid_offset(stream.stream)
         supplied = position(stream)
-        consumed = position(stream.stream) - stream.state.offset
+        consumed = position(stream.stream) - something(stream.state.offset)
     else
         throw_invalid_mode(mode)
     end

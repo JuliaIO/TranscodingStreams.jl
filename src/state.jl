@@ -25,10 +25,10 @@ mutable struct State
     buffer2::Buffer
 
     # relative start position in underlying stream
-    offset::Int64
+    offset::Union{Int64, Nothing}
 
     function State(buffer1::Buffer, buffer2::Buffer)
-        return new(:idle, :ok, false, Error(), buffer1, buffer2, 0)
+        return new(:idle, :ok, false, Error(), buffer1, buffer2, nothing)
     end
 end
 

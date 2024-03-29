@@ -31,10 +31,20 @@ struct TranscodingStream{C<:Codec,S<:IO} <: IO
         elseif state.mode != :idle
             throw(ArgumentError("invalid initial mode"))
         end
+
+        # `stream` is not required to implement `position`
+        # In this case, offset is set to `nothing`, 
+        # this may cause future `stat` and `seekend` calls to error.
+        state.offset = try
+            position(stream)
+        catch e
+            e isa InterruptException && rethrow()
+            nothing
+        end
+
         if !initialized
             initialize(codec)
         end
-        state.offset = position(stream)
         return new(codec, stream, state, state.buffer1, state.buffer2)
     end
 end
@@ -157,6 +167,11 @@ end
 
 # throw ArgumentError that mode is invalid.
 throw_invalid_mode(mode) = throw(ArgumentError(string("invalid mode :", mode)))
+
+# throw ArgumentError stream.state.offset is invalid.
+throw_invalid_offset(stream) = throw(ArgumentError(
+    "failed to get position of underlying stream: $(stream) during construction."
+))
 
 # Return true if the stream shares buffers with underlying stream
 function has_sharedbuf(stream::TranscodingStream)::Bool
@@ -575,6 +590,7 @@ function stats(stream::TranscodingStream)
     if mode === :idle
         transcoded_in = transcoded_out = in = out = 0
     elseif mode === :read
+        isnothing(stream.state.offset) && throw_invalid_offset(stream.stream)
         in = position(stream.stream) - stream.state.offset
         out = position(stream)
         transcoded_in = if has_sharedbuf(stream)
@@ -584,6 +600,7 @@ function stats(stream::TranscodingStream)
         end
         transcoded_out = out + buffersize(buffer1)
     elseif mode === :write
+        isnothing(stream.state.offset) && throw_invalid_offset(stream.stream)
         in = position(stream)
         out = position(stream.stream) - stream.state.offset
         transcoded_in = in - buffersize(buffer1)
