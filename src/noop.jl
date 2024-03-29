@@ -68,34 +68,32 @@ end
 
 function Base.seek(stream::NoopStream, pos::Integer)
     if has_sharedbuf(stream)
-        seek(stream.stream, stream.state.offset + pos)
+        seek(stream.stream, pos)
     else
         mode = stream.state.mode
         if mode === :write
             flushbuffer(stream)
         end
-        seek(stream.stream, stream.state.offset + pos)
+        seek(stream.stream, pos)
         initbuffer!(stream.buffer1)
         stream.buffer1.shifted = pos
     end
-    # update offset incase seek decided to go somewhere unexpected
-    stream.state.offset = position(stream.stream) - pos
+    stream.state.offset = 0
     return stream
 end
 
 function Base.seekstart(stream::NoopStream)
     if has_sharedbuf(stream)
-        seek_offset(stream)
+        seekstart(stream.stream)
     else
         mode = stream.state.mode
         if mode === :write
             flushbuffer(stream)
         end
-        seek_offset(stream)
+        seekstart(stream.stream)
         initbuffer!(stream.buffer1)
     end
-    # update offset incase seek decided to go somewhere unexpected
-    stream.state.offset = position(stream.stream)
+    stream.state.offset = 0
     return stream
 end
 

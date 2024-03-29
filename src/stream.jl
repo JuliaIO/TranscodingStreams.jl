@@ -249,32 +249,33 @@ end
 end
 
 function Base.ismarked(stream::TranscodingStream)
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     return ismarked(stream.buffer1)
 end
 
 function Base.mark(stream::TranscodingStream)
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     return mark!(stream.buffer1)
 end
 
 function Base.unmark(stream::TranscodingStream)
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     return unmark!(stream.buffer1)
 end
 
 function Base.reset(stream::TranscodingStream)
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     return reset!(stream.buffer1)
 end
 
 function Base.skip(stream::TranscodingStream, offset::Integer)
+    ready_to_read!(stream)
     if offset < 0
         throw(ArgumentError("negative offset"))
     end
     buffer1 = stream.buffer1
     skipped = 0
-    while !eof(stream) && skipped < offset
+    while skipped < offset && !eof(stream)
         n = min(buffersize(buffer1), offset - skipped)
         skipbuffer!(buffer1, n)
         skipped += n
@@ -310,32 +311,21 @@ end
 # Seek Operations
 # ---------------
 
-# Seek the underlying stream to the position where `stream` was made.
-# Try to use seekstart if possible.
-function seek_offset(stream::TranscodingStream)
-    if iszero(stream.state.offset)
-        seekstart(stream.stream)
-    else
-        seek(stream.stream, stream.state.offset)
-    end
-    nothing
-end
-
 function Base.seekstart(stream::TranscodingStream)
     mode = stream.state.mode
-    if !(mode === :read || mode === :idle)
+    if mode === :read || mode === :idle
+        seekstart(stream.stream)
+    else
         throw_invalid_mode(mode)
     end
+    stream.state.offset = 0
     if mode === :read
-        seek_offset(stream)
         callstartproc(stream, mode)
         initbuffer!(stream.buffer1)
         if !has_sharedbuf(stream)
             initbuffer!(stream.buffer2)
         end
     end
-    # update offset incase seek decided to go somewhere unexpected
-    stream.state.offset = position(stream.stream)
     return stream
 end
 
@@ -351,6 +341,7 @@ function Base.read(stream::TranscodingStream, ::Type{UInt8})
 end
 
 function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=false)
+    ready_to_read!(stream)
     buffer1 = stream.buffer1
     # delay initialization so as to reduce the number of buffer resizes
     local ret::Vector{UInt8}
@@ -391,10 +382,11 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
 end
 
 function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes::UInt)
+    ready_to_read!(stream)
     buffer = stream.buffer1
     p = output
     p_end = output + nbytes
-    while !eof(stream) && p < p_end
+    while p < p_end && !eof(stream)
         m = min(buffersize(buffer), p_end - p)
         copydata!(p, buffer, m)
         p += m
@@ -406,9 +398,45 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
     return
 end
 
+function Base.readbytes!(stream::TranscodingStream, b::DenseArray{UInt8}, nb=length(b))
+    ready_to_read!(stream)
+    filled = 0
+    resized = false
+    while filled < nb && !eof(stream)
+        if length(b) == filled
+            resize!(b, min(max(length(b) * 2, 8), nb))
+            resized = true
+        end
+        filled += GC.@preserve b unsafe_read(stream, pointer(b, filled+1), min(length(b), nb)-filled)
+    end
+    if resized
+        resize!(b, filled)
+    end
+    return filled
+end
+
 function Base.bytesavailable(stream::TranscodingStream)
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     return buffersize(stream.buffer1)
+end
+
+function Base.readavailable(stream::TranscodingStream)
+    n = bytesavailable(stream)
+    data = Vector{UInt8}(undef, n)
+    GC.@preserve data unsafe_read(stream, pointer(data), n)
+    return data
+end
+
+"""
+    unread(stream::TranscodingStream, data::Vector{UInt8})
+
+Insert `data` to the current reading position of `stream`.
+
+The next `read(stream, sizeof(data))` call will read data that are just
+inserted.
+"""
+function unread(stream::TranscodingStream, data::ByteData)
+    GC.@preserve data unsafe_unread(stream, pointer(data), sizeof(data))
 end
 
 """
@@ -423,9 +451,18 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     if nbytes < 0
         throw(ArgumentError("negative nbytes"))
     end
-    changemode!(stream, :read)
+    ready_to_read!(stream)
     insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
     return nothing
+end
+
+# Ready to read data from the stream.
+function ready_to_read!(stream::TranscodingStream)
+    mode = stream.state.mode
+    if mode !== :read
+        changemode!(stream, :read)
+    end
+    return
 end
 
 
