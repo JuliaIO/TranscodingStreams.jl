@@ -110,6 +110,43 @@ end
         end
     end
 
+    @testset "skip" begin
+        @testset "position" begin
+            # make sure position is updated correctly by skip
+            iob = IOBuffer(repeat("x", 400))
+            source = IOBuffer(repeat("x", 100))
+            stream = TranscodingStream(QuadrupleCodec(), source, bufsize=16)
+            @test position(stream) == position(iob)
+            for len in 0:10:100
+                skip(stream, len)
+                skip(iob, len)
+                @test position(stream) == position(iob)
+            end
+            close(stream)
+        end
+        @testset "mark" begin
+            iob = IOBuffer(repeat("x", 400))
+            source = IOBuffer(repeat("x", 100))
+            stream = TranscodingStream(QuadrupleCodec(), source, bufsize=16)
+            @test position(stream) == position(iob)
+            @test mark(stream) == mark(iob)
+            for len in 0:10:100
+                skip(stream, len)
+                skip(iob, len)
+                @test position(stream) == position(iob)
+            end
+            @test Base.reset(stream) == Base.reset(iob)
+            for len in 0:10:100
+                skip(stream, len)
+                skip(iob, len)
+                @test position(stream) == position(iob)
+            end
+            @test mark(stream) == mark(iob)
+            @test Base.reset(stream) == Base.reset(iob)
+            close(stream)
+        end
+    end
+
     @testset "seekstart" begin
         data = Vector(b"abracadabra")
         source = IOBuffer(data)

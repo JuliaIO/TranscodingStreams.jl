@@ -229,50 +229,26 @@ end
     end
 end
 
-function Base.ismarked(stream::TranscodingStream)
+function Base.ismarked(stream::TranscodingStream)::Bool
     checkmode(stream)
-    return ismarked(stream.buffer1)
+    ismarked(stream.buffer1)
 end
 
-function Base.mark(stream::TranscodingStream)
-    checkmode(stream)
-    return mark!(stream.buffer1)
+function Base.mark(stream::TranscodingStream)::Int64
+    ready_to_read!(stream)
+    mark!(stream.buffer1)
+    position(stream)
 end
 
-function Base.unmark(stream::TranscodingStream)
+function Base.unmark(stream::TranscodingStream)::Bool
     checkmode(stream)
-    return unmark!(stream.buffer1)
+    unmark!(stream.buffer1)
 end
 
-function Base.reset(stream::TranscodingStream)
-    checkmode(stream)
-    return reset!(stream.buffer1)
-end
-
-function Base.skip(stream::TranscodingStream, offset::Integer)
-    checkmode(stream)
-    if offset < 0
-        throw(ArgumentError("negative offset"))
-    end
-    mode = stream.state.mode
-    buffer1 = stream.buffer1
-    skipped = 0
-    if mode === :read || mode === :stop
-        while !eof(stream) && buffersize(buffer1) < offset - skipped
-            n = buffersize(buffer1)
-            emptybuffer!(buffer1)
-            skipped += n
-        end
-        if eof(stream)
-            emptybuffer!(buffer1)
-        else
-            skipbuffer!(buffer1, offset - skipped)
-        end
-    else
-        # TODO: support skip in write mode
-        throw(ArgumentError("not in read mode"))
-    end
-    return stream
+function Base.reset(stream::T) where T<:TranscodingStream
+    Base.ismarked(stream) || throw(ArgumentError("$T not marked"))
+    reset!(stream.buffer1)
+    position(stream)
 end
 
 """
@@ -387,6 +363,32 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
         ret = UInt8[]
     end
     return ret
+end
+
+"""
+    skip(stream::TranscodingStream, offset)
+
+Read bytes from `stream` until `offset` bytes have been read or `eof(stream)` is reached.
+
+Return `stream`, discarding read bytes.
+
+This function will not throw an `EOFError` if `eof(stream)` is reached before
+`offset` bytes can be read.
+"""
+function Base.skip(stream::TranscodingStream, offset::Integer)
+    if offset < 0
+        # TODO support negative offset if stream is marked
+        throw(ArgumentError("negative offset"))
+    end
+    ready_to_read!(stream)
+    buffer1 = stream.buffer1
+    skipped = 0
+    while skipped < offset && !eof(stream)
+        n = min(buffersize(buffer1), offset - skipped)
+        skipbuffer!(buffer1, n)
+        skipped += n
+    end
+    return stream
 end
 
 function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes::UInt)
