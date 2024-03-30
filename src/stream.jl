@@ -400,7 +400,7 @@ function Base.unsafe_read(stream::TranscodingStream, output::Ptr{UInt8}, nbytes:
         p += m
         GC.safepoint()
     end
-    if p < p_end && eof(stream)
+    if p < p_end
         throw(EOFError())
     end
     return
