@@ -58,9 +58,9 @@ function wrap_stream(codecs_kws, io::IO)::IO
     end
 end
 
-# read data using various means
-# these function read data from io,
-# if the stream is eof they should return an empty vector.
+# Read data using various means.
+# These function read a vector of bytes from io,
+# if io is eof they should return an empty vector.
 read_methods = Data.SampledFrom([
     function read_byte(io)
         eof(io) && return UInt8[]
@@ -90,7 +90,6 @@ read_methods = Data.SampledFrom([
         ret[1:n]
     end
 ])
-
 
 
 @check function read_byte_data(
