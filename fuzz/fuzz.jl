@@ -58,6 +58,40 @@ function wrap_stream(codecs_kws, io::IO)::IO
     end
 end
 
+# Read data using various means.
+# These function read a vector of bytes from io,
+# if io is eof they should return an empty vector.
+read_methods = Data.SampledFrom([
+    function read_byte(io)
+        eof(io) && return UInt8[]
+        [read(io, UInt8)]
+    end,
+    function read_by_readuntil_keep(io)
+        delim = 0x01
+        readuntil(io, delim; keep=true)
+    end,
+    function read_by_Base_unsafe_read(io)
+        n = bytesavailable(io)
+        ret = zeros(UInt8, n)
+        GC.@preserve ret Base.unsafe_read(io, pointer(ret), n)
+        ret
+    end,
+    function read_by_readavailable(io)
+        readavailable(io)
+    end,
+    function read_by_readbytes1(io)
+        ret = zeros(UInt8, 10000)
+        n = readbytes!(io, ret)
+        ret[1:n]
+    end,
+    function read_by_readbytes2(io)
+        ret = zeros(UInt8, 0)
+        n = readbytes!(io, ret, 10000)
+        ret[1:n]
+    end
+])
+
+
 @check function read_byte_data(
         kws=read_codecs_kws,
         data=datas,
@@ -75,6 +109,21 @@ end
     stream = wrap_stream(kws, IOBuffer(data))
     read(stream) == data || return false
     eof(stream)
+end
+@check function read_data_methods(
+        kws=read_codecs_kws,
+        data=datas,
+        rs=Data.Vectors(read_methods),
+    )
+    stream = wrap_stream(kws, IOBuffer(data))
+    x = UInt8[]
+    for r in rs
+        d = r(stream)
+        append!(x, d)
+        # TODO fix position
+        # length(x) == position(stream) || return false
+    end
+    x == data[eachindex(x)]
 end
 
 # flush all nested streams and return final data

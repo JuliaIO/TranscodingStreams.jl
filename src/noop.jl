@@ -97,28 +97,6 @@ function Base.seekend(stream::NoopStream)
     return stream
 end
 
-function Base.unsafe_read(stream::NoopStream, output::Ptr{UInt8}, nbytes::UInt)
-    changemode!(stream, :read)
-    buffer = stream.buffer1
-    p = output
-    p_end = output + nbytes
-    while p < p_end && !eof(stream)
-        if buffersize(buffer) > 0
-            m = min(buffersize(buffer), p_end - p)
-            copydata!(p, buffer, m)
-        else
-            # directly read data from the underlying stream
-            m = p_end - p
-            Base.unsafe_read(stream.stream, p, m)
-        end
-        p += m
-    end
-    if p < p_end && eof(stream)
-        throw(EOFError())
-    end
-    return
-end
-
 function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :write)
     buffer = stream.buffer1
