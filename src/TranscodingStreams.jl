@@ -16,6 +16,7 @@ include("stream.jl")
 include("io.jl")
 include("noop.jl")
 include("transcode.jl")
+include("deprecated.jl")
 
 function test_roundtrip_read end
 function test_roundtrip_write end
