@@ -59,16 +59,18 @@
     data = collect(0x00:0x0f)
     stream = TranscodingStream(Noop(), IOBuffer(data))
     @test !ismarked(stream)
-    mark(stream)
+    @test mark(stream) == 0
     @test ismarked(stream)
     @test [read(stream, UInt8) for _ in 1:3] == data[1:3]
-    reset(stream)
+    @test reset(stream) == 0
+    @test_throws ArgumentError reset(stream)
     @test !ismarked(stream)
     @test [read(stream, UInt8) for _ in 1:3] == data[1:3]
-    mark(stream)
+    @test mark(stream) == 3
     @test ismarked(stream)
-    unmark(stream)
+    @test unmark(stream)
     @test !ismarked(stream)
+    @test !unmark(stream)
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
