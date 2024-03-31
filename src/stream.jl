@@ -231,7 +231,7 @@ end
 
 function Base.ismarked(stream::TranscodingStream)::Bool
     checkmode(stream)
-    ismarked(stream.buffer1)
+    isopen(stream) && ismarked(stream.buffer1)
 end
 
 function Base.mark(stream::TranscodingStream)::Int64
@@ -242,7 +242,7 @@ end
 
 function Base.unmark(stream::TranscodingStream)::Bool
     checkmode(stream)
-    unmark!(stream.buffer1)
+    isopen(stream) && unmark!(stream.buffer1)
 end
 
 function Base.reset(stream::T) where T<:TranscodingStream

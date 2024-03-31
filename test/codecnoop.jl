@@ -71,7 +71,9 @@
     @test unmark(stream)
     @test !ismarked(stream)
     @test !unmark(stream)
+    @test mark(stream) == 3
     close(stream)
+    @test !ismarked(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
     @test stream == seek(stream, 2)

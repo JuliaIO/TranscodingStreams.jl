@@ -143,7 +143,11 @@ end
             end
             @test mark(stream) == mark(iob)
             @test Base.reset(stream) == Base.reset(iob)
+            @test mark(stream) == mark(iob)
             close(stream)
+            close(iob)
+            @test !ismarked(stream)
+            @test !ismarked(iob)
         end
     end
 
