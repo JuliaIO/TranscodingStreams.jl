@@ -19,6 +19,7 @@ TranscodingStreams.unsafe_read
 TranscodingStreams.unread
 TranscodingStreams.unsafe_unread
 Base.position(stream::TranscodingStream)
+Base.skip
 ```
 
 Statistics
