@@ -287,7 +287,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
     @testset "reading zero bytes from invalid stream" begin
         # This behavior is required to avoid breaking JLD2.jl
         # `s` must go into read mode, but not actually call `eof`
-        for readnone in (io -> read!(io, UInt8[]), io -> read(io, 0))
+        for readnone in (io -> read!(io, UInt8[]), io -> read(io, 0), io -> skip(io, 0))
             for invalid_data in (b"", b"asdf")
                 s = DoubleFrameDecoderStream(IOBuffer(invalid_data;read=true,write=true))
                 @test iswritable(s)
