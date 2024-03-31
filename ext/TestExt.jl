@@ -88,11 +88,15 @@ function TranscodingStreams.test_chunked_read(Encoder, Decoder)
         ok = true
         for chunk in chunks
             stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
-            ok &= hash(read(stream)) == hash(chunk)
+            ok &= read(stream) == chunk
             ok &= eof(stream)
             ok &= isreadable(stream)
             close(stream)
         end
+        # read without stop_on_end should read the full data.
+        stream = TranscodingStream(Decoder(), IOBuffer(data))
+        ok &= read(stream) == reduce(vcat, chunks)
+        close(stream)
         Test.@test ok
     end
     finalize(encoder)
