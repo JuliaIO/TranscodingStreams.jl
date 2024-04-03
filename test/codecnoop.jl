@@ -370,7 +370,7 @@
         end
 
         @testset "writing nested NoopStream sharedbuf=$(sharedbuf)" for sharedbuf in (true, false)
-            stream = NoopStream(NoopStream(IOBuffer()); sharedbuf)
+            stream = NoopStream(NoopStream(IOBuffer()); sharedbuf, bufsize=4)
             @test position(stream) == 0
             write(stream, 0x01)
             @test position(stream) == 1
@@ -380,6 +380,10 @@
             @test position(stream) == 4
             flush(stream)
             @test position(stream) == 4
+            for i in 1:10
+                write(stream, 0x01)
+                @test position(stream) == 4 + i
+            end
         end
 
         @testset "reading nested NoopStream sharedbuf=$(sharedbuf)" for sharedbuf in (true, false)

@@ -107,7 +107,7 @@ function Base.write(stream::NoopStream, b::UInt8)::Int
         return n
     end
     buffer1 = stream.buffer1
-    marginsize(buffer1) > 0 || empty_buffer2(stream)
+    marginsize(buffer1) > 0 || flushbuffer(stream)
     return writebyte!(buffer1, b)
 end
 
