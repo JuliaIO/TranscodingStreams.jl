@@ -157,6 +157,10 @@ end
 # throw ArgumentError that mode is invalid.
 throw_invalid_mode(mode) = throw(ArgumentError(string("invalid mode :", mode)))
 
+# Return true if the stream shares buffers with underlying stream
+function has_sharedbuf(stream::TranscodingStream)::Bool
+    stream.stream isa TranscodingStream && stream.buffer2 === stream.stream.buffer1
+end
 
 # Base IO Functions
 # -----------------

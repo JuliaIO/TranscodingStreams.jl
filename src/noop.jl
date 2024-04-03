@@ -53,16 +53,18 @@ Note that this method may return a wrong position when
 - some data have been inserted by `TranscodingStreams.unread`, or
 - the position of the wrapped stream has been changed outside of this package.
 """
-function Base.position(stream::NoopStream)
+function Base.position(stream::NoopStream)::Int64
     mode = stream.state.mode
-    if mode === :idle
-        return Int64(0)
+    if !isopen(stream)
+        throw_invalid_mode(mode)
+    elseif mode === :idle
+        return 0
+    elseif has_sharedbuf(stream)
+        return position(stream.stream)
     elseif mode === :write
         return position(stream.stream) + buffersize(stream.buffer1)
-    elseif mode === :read
+    else # read
         return position(stream.stream) - buffersize(stream.buffer1)
-    else
-        throw_invalid_mode(mode)
     end
     @assert false "unreachable"
 end
@@ -152,7 +154,7 @@ function fillbuffer(stream::NoopStream; eager::Bool = false)::Int
     changemode!(stream, :read)
     buffer = stream.buffer1
     @assert buffer === stream.buffer2
-    if stream.stream isa TranscodingStream && buffer === stream.stream.buffer1
+    if has_sharedbuf(stream)
         # Delegate the operation when buffers are shared.
         underlying_mode::Symbol = stream.stream.state.mode
         if underlying_mode === :idle || underlying_mode === :read
