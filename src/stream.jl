@@ -268,7 +268,7 @@ function Base.position(stream::TranscodingStream)
     mode = stream.state.mode
     if mode === :idle
         return Int64(0)
-    elseif mode === :read
+    elseif mode === :read || mode === :stop
         return stats(stream).out
     elseif mode === :write
         return stats(stream).in
@@ -588,7 +588,7 @@ function stats(stream::TranscodingStream)
     buffer2 = stream.buffer2
     if mode === :idle
         transcoded_in = transcoded_out = in = out = 0
-    elseif mode === :read
+    elseif mode === :read || mode === :stop
         transcoded_in = buffer2.transcoded
         transcoded_out = buffer1.transcoded
         in = transcoded_in + buffersize(buffer2)
