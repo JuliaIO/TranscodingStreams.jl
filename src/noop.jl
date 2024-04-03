@@ -99,8 +99,25 @@ function Base.seekend(stream::NoopStream)
     return stream
 end
 
-function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
+function Base.write(stream::NoopStream, b::UInt8)::Int
     changemode!(stream, :write)
+    if has_sharedbuf(stream)
+        # directly write data to the underlying stream
+        n = Int(write(stream.stream, b))
+        return n
+    end
+    buffer1 = stream.buffer1
+    marginsize(buffer1) > 0 || empty_buffer2(stream)
+    return writebyte!(buffer1, b)
+end
+
+function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)::Int
+    changemode!(stream, :write)
+    if has_sharedbuf(stream)
+        # directly write data to the underlying stream
+        n = Int(unsafe_write(stream.stream, input, nbytes))
+        return n
+    end
     buffer = stream.buffer1
     if marginsize(buffer) ≥ nbytes
         copydata!(buffer, input, nbytes)
@@ -108,7 +125,8 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     else
         flushbuffer(stream)
         # directly write data to the underlying stream
-        return unsafe_write(stream.stream, input, nbytes)
+        n = Int(unsafe_write(stream.stream, input, nbytes))
+        return n
     end
 end
 

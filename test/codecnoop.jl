@@ -368,6 +368,37 @@
                 @test position(stream) == pos
             end
         end
+
+        @testset "writing nested NoopStream sharedbuf=$(sharedbuf)" for sharedbuf in (true, false)
+            stream = NoopStream(NoopStream(IOBuffer()); sharedbuf)
+            @test position(stream) == 0
+            write(stream, 0x01)
+            @test position(stream) == 1
+            flush(stream)
+            @test position(stream) == 1
+            write(stream, "abc")
+            @test position(stream) == 4
+            flush(stream)
+            @test position(stream) == 4
+        end
+
+        @testset "reading nested NoopStream sharedbuf=$(sharedbuf)" for sharedbuf in (true, false)
+            stream = NoopStream(NoopStream(IOBuffer("abcdefghijk")); sharedbuf, bufsize=4)
+            @test position(stream) == 0
+            @test !eof(stream)
+            @test position(stream) == 0
+            @test read(stream, UInt8) == b"a"[1]
+            @test position(stream) == 1
+            @test read(stream, 3) == b"bcd"
+            @test position(stream) == 4
+            @test !eof(stream)
+            @test position(stream) == 4
+            @test read(stream) == b"efghijk"
+            @test position(stream) == 11
+            @test eof(stream)
+            @test position(stream) == 11
+        end
+
     end
 
     @testset "seek doesn't delete data" begin

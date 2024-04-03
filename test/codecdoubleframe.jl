@@ -272,6 +272,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
             )
         ))
         @test read(s1) == b""
+        @test position(s1) == 0
         @test eof(s1)
 
         s2 = NoopStream(
@@ -281,6 +282,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
             )
         )
         @test read(s2) == b""
+        @test position(s1) == 0
         @test eof(s2)
     end
 

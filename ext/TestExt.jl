@@ -89,6 +89,7 @@ function TranscodingStreams.test_chunked_read(Encoder, Decoder)
         for chunk in chunks
             stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
             ok &= read(stream) == chunk
+            ok &= position(stream) == length(chunk)
             ok &= eof(stream)
             ok &= isreadable(stream)
             close(stream)
