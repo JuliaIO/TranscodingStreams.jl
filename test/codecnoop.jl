@@ -50,11 +50,11 @@
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
-    @test position(stream) === 0
+    @test position(stream) === Int64(0)
     read(stream, UInt8)
-    @test position(stream) === 1
+    @test position(stream) === Int64(1)
     read(stream)
-    @test position(stream) === 9
+    @test position(stream) === Int64(9)
 
     data = collect(0x00:0x0f)
     stream = TranscodingStream(Noop(), IOBuffer(data))

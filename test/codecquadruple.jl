@@ -51,19 +51,19 @@ end
     close(stream)
 
     stream = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
-    @test position(stream) === 0
+    @test position(stream) === Int64(0)
     read(stream, 3)
-    @test position(stream) === 3
+    @test position(stream) === Int64(3)
     read(stream, UInt8)
-    @test position(stream) === 4
+    @test position(stream) === Int64(4)
     close(stream)
 
     stream = TranscodingStream(QuadrupleCodec(), IOBuffer())
-    @test position(stream) === 0
+    @test position(stream) === Int64(0)
     write(stream, 0x00)
-    @test position(stream) === 1
+    @test position(stream) === Int64(1)
     write(stream, "foo")
-    @test position(stream) === 4
+    @test position(stream) === Int64(4)
     close(stream)
 
     # Buffers are shared.
