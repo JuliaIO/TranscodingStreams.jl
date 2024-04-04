@@ -58,7 +58,7 @@ function Base.position(stream::NoopStream)::Int64
     if !isopen(stream)
         throw_invalid_mode(mode)
     elseif mode === :idle
-        return 0
+        return Int64(0)
     elseif has_sharedbuf(stream)
         return position(stream.stream)
     elseif mode === :write
