@@ -157,6 +157,10 @@ end
 # throw ArgumentError that mode is invalid.
 throw_invalid_mode(mode) = throw(ArgumentError(string("invalid mode :", mode)))
 
+# Return true if the stream shares buffers with underlying stream
+function has_sharedbuf(stream::TranscodingStream)::Bool
+    stream.stream isa TranscodingStream && stream.buffer2 === stream.stream.buffer1
+end
 
 # Base IO Functions
 # -----------------
@@ -264,7 +268,7 @@ function Base.position(stream::TranscodingStream)
     mode = stream.state.mode
     if mode === :idle
         return Int64(0)
-    elseif mode === :read
+    elseif mode === :read || mode === :stop
         return stats(stream).out
     elseif mode === :write
         return stats(stream).in
@@ -584,7 +588,7 @@ function stats(stream::TranscodingStream)
     buffer2 = stream.buffer2
     if mode === :idle
         transcoded_in = transcoded_out = in = out = 0
-    elseif mode === :read
+    elseif mode === :read || mode === :stop
         transcoded_in = buffer2.transcoded
         transcoded_out = buffer1.transcoded
         in = transcoded_in + buffersize(buffer2)

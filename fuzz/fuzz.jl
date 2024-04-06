@@ -120,8 +120,7 @@ end
     for r in rs
         d = r(stream)
         append!(x, d)
-        # TODO fix position
-        # length(x) == position(stream) || return false
+        length(x) == position(stream) || return false
     end
     x == data[eachindex(x)]
 end

@@ -53,16 +53,18 @@ Note that this method may return a wrong position when
 - some data have been inserted by `TranscodingStreams.unread`, or
 - the position of the wrapped stream has been changed outside of this package.
 """
-function Base.position(stream::NoopStream)
+function Base.position(stream::NoopStream)::Int64
     mode = stream.state.mode
-    if mode === :idle
+    if !isopen(stream)
+        throw_invalid_mode(mode)
+    elseif mode === :idle
         return Int64(0)
+    elseif has_sharedbuf(stream)
+        return position(stream.stream)
     elseif mode === :write
         return position(stream.stream) + buffersize(stream.buffer1)
-    elseif mode === :read
+    else # read
         return position(stream.stream) - buffersize(stream.buffer1)
-    else
-        throw_invalid_mode(mode)
     end
     @assert false "unreachable"
 end
@@ -97,8 +99,25 @@ function Base.seekend(stream::NoopStream)
     return stream
 end
 
-function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
+function Base.write(stream::NoopStream, b::UInt8)::Int
     changemode!(stream, :write)
+    if has_sharedbuf(stream)
+        # directly write data to the underlying stream
+        n = Int(write(stream.stream, b))
+        return n
+    end
+    buffer1 = stream.buffer1
+    marginsize(buffer1) > 0 || flushbuffer(stream)
+    return writebyte!(buffer1, b)
+end
+
+function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)::Int
+    changemode!(stream, :write)
+    if has_sharedbuf(stream)
+        # directly write data to the underlying stream
+        n = Int(unsafe_write(stream.stream, input, nbytes))
+        return n
+    end
     buffer = stream.buffer1
     if marginsize(buffer) ≥ nbytes
         copydata!(buffer, input, nbytes)
@@ -106,7 +125,8 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)
     else
         flushbuffer(stream)
         # directly write data to the underlying stream
-        return unsafe_write(stream.stream, input, nbytes)
+        n = Int(unsafe_write(stream.stream, input, nbytes))
+        return n
     end
 end
 
@@ -152,7 +172,7 @@ function fillbuffer(stream::NoopStream; eager::Bool = false)::Int
     changemode!(stream, :read)
     buffer = stream.buffer1
     @assert buffer === stream.buffer2
-    if stream.stream isa TranscodingStream && buffer === stream.stream.buffer1
+    if has_sharedbuf(stream)
         # Delegate the operation when buffers are shared.
         underlying_mode::Symbol = stream.stream.state.mode
         if underlying_mode === :idle || underlying_mode === :read

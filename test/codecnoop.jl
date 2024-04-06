@@ -50,11 +50,11 @@
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer(b"foobarbaz"))
-    @test position(stream) === 0
+    @test position(stream) === Int64(0)
     read(stream, UInt8)
-    @test position(stream) === 1
+    @test position(stream) === Int64(1)
     read(stream)
-    @test position(stream) === 9
+    @test position(stream) === Int64(9)
 
     data = collect(0x00:0x0f)
     stream = TranscodingStream(Noop(), IOBuffer(data))
@@ -368,6 +368,41 @@
                 @test position(stream) == pos
             end
         end
+
+        @testset "writing nested NoopStream sharedbuf=$(sharedbuf)" for sharedbuf in (true, false)
+            stream = NoopStream(NoopStream(IOBuffer()); sharedbuf, bufsize=4)
+            @test position(stream) == 0
+            write(stream, 0x01)
+            @test position(stream) == 1
+            flush(stream)
+            @test position(stream) == 1
+            write(stream, "abc")
+            @test position(stream) == 4
+            flush(stream)
+            @test position(stream) == 4
+            for i in 1:10
+                write(stream, 0x01)
+                @test position(stream) == 4 + i
+            end
+        end
+
+        @testset "reading nested NoopStream sharedbuf=$(sharedbuf)" for sharedbuf in (true, false)
+            stream = NoopStream(NoopStream(IOBuffer("abcdefghijk")); sharedbuf, bufsize=4)
+            @test position(stream) == 0
+            @test !eof(stream)
+            @test position(stream) == 0
+            @test read(stream, UInt8) == b"a"[1]
+            @test position(stream) == 1
+            @test read(stream, 3) == b"bcd"
+            @test position(stream) == 4
+            @test !eof(stream)
+            @test position(stream) == 4
+            @test read(stream) == b"efghijk"
+            @test position(stream) == 11
+            @test eof(stream)
+            @test position(stream) == 11
+        end
+
     end
 
     @testset "seek doesn't delete data" begin
