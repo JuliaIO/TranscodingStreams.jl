@@ -152,7 +152,25 @@ end
     )
     stream = wrap_stream(kws, IOBuffer())
     for i in 1:length(data)
+        position(stream) == i-1 || return false
+        if stream isa TranscodingStream
+            s = TranscodingStreams.stats(stream)
+            s.in == i-1 || return false
+            # TODO fix position(stream.stream)
+            # s.out == position(stream.stream) || return false
+            # s.transcoded_in == s.out || return false
+            # s.transcoded_out == s.out || return false
+        end
         write(stream, data[i]) == 1 || return false
     end
-    take_all(stream) == data
+    take_all(stream) == data || return false
+    if stream isa TranscodingStream
+        s = TranscodingStreams.stats(stream)
+        s.in == length(data) || return false
+        # TODO fix position(stream.stream)
+        # s.out == position(stream.stream) || return false
+        # s.transcoded_in == s.out || return false
+        # s.transcoded_out == s.out || return false
+    end
+    true
 end

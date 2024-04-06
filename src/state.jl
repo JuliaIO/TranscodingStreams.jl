@@ -24,8 +24,11 @@ mutable struct State
     buffer1::Buffer
     buffer2::Buffer
 
+    # Number of bytes written to the underlying stream
+    bytes_written_out::Int64
+
     function State(buffer1::Buffer, buffer2::Buffer)
-        return new(:idle, :ok, false, Error(), buffer1, buffer2)
+        return new(:idle, :ok, false, Error(), buffer1, buffer2, Int64(0))
     end
 end
 

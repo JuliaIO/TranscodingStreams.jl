@@ -302,6 +302,81 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         end
     end
 
+    @testset "stats" begin
+        @testset "read" begin
+            stream = DoubleFrameEncoderStream(IOBuffer(b"foobar"))
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 0
+            @test stat.out == 0
+            read(stream)
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 6
+            @test stat.transcoded_in == 6
+            @test stat.transcoded_out == 16
+            @test stat.out == 16
+            close(stream)
+
+            #nested Streams
+            stream = DoubleFrameDecoderStream(DoubleFrameEncoderStream(IOBuffer(b"foobar")))
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 0
+            @test stat.out == 0
+            read(stream)
+            stat = TranscodingStreams.stats(stream)
+            @test_broken stat.in == 16
+            @test_broken stat.transcoded_in == 16
+            @test stat.transcoded_out == 6
+            @test stat.out == 6
+            close(stream)
+        end
+
+        @testset "write" begin
+            stream = DoubleFrameEncoderStream(IOBuffer())
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 0
+            @test stat.out == 0
+            write(stream, b"foobar")
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 6
+            @test stat.transcoded_in == 0
+            @test stat.transcoded_out == 0
+            @test stat.out == 0
+            flush(stream)
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 6
+            @test stat.transcoded_in == 6
+            @test stat.transcoded_out == 14
+            @test stat.out == 14
+            write(stream, TranscodingStreams.TOKEN_END)
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 6
+            @test stat.transcoded_in == 6
+            @test stat.transcoded_out == 16
+            @test stat.out == 16
+            close(stream)
+
+            #nested Streams
+            stream = DoubleFrameDecoderStream(DoubleFrameEncoderStream(IOBuffer()))
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 0
+            @test stat.out == 0
+            write(stream, b"[ ffoooobbaarr ]")
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 16
+            @test stat.transcoded_in == 0
+            @test stat.transcoded_out == 0
+            @test stat.out == 0
+            flush(stream)
+            stat = TranscodingStreams.stats(stream)
+            @test stat.in == 16
+            @test stat.transcoded_in == 16
+            @test stat.transcoded_out == 6
+            @test stat.out == 6
+            @test_broken position(stream.stream) == 6
+            close(stream)
+        end
+    end
+
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_write(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_lines(DoubleFrameEncoderStream, DoubleFrameDecoderStream)

@@ -72,7 +72,7 @@ end
 function Base.seek(stream::NoopStream, pos::Integer)
     mode = stream.state.mode
     if mode === :write
-        flushbuffer(stream)
+        flush_buffer2(stream)
     end
     seek(stream.stream, pos)
     initbuffer!(stream.buffer1)
@@ -82,7 +82,7 @@ end
 function Base.seekstart(stream::NoopStream)
     mode = stream.state.mode
     if mode === :write
-        flushbuffer(stream)
+        flush_buffer2(stream)
     end
     seekstart(stream.stream)
     initbuffer!(stream.buffer1)
@@ -92,7 +92,7 @@ end
 function Base.seekend(stream::NoopStream)
     mode = stream.state.mode
     if mode === :write
-        flushbuffer(stream)
+        flush_buffer2(stream)
     end
     seekend(stream.stream)
     initbuffer!(stream.buffer1)
@@ -103,12 +103,14 @@ function Base.write(stream::NoopStream, b::UInt8)::Int
     changemode!(stream, :write)
     if has_sharedbuf(stream)
         # directly write data to the underlying stream
-        n = Int(write(stream.stream, b))
-        return n
+        write(stream.stream, b)
+        stream.state.bytes_written_out += 1
+    else
+        buffer1 = stream.buffer1
+        marginsize(buffer1) > 0 || flush_buffer2(stream)
+        writebyte!(buffer1, b)
     end
-    buffer1 = stream.buffer1
-    marginsize(buffer1) > 0 || flushbuffer(stream)
-    return writebyte!(buffer1, b)
+    return 1
 end
 
 function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)::Int
@@ -116,6 +118,7 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt):
     if has_sharedbuf(stream)
         # directly write data to the underlying stream
         n = Int(unsafe_write(stream.stream, input, nbytes))
+        stream.state.bytes_written_out += n
         return n
     end
     buffer = stream.buffer1
@@ -123,9 +126,10 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt):
         copydata!(buffer, input, nbytes)
         return Int(nbytes)
     else
-        flushbuffer(stream)
+        flush_buffer2(stream)
         # directly write data to the underlying stream
         n = Int(unsafe_write(stream.stream, input, nbytes))
+        stream.state.bytes_written_out += n
         return n
     end
 end
@@ -148,17 +152,20 @@ function stats(stream::NoopStream)
     buffer = stream.buffer1
     @assert buffer === stream.buffer2
     if mode === :idle
-        consumed = supplied = 0
+        in = out = 0
     elseif mode === :read
-        supplied = buffer.transcoded
-        consumed = supplied - buffersize(buffer)
+        in = buffer.transcoded
+        out = in - buffersize(buffer)
     elseif mode === :write
-        supplied = buffer.transcoded + buffersize(buffer)
-        consumed = buffer.transcoded
+        out = stream.state.bytes_written_out
+        in = out
+        if !has_sharedbuf(stream)
+            in += buffersize(buffer)
+        end
     else
         throw_invalid_mode(mode)
     end
-    return Stats(consumed, supplied, supplied, supplied)
+    return Stats(in, out, out, out)
 end
 
 
@@ -190,24 +197,15 @@ function fillbuffer(stream::NoopStream; eager::Bool = false)::Int
     return nfilled
 end
 
-function flushbuffer(stream::NoopStream, all::Bool=false)
-    changemode!(stream, :write)
-    buffer = stream.buffer1
-    @assert buffer === stream.buffer2
-    nflushed::Int = 0
-    if all
-        while buffersize(buffer) > 0
-            nflushed += writedata!(stream.stream, buffer)
-        end
-    else
-        nflushed += writedata!(stream.stream, buffer)
-        makemargin!(buffer, 0)
-    end
-    buffer.transcoded += nflushed
-    return nflushed
+# Empty buffer1 by writing out data.
+# `stream` must be in :write mode.
+# Ensure there is margin available in buffer1 for at least one byte.
+function flush_buffer1(stream::NoopStream)::Nothing
+    flush_buffer2(stream)
 end
 
+# This is always called after `flush_buffer1(stream)`
 function flushuntilend(stream::NoopStream)
-    stream.buffer1.transcoded += writedata!(stream.stream, stream.buffer1)
+    @assert iszero(buffersize(stream.buffer1))
     return
 end

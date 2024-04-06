@@ -41,6 +41,7 @@ default buffer size is 16KiB for each.
 - `error`: exception returned by the codec (`<:Error`)
 - `buffer1`: data buffer that is closer to the user (`<:Buffer`)
 - `buffer2`: data buffer that is farther to the user (`<:Buffer`)
+- `bytes_written_out`: number of bytes written to the underlying stream (`<:Int64`)
 
 The `mode` field may be one of the following value:
 - `:idle` : initial and intermediate mode, no buffered data
@@ -78,8 +79,10 @@ Shared buffers
 Adjacent transcoding streams may share their buffers. This will reduce memory
 allocation and eliminate data copy between buffers.
 
-`readdata!(input::IO, output::Buffer)` and `writedata!(output::IO,
-input::Buffer)` do the actual work of read/write data from/to the underlying
+If `buffer2` is shared it is considered to be owned by the underlying stream 
+by the `stats` and `position` functions.
+
+`readdata!(input::IO, output::Buffer)` and `flush_buffer2(stream::TranscodingStream)` do the actual work of read/write data from/to the underlying
 stream. These methods have a special pass for shared buffers.
 
 
