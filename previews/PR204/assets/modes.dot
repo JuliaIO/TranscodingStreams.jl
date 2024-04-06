@@ -1,0 +1,27 @@
+digraph modes {
+    "start" -> "idle";
+
+    "idle" -> "read";
+    "idle" -> "write";
+    "idle" -> "close";
+    "idle" -> "panic";
+
+    "read" -> "read";
+    "read" -> "stop";
+    "read" -> "close";
+    "read" -> "panic";
+
+    "write" -> "write";
+    "write" -> "close";
+    "write" -> "panic";
+
+    "stop" -> "close";
+
+    "start" [ shape = point ];
+    "idle"  [ shape = circle ];
+    "read"  [ shape = circle ];
+    "write" [ shape = circle ];
+    "stop"  [ shape = circle; style=bold; ];
+    "close" [ shape = circle; style=bold; ];
+    "panic" [ shape = circle; style=bold; ];
+}
