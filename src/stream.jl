@@ -505,21 +505,7 @@ function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes:
     p_end = p + nbytes
     while p < p_end
         if marginsize(buffer1) ≤ 0
-            try
-                flush_buffer1(stream)
-            catch
-                nwritten = Int(p - input)
-                # try and un write any buffered data
-                # the goal is to error if no bytes got committed.
-                n_unwrite = min(nwritten, buffersize(buffer1))
-                buffer1.marginpos -= n_unwrite
-                nwritten -= n_unwrite
-                if iszero(nwritten) || stream.state.mode === :panic
-                    rethrow()
-                else
-                    return nwritten
-                end
-            end
+            flush_buffer1(stream)
         end
         m = min(marginsize(buffer1), p_end - p)
         copydata!(buffer1, p, m)
