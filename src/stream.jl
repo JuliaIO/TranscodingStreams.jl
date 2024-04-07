@@ -499,11 +499,28 @@ end
 
 function Base.unsafe_write(stream::TranscodingStream, input::Ptr{UInt8}, nbytes::UInt)
     changemode!(stream, :write)
+    Int(nbytes) # Error if nbytes > typemax Int
     buffer1 = stream.buffer1
     p = input
     p_end = p + nbytes
     while p < p_end
-        marginsize(buffer1) > 0 || flush_buffer1(stream)
+        if marginsize(buffer1) ≤ 0
+            try
+                flush_buffer1(stream)
+            catch
+                nwritten = Int(p - input)
+                # try and un write any buffered data
+                # the goal is to error if no bytes got committed.
+                n_unwrite = min(nwritten, buffersize(buffer1))
+                buffer1.marginpos -= n_unwrite
+                nwritten -= n_unwrite
+                if iszero(nwritten) || stream.state.mode === :panic
+                    rethrow()
+                else
+                    return nwritten
+                end
+            end
+        end
         m = min(marginsize(buffer1), p_end - p)
         copydata!(buffer1, p, m)
         p += m
@@ -756,6 +773,7 @@ function flush_buffer2(stream::TranscodingStream)::Nothing
     else
         while buffersize(buffer2) > 0
             n::Int = GC.@preserve buffer2 Base.unsafe_write(output, bufferptr(buffer2), buffersize(buffer2))
+            n ≤ 0 && error("short write")
             consumed!(buffer2, n)
             state.bytes_written_out += n
             GC.safepoint()
