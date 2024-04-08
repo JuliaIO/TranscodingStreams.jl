@@ -32,7 +32,7 @@ jobs:
           - {user: JuliaWeb, repo: HTTP.jl, group: TranscodingStreams}
     steps:
       - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v1
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia-version }}
           arch: x64
