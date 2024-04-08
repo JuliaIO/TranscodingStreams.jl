@@ -377,6 +377,14 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         end
     end
 
+    @testset "underlying stream fails" begin
+        sink = IOBuffer(;maxsize=4)
+        stream = DoubleFrameEncoderStream(sink)
+        @test write(stream, "abcd") == 4
+        # make sure flush doesn't go into an infinate loop
+        @test_throws ErrorException("short write") flush(stream)
+    end
+
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_write(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_lines(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
