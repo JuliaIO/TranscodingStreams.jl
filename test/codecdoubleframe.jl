@@ -381,7 +381,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         sink = IOBuffer(;maxsize=4)
         stream = DoubleFrameEncoderStream(sink)
         @test write(stream, "abcd") == 4
-        # make sure flush doesn't go into an infinate loop
+        # make sure flush doesn't go into an infinite loop
         @test_throws ErrorException("short write") flush(stream)
     end
 
