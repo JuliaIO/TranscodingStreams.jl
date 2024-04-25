@@ -30,6 +30,7 @@ jobs:
           - {user: JuliaVTK, repo: WriteVTK.jl, group: TranscodingStreams}
           - {user: JuliaData, repo: RData.jl, group: TranscodingStreams}
           - {user: JuliaWeb, repo: HTTP.jl, group: TranscodingStreams}
+          - {user: reallyasi9, repo: ZipStreams.jl, group: TranscodingStreams}
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
