@@ -317,10 +317,10 @@
                 @test read(stream, 3n) == codeunits("foo"^n)
                 @test read(stream, 3n) == codeunits("bar"^n)
                 TranscodingStreams.unread(stream, codeunits("baz"^n))
-                @test_broken reset(stream) == 0
+                @test reset(stream) == 0
                 @test read(stream, 3n) == codeunits("foo"^n)
-                @test_broken read(stream, 3n) == codeunits("baz"^n)
-                @test_broken eof(stream)
+                @test read(stream, 3n) == codeunits("baz"^n)
+                @test eof(stream)
                 close(stream)
             end
         end
@@ -333,8 +333,8 @@
             TranscodingStreams.unread(stream, b"foo")
         end
         @test read(stream, String) == "foo"^100
-        @test_broken reset(stream) == 6
-        @test_broken eof(stream)
+        @test reset(stream) == 6
+        @test eof(stream)
 
         stream = NoopStream(IOBuffer("foobar"))
         @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
