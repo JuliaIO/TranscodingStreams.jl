@@ -213,11 +213,12 @@ function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     end
     datasize = buf.marginpos - datapos
     copyto!(buf.data, datapos + nbytes, buf.data, datapos, datasize)
+    GC.@preserve buf unsafe_copyto!(bufferptr(buf), data, nbytes)
+    supplied!(buf, nbytes)
     if !iszero(buf.markpos)
         buf.markpos += nbytes
     end
-    GC.@preserve buf unsafe_copyto!(bufferptr(buf), data, nbytes)
-    supplied!(buf, nbytes)
+    @assert buf.markpos ≤ buf.marginpos
     return buf
 end
 
