@@ -700,6 +700,10 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
         makemargin!(outbuf, max(16, marginsize(outbuf) * 2))
     elseif state.code == :end && state.stop_on_end
         if stream.state.mode == :read
+            if stream.stream isa TranscodingStream && !has_sharedbuf(stream) && !iszero(buffersize(inbuf))
+                # unread data to match behavior if inbuf was shared.
+                GC.@preserve inbuf unsafe_unread(stream.stream, bufferptr(inbuf), buffersize(inbuf))
+            end
             changemode!(stream, :stop)
         end
     end
