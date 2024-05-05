@@ -1,3 +1,5 @@
+using OffsetArrays: OffsetArray
+
 @testset "Noop Codec" begin
     source = IOBuffer("")
     stream = TranscodingStream(Noop(), source)
@@ -338,6 +340,21 @@
 
         stream = NoopStream(IOBuffer("foobar"))
         @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
+        close(stream)
+
+        stream = NoopStream(IOBuffer("foo"))
+        @test read(stream, 3) == b"foo"
+        @test TranscodingStreams.unread(stream, OffsetArray(b"bar", -5:-3)) === nothing
+        @test read(stream, 3) == b"bar"
+        close(stream)
+
+        stream = NoopStream(IOBuffer("foo"))
+        @test read(stream, 3) == b"foo"
+        d = b"bar"
+        GC.@preserve d begin
+            @test TranscodingStreams.unsafe_unread(stream, pointer(d), 3) === nothing
+        end
+        @test read(stream, 3) == b"bar"
         close(stream)
     end
 

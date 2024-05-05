@@ -19,6 +19,10 @@ end
     return mem.size
 end
 
+@inline function Base.firstindex(mem::Memory)
+    return 1
+end
+
 @inline function Base.lastindex(mem::Memory)
     return Int(mem.size)
 end

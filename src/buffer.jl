@@ -202,7 +202,9 @@ function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
 end
 
 # Insert data to the current buffer.
-function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
+# `data` must not alias `buf`
+function insertdata!(buf::Buffer, data::Union{AbstractArray{UInt8}, Memory})
+    nbytes = Int(length(data))
     makemargin!(buf, nbytes)
     datapos = if iszero(buf.markpos)
         # If data is not marked we must not discard buffered (nonconsumed) data
@@ -213,7 +215,9 @@ function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     end
     datasize = buf.marginpos - datapos
     copyto!(buf.data, datapos + nbytes, buf.data, datapos, datasize)
-    GC.@preserve buf unsafe_copyto!(bufferptr(buf), data, nbytes)
+    for i in 0:nbytes-1
+        buf.data[buf.bufferpos + i] = data[firstindex(data) + i]
+    end
     supplied!(buf, nbytes)
     if !iszero(buf.markpos)
         buf.markpos += nbytes

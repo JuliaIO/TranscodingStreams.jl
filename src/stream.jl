@@ -442,15 +442,18 @@ function Base.readavailable(stream::TranscodingStream)
 end
 
 """
-    unread(stream::TranscodingStream, data::Vector{UInt8})
+    unread(stream::TranscodingStream, data::AbstractVector{UInt8})
 
 Insert `data` to the current reading position of `stream`.
 
 The next `read(stream, sizeof(data))` call will read data that are just
 inserted.
+
+`data` must not alias any internal buffers in `stream`
 """
-function unread(stream::TranscodingStream, data::ByteData)
-    GC.@preserve data unsafe_unread(stream, pointer(data), sizeof(data))
+function unread(stream::TranscodingStream, data::AbstractVector{UInt8})
+    insertdata!(stream.buffer1, data)
+    return nothing
 end
 
 """
@@ -460,13 +463,15 @@ Insert `nbytes` pointed by `data` to the current reading position of `stream`.
 
 The data are copied into the internal buffer and hence `data` can be safely used
 after the operation without interfering the stream.
+
+`data` must not alias any internal buffers in `stream`
 """
 function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     if nbytes < 0
         throw(ArgumentError("negative nbytes"))
     end
     ready_to_read!(stream)
-    insertdata!(stream.buffer1, convert(Ptr{UInt8}, data), nbytes)
+    insertdata!(stream.buffer1, Memory(convert(Ptr{UInt8}, data), UInt(nbytes)))
     return nothing
 end
 
@@ -702,7 +707,7 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
         if stream.state.mode == :read
             if stream.stream isa TranscodingStream && !has_sharedbuf(stream) && !iszero(buffersize(inbuf))
                 # unread data to match behavior if inbuf was shared.
-                GC.@preserve inbuf unsafe_unread(stream.stream, bufferptr(inbuf), buffersize(inbuf))
+                unread(stream.stream, view(inbuf.data, inbuf.bufferpos:inbuf.marginpos-1))
             end
             changemode!(stream, :stop)
         end
