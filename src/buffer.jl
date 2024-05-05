@@ -127,7 +127,7 @@ end
 
 # Make margin with ≥`minsize` and return the size of it.
 # If eager is true, it tries to move data even when the buffer has enough margin.
-function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
+function makemargin!(buf::Buffer, minsize::Int; eager::Bool = false)
     @assert minsize ≥ 0
     if buffersize(buf) == 0 && buf.markpos == 0
         buf.bufferpos = buf.marginpos = 1
@@ -156,7 +156,7 @@ function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
     # At least enough for minsize, but otherwise 1.5 times
     if marginsize(buf) < minsize
         datasize = length(buf.data)
-        resize!(buf.data, max(buf.marginpos + minsize - 1, datasize + div(datasize, 2)))
+        resize!(buf.data, max(Base.checked_add(buf.marginpos, minsize) - 1, datasize + div(datasize, 2)))
     end
     @assert marginsize(buf) ≥ minsize
     return marginsize(buf)
@@ -185,7 +185,7 @@ end
 
 # Copy data from `data` to `buf`.
 function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
-    makemargin!(buf, nbytes)
+    makemargin!(buf, Int(nbytes))
     GC.@preserve buf unsafe_copyto!(marginptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
@@ -202,7 +202,9 @@ function copydata!(data::Ptr{UInt8}, buf::Buffer, nbytes::Integer)
 end
 
 # Insert data to the current buffer.
-function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
+# `data` must not alias `buf`
+function insertdata!(buf::Buffer, data::Union{AbstractArray{UInt8}, Memory})
+    nbytes = Int(length(data))
     makemargin!(buf, nbytes)
     datapos = if iszero(buf.markpos)
         # If data is not marked we must not discard buffered (nonconsumed) data
@@ -213,7 +215,9 @@ function insertdata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
     end
     datasize = buf.marginpos - datapos
     copyto!(buf.data, datapos + nbytes, buf.data, datapos, datasize)
-    GC.@preserve buf unsafe_copyto!(bufferptr(buf), data, nbytes)
+    for i in 0:nbytes-1
+        buf.data[buf.bufferpos + i] = data[firstindex(data) + i]
+    end
     supplied!(buf, nbytes)
     if !iszero(buf.markpos)
         buf.markpos += nbytes
