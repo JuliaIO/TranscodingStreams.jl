@@ -157,7 +157,8 @@ eof(stream)   #> true
 In the case where you need to reuse the wrapped stream, the code above must be
 slightly modified because the transcoding stream may read more bytes than
 necessary from the wrapped stream. Wrapping the stream with `NoopStream` solves
-the problem because adjacent transcoding streams share the same buffer.
+the problem because any extra data read after the end of the chunk will be 
+stored back in the internal buffer of the wrapped transcoding stream.
 ```julia
 using CodecZlib
 using TranscodingStreams
