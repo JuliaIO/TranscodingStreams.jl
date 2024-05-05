@@ -351,7 +351,7 @@ using FillArrays: Zeros
 
         stream = NoopStream(IOBuffer("foobar"))
         @test read(stream, 3) == b"foo"
-        @test_throws OverflowError TranscodingStreams.unread(stream, Zeros{UInt8}(2^63-1)) === nothing
+        @test_throws OverflowError TranscodingStreams.unread(stream, Zeros{UInt8}(typemax(Int))) === nothing
         close(stream)
 
         stream = NoopStream(IOBuffer("foo"))
