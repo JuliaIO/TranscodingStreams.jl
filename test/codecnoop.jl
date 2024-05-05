@@ -1,4 +1,5 @@
 using OffsetArrays: OffsetArray
+using FillArrays: Zeros
 
 @testset "Noop Codec" begin
     source = IOBuffer("")
@@ -346,6 +347,17 @@ using OffsetArrays: OffsetArray
         @test read(stream, 3) == b"foo"
         @test TranscodingStreams.unread(stream, OffsetArray(b"bar", -5:-3)) === nothing
         @test read(stream, 3) == b"bar"
+        close(stream)
+
+        stream = NoopStream(IOBuffer("foobar"))
+        @test read(stream, 3) == b"foo"
+        @test_throws OverflowError TranscodingStreams.unread(stream, Zeros{UInt8}(2^63-1)) === nothing
+        close(stream)
+
+        stream = NoopStream(IOBuffer("foo"))
+        @test read(stream, 3) == b"foo"
+        @test TranscodingStreams.unread(stream, Zeros{UInt8}(big(3))) === nothing
+        @test read(stream, 3) == b"\0\0\0"
         close(stream)
 
         stream = NoopStream(IOBuffer("foo"))

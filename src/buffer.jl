@@ -127,7 +127,7 @@ end
 
 # Make margin with ≥`minsize` and return the size of it.
 # If eager is true, it tries to move data even when the buffer has enough margin.
-function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
+function makemargin!(buf::Buffer, minsize::Int; eager::Bool = false)
     @assert minsize ≥ 0
     if buffersize(buf) == 0 && buf.markpos == 0
         buf.bufferpos = buf.marginpos = 1
@@ -156,7 +156,7 @@ function makemargin!(buf::Buffer, minsize::Integer; eager::Bool = false)
     # At least enough for minsize, but otherwise 1.5 times
     if marginsize(buf) < minsize
         datasize = length(buf.data)
-        resize!(buf.data, max(buf.marginpos + minsize - 1, datasize + div(datasize, 2)))
+        resize!(buf.data, max(Base.checked_add(buf.marginpos, minsize) - 1, datasize + div(datasize, 2)))
     end
     @assert marginsize(buf) ≥ minsize
     return marginsize(buf)
@@ -185,7 +185,7 @@ end
 
 # Copy data from `data` to `buf`.
 function copydata!(buf::Buffer, data::Ptr{UInt8}, nbytes::Integer)
-    makemargin!(buf, nbytes)
+    makemargin!(buf, Int(nbytes))
     GC.@preserve buf unsafe_copyto!(marginptr(buf), data, nbytes)
     supplied!(buf, nbytes)
     return buf
