@@ -45,7 +45,9 @@ TranscodingStreams.expectedsize
 TranscodingStreams.minoutsize
 TranscodingStreams.initialize
 TranscodingStreams.finalize
+TranscodingStreams.startproc2
 TranscodingStreams.startproc
+TranscodingStreams.process2
 TranscodingStreams.process
 ```
 
