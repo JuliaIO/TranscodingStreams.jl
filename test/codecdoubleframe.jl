@@ -22,11 +22,13 @@ end
 
 DoubleFrameEncoder() = DoubleFrameEncoder(Ref(false), Ref(false), Ref(false))
 
-function TranscodingStreams.process(
+TranscodingStreams.process(c::DoubleFrameEncoder, i, o, e) = TranscodingStreams.process2(c, i, o, e)
+function TranscodingStreams.process2(
         codec     :: DoubleFrameEncoder,
         input     :: TranscodingStreams.Memory,
         output    :: TranscodingStreams.Memory,
-        error_ref :: TranscodingStreams.Error,
+        error_ref :: TranscodingStreams.Error;
+        kwargs...,
     )
     if input.size == 0
         codec.got_stop_msg[] = true
@@ -75,7 +77,8 @@ function TranscodingStreams.minoutsize(
     return 2
 end
 
-function TranscodingStreams.startproc(codec::DoubleFrameEncoder, ::Symbol, error::Error)
+TranscodingStreams.startproc(c::DoubleFrameEncoder, s, e) = TranscodingStreams.startproc2(c, s, e)
+function TranscodingStreams.startproc2(codec::DoubleFrameEncoder, ::Symbol, error::Error; kwargs...)
     codec.opened[] = false
     codec.got_stop_msg[] = false
     codec.stopped[] = false
@@ -91,11 +94,13 @@ end
 
 DoubleFrameDecoder() = DoubleFrameDecoder(Ref(1), Ref(0x00), Ref(0x00))
 
-function TranscodingStreams.process(
+TranscodingStreams.process(c::DoubleFrameDecoder, i, o, e) = TranscodingStreams.process2(c, i, o, e)
+function TranscodingStreams.process2(
         codec     :: DoubleFrameDecoder,
         input     :: TranscodingStreams.Memory,
         output    :: TranscodingStreams.Memory,
-        error_ref :: TranscodingStreams.Error,
+        error_ref :: TranscodingStreams.Error;
+        kwargs...
     )
     Δin::Int = 0
     Δout::Int = 0
@@ -172,7 +177,8 @@ function TranscodingStreams.process(
     end
 end
 
-function TranscodingStreams.startproc(codec::DoubleFrameDecoder, ::Symbol, error::Error)
+TranscodingStreams.startproc(c::DoubleFrameDecoder, x::Symbol, e::Error) = TranscodingStreams.startproc2(c, x, e)
+function TranscodingStreams.startproc2(codec::DoubleFrameDecoder, ::Symbol, error::Error; kwargs...)
     codec.state[] = 1
     codec.a[] = 0x00
     codec.b[] = 0x00

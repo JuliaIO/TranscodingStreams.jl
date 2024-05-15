@@ -18,12 +18,16 @@ There are six functions for a codec to implement:
 - `initialize`: initialize the codec
 - `finalize`: finalize the codec
 - `startproc`: start processing with the codec
+- `startproc2`: start processing with the codec
 - `process`: process data with the codec.
+- `process2`: process data with the codec.
 
 These are defined in the `TranscodingStreams` and a new codec type must extend
 these methods if necessary.  Implementing a `process` method is mandatory but
 others are optional.  `expectedsize`, `minoutsize`, `initialize`, `finalize`,
-and `startproc` have a default implementation.
+`startproc`, `startproc2`, and `process2` have a default implementation.
+
+Methods ending with a 2 allow extra keyword arguments, for future hints.
 
 Your codec type is denoted by `C` and its object by `codec`.
 
@@ -72,9 +76,10 @@ the stream will become the close mode for safety.
 
 The `startproc(codec::C, mode::Symbol, error::Error)::Symbol` method takes
 `codec`, `mode` and `error`, and returns a status code. This is called just
-before the stream starts reading or writing data. `mode` is either `:read` or
-`:write` and then the stream starts reading or writing, respectively.  The
-return code must be `:ok` if `codec` is ready to read or write data.  Otherwise,
+before the stream starts reading or writing data. `mode` is either `:read`,
+`:write`, or `:transcode` and then the stream starts reading or
+writing, or one of the `transcode` functions is used. 
+The return code must be `:ok` if `codec` is ready for data. Otherwise,
 it must be `:error` and the `error` argument must be set to an exception object.
 
 ### `process`
@@ -157,6 +162,17 @@ function startproc(codec::Codec, mode::Symbol, error::Error)::Symbol
 end
 
 """
+    startproc2(codec::Codec, mode::Symbol, error::Error; kwargs...)::Symbol
+
+Start data processing with `codec` of `mode`.
+
+The default method does nothing and returns `:ok`.
+"""
+function startproc2(codec::Codec, mode::Symbol, error::Error; kwargs...)::Symbol
+    startproc(codec, mode, error)
+end
+
+"""
     process(codec::Codec, input::Memory, output::Memory, error::Error)::Tuple{Int,Int,Symbol}
 
 Do data processing with `codec`.
@@ -166,4 +182,15 @@ There is no default method.
 function process(codec::Codec, input::Memory, output::Memory, error::Error)::Tuple{Int,Int,Symbol}
     # no default method
     throw(MethodError(process, (codec, input, output, error)))
+end
+
+"""
+    process2(codec::Codec, input::Memory, output::Memory, error::Error; kwargs...)::Tuple{Int,Int,Symbol}
+
+Do data processing with `codec`.
+
+There is no default method.
+"""
+function process2(codec::Codec, input::Memory, output::Memory, error::Error; kwargs...)::Tuple{Int,Int,Symbol}
+    process(codec, input, output, error)
 end

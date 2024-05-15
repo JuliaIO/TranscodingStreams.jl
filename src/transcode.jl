@@ -143,14 +143,17 @@ function unsafe_transcode!(
     input::Buffer,
 )
     error = Error()
-    code = startproc(codec, :write, error)
+    # Note: pledged_input_size is currently experimental
+    # :transcode mode enables some codecs to error if they are used in a TranscodingStream.
+    code = startproc2(codec, :transcode, error; pledged_input_size=buffersize(input))
     if code === :error
         @goto error
     end
     n = minoutsize(codec, buffermem(input))
     @label process
     makemargin!(output, n)
-    Δin, Δout, code = process(codec, buffermem(input), marginmem(output), error)
+    # Note: all_input is an experimental hint that all input is available for the current frame.
+    Δin, Δout, code = process2(codec, buffermem(input), marginmem(output), error; all_input=true)
     @debug(
         "called process()",
         code = code,
@@ -165,7 +168,7 @@ function unsafe_transcode!(
         @goto error
     elseif code === :end
         if buffersize(input) > 0
-            if startproc(codec, :write, error) === :error
+            if startproc2(codec, :transcode, error) === :error
                 @goto error
             end
             n = minoutsize(codec, buffermem(input))

@@ -675,7 +675,7 @@ end
 # Call `startproc` with epilogne.
 function callstartproc(stream::TranscodingStream, mode::Symbol)
     state = stream.state
-    state.code = startproc(stream.codec, mode, state.error)
+    state.code = startproc2(stream.codec, mode, state.error)
     if state.code == :error
         changemode!(stream, :panic)
     end
@@ -687,7 +687,7 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     state = stream.state
     input = buffermem(inbuf)
     GC.@preserve inbuf makemargin!(outbuf, minoutsize(stream.codec, input))
-    Δin, Δout, state.code = GC.@preserve inbuf outbuf process(stream.codec, input, marginmem(outbuf), state.error)
+    Δin, Δout, state.code = GC.@preserve inbuf outbuf process2(stream.codec, input, marginmem(outbuf), state.error)
     @debug(
         "called process()",
         code = state.code,
@@ -781,7 +781,7 @@ function changemode!(stream::TranscodingStream, newmode::Symbol)
         throw(state.error[])
     elseif mode == :idle
         if newmode == :read || newmode == :write
-            state.code = startproc(stream.codec, newmode, state.error)
+            state.code = startproc2(stream.codec, newmode, state.error)
             if state.code == :error
                 changemode!(stream, :panic)
             end
