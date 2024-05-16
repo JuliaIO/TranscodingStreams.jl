@@ -143,8 +143,7 @@ function unsafe_transcode!(
     input::Buffer,
 )
     error = Error()
-    # Note: pledged_input_size is currently experimental
-    code = startproc2(codec, :write, error; pledged_input_size=buffersize(input))
+    code = startproc2(codec, :write, error)
     if code === :error
         @goto error
     end
