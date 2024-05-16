@@ -76,10 +76,9 @@ the stream will become the close mode for safety.
 
 The `startproc(codec::C, mode::Symbol, error::Error)::Symbol` method takes
 `codec`, `mode` and `error`, and returns a status code. This is called just
-before the stream starts reading or writing data. `mode` is either `:read`,
-`:write`, or `:transcode` and then the stream starts reading or
-writing, or one of the `transcode` functions is used. 
-The return code must be `:ok` if `codec` is ready for data. Otherwise,
+before the stream starts reading or writing data. `mode` is either `:read` or
+`:write` and then the stream starts reading or writing, respectively.  The
+return code must be `:ok` if `codec` is ready to read or write data.  Otherwise,
 it must be `:error` and the `error` argument must be set to an exception object.
 
 ### `process`

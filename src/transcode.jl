@@ -144,8 +144,7 @@ function unsafe_transcode!(
 )
     error = Error()
     # Note: pledged_input_size is currently experimental
-    # :transcode mode enables some codecs to error if they are used in a TranscodingStream.
-    code = startproc2(codec, :transcode, error; pledged_input_size=buffersize(input))
+    code = startproc2(codec, :write, error; pledged_input_size=buffersize(input))
     if code === :error
         @goto error
     end
@@ -168,7 +167,7 @@ function unsafe_transcode!(
         @goto error
     elseif code === :end
         if buffersize(input) > 0
-            if startproc2(codec, :transcode, error) === :error
+            if startproc2(codec, :write, error) === :error
                 @goto error
             end
             n = minoutsize(codec, buffermem(input))
