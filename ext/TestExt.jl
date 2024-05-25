@@ -81,24 +81,26 @@ function TranscodingStreams.test_chunked_read(Encoder, Decoder)
     alpha = b"色即是空"
     encoder = Encoder()
     initialize(encoder)
-    for _ in 1:500
-        chunks = [rand(alpha, rand(0:100)) for _ in 1:rand(1:100)]
-        data = mapfoldl(x->transcode(encoder, x), vcat, chunks, init=UInt8[])
-        buffer = NoopStream(IOBuffer(data))
-        ok = true
-        for chunk in chunks
-            stream = TranscodingStream(Decoder(), buffer, stop_on_end=true)
-            ok &= read(stream) == chunk
-            ok &= position(stream) == length(chunk)
-            ok &= eof(stream)
-            ok &= isreadable(stream)
+    for sharedbuf in false:true
+        for _ in 1:500
+            chunks = [rand(alpha, rand(0:100)) for _ in 1:rand(1:100)]
+            data = mapfoldl(x->transcode(encoder, x), vcat, chunks, init=UInt8[])
+            buffer = NoopStream(IOBuffer(data))
+            ok = true
+            for chunk in chunks
+                stream = TranscodingStream(Decoder(), buffer; stop_on_end=true, sharedbuf)
+                ok &= read(stream) == chunk
+                ok &= position(stream) == length(chunk)
+                ok &= eof(stream)
+                ok &= isreadable(stream)
+                close(stream)
+            end
+            # read without stop_on_end should read the full data.
+            stream = TranscodingStream(Decoder(), IOBuffer(data))
+            ok &= read(stream) == reduce(vcat, chunks)
             close(stream)
+            Test.@test ok
         end
-        # read without stop_on_end should read the full data.
-        stream = TranscodingStream(Decoder(), IOBuffer(data))
-        ok &= read(stream) == reduce(vcat, chunks)
-        close(stream)
-        Test.@test ok
     end
     finalize(encoder)
 end

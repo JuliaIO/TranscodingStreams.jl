@@ -123,7 +123,7 @@ function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt):
     end
     buffer = stream.buffer1
     if marginsize(buffer) ≥ nbytes
-        copydata!(buffer, input, nbytes)
+        copydata!(buffer, input, Int(nbytes))
         return Int(nbytes)
     else
         flush_buffer2(stream)

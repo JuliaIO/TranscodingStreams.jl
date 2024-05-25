@@ -1,3 +1,6 @@
+using OffsetArrays: OffsetArray
+using FillArrays: Zeros
+
 @testset "Noop Codec" begin
     source = IOBuffer("")
     stream = TranscodingStream(Noop(), source)
@@ -317,44 +320,98 @@
         @test !iswritable(stream)
     end
 
-    stream = NoopStream(IOBuffer(""))
-    @test TranscodingStreams.unread(stream, b"foo") === nothing
-    @test read(stream, 3) == b"foo"
-    close(stream)
+    @testset "unread" begin
+        stream = NoopStream(IOBuffer(""))
+        @test TranscodingStreams.unread(stream, b"foo") === nothing
+        @test read(stream, 3) == b"foo"
+        close(stream)
 
-    stream = NoopStream(IOBuffer("foo"))
-    @test read(stream, 3) == b"foo"
-    @test TranscodingStreams.unread(stream, b"bar") === nothing
-    @test read(stream, 3) == b"bar"
-    close(stream)
+        stream = NoopStream(IOBuffer("foo"))
+        @test read(stream, 3) == b"foo"
+        @test TranscodingStreams.unread(stream, b"bar") === nothing
+        @test read(stream, 3) == b"bar"
+        close(stream)
 
-    stream = NoopStream(IOBuffer("foobar"))
-    @test TranscodingStreams.unread(stream, b"baz") === nothing
-    @test read(stream, 3) == b"baz"
-    @test read(stream, 3) == b"foo"
-    @test read(stream, 3) == b"bar"
-    @test eof(stream)
-    close(stream)
+        stream = NoopStream(IOBuffer("foobar"))
+        @test TranscodingStreams.unread(stream, b"baz") === nothing
+        @test read(stream, 3) == b"baz"
+        @test read(stream, 3) == b"foo"
+        @test read(stream, 3) == b"bar"
+        @test eof(stream)
+        close(stream)
 
-    stream = NoopStream(IOBuffer("foobar"))
-    @test read(stream, 3) == b"foo"
-    @test TranscodingStreams.unread(stream, b"baz") === nothing
-    @test read(stream, 3) == b"baz"
-    @test read(stream, 3) == b"bar"
-    @test eof(stream)
-    close(stream)
+        stream = NoopStream(IOBuffer("foobar"))
+        @test read(stream, 3) == b"foo"
+        @test TranscodingStreams.unread(stream, b"baz") === nothing
+        @test read(stream, 3) == b"baz"
+        @test read(stream, 3) == b"bar"
+        @test eof(stream)
+        close(stream)
 
-    stream = NoopStream(IOBuffer("foobar"))
-    @test read(stream, 3) == b"foo"
-    @test read(stream, 3) == b"bar"
-    @test TranscodingStreams.unread(stream, b"baz") === nothing
-    @test read(stream, 3) == b"baz"
-    @test eof(stream)
-    close(stream)
+        stream = NoopStream(IOBuffer("foobar"))
+        @test read(stream, 3) == b"foo"
+        @test read(stream, 3) == b"bar"
+        @test TranscodingStreams.unread(stream, b"baz") === nothing
+        @test read(stream, 3) == b"baz"
+        @test eof(stream)
+        close(stream)
 
-    stream = NoopStream(IOBuffer("foobar"))
-    @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
-    close(stream)
+        for bufsize in (1, 2, 3, 4, 100)
+            for n in (1, 100)
+                stream = NoopStream(IOBuffer("foo"^n*"bar"^n); bufsize)
+                @test mark(stream) == 0
+                @test read(stream, 3n) == codeunits("foo"^n)
+                @test read(stream, 3n) == codeunits("bar"^n)
+                TranscodingStreams.unread(stream, codeunits("baz"^n))
+                @test reset(stream) == 0
+                @test read(stream, 3n) == codeunits("foo"^n)
+                @test read(stream, 3n) == codeunits("baz"^n)
+                @test eof(stream)
+                close(stream)
+            end
+        end
+
+        # unread before mark
+        stream = NoopStream(IOBuffer("foobar"); bufsize=16)
+        @test read(stream, String) == "foobar"
+        mark(stream)
+        for i in 1:100
+            TranscodingStreams.unread(stream, b"foo")
+        end
+        @test read(stream, String) == "foo"^100
+        @test reset(stream) == 6
+        @test eof(stream)
+
+        stream = NoopStream(IOBuffer("foobar"))
+        @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
+        close(stream)
+
+        stream = NoopStream(IOBuffer("foo"))
+        @test read(stream, 3) == b"foo"
+        @test TranscodingStreams.unread(stream, OffsetArray(b"bar", -5:-3)) === nothing
+        @test read(stream, 3) == b"bar"
+        close(stream)
+
+        stream = NoopStream(IOBuffer("foobar"))
+        @test read(stream, 3) == b"foo"
+        @test_throws OverflowError TranscodingStreams.unread(stream, Zeros{UInt8}(typemax(Int))) === nothing
+        close(stream)
+
+        stream = NoopStream(IOBuffer("foo"))
+        @test read(stream, 3) == b"foo"
+        @test TranscodingStreams.unread(stream, Zeros{UInt8}(big(3))) === nothing
+        @test read(stream, 3) == b"\0\0\0"
+        close(stream)
+
+        stream = NoopStream(IOBuffer("foo"))
+        @test read(stream, 3) == b"foo"
+        d = b"bar"
+        GC.@preserve d begin
+            @test TranscodingStreams.unsafe_unread(stream, pointer(d), 3) === nothing
+        end
+        @test read(stream, 3) == b"bar"
+        close(stream)
+    end
 
     stream = NoopStream(IOBuffer(""))
     unsafe_write(stream, C_NULL, 0)
