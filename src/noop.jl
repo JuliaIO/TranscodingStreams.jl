@@ -115,6 +115,7 @@ end
 
 function Base.unsafe_write(stream::NoopStream, input::Ptr{UInt8}, nbytes::UInt)::Int
     changemode!(stream, :write)
+    Int(nbytes) # Error if nbytes > typemax Int
     if has_sharedbuf(stream)
         # directly write data to the underlying stream
         n = Int(unsafe_write(stream.stream, input, nbytes))
