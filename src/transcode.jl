@@ -125,7 +125,8 @@ function transcode!(
     Base.mightalias(input.data, output.data) && error(
         "input and outbut buffers must be independent"
     )
-    unsafe_transcode!(output, codec, input)
+    # GC.@preserve since unsafe_transcode! may convert to raw pointers
+    GC.@preserve input output codec unsafe_transcode!(output, codec, input)
 end
 
 """
