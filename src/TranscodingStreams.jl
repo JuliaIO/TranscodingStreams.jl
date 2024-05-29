@@ -21,10 +21,10 @@ function test_roundtrip_read end
 function test_roundtrip_write end
 function test_roundtrip_transcode end
 function test_roundtrip_lines end
+function test_roundtrip_seekstart end
 function test_roundtrip_fileio end
 function test_chunked_read end
 function test_chunked_write end
-function test_seekstart end
 
 if !isdefined(Base, :get_extension)
     include("../ext/TestExt.jl")
