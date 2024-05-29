@@ -125,4 +125,23 @@ function TranscodingStreams.test_chunked_write(Encoder, Decoder)
     finalize(encoder)
 end
 
+# Test that seekstart resets the state of the codec.
+function TranscodingStreams.test_seekstart(encoder, decoder)
+    seed!(TEST_RANDOM_SEED)
+    for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
+        data = rand(alpha, n)
+        file = IOBuffer(data)
+        stream = decoder(encoder(file))
+        for m in vcat(0:min(n,20), sort!(rand(0:n, 10)))
+            Test.@test read(stream, m) == @view(data[1:m])
+            seekstart(stream)
+        end
+        seekstart(stream)
+        Test.@test read(stream) == data
+        seekstart(stream)
+        Test.@test read(stream) == data
+        close(stream)
+    end
+end
+
 end # module

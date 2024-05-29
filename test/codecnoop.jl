@@ -254,6 +254,7 @@ using FillArrays: Zeros
     TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
     TranscodingStreams.test_roundtrip_write(NoopStream, NoopStream)
     TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
+    TranscodingStreams.test_seekstart(NoopStream, NoopStream)
 
     @testset "switch write => read" begin
         stream = NoopStream(IOBuffer(collect(b"foobar"), read=true, write=true))
