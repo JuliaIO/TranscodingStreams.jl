@@ -68,7 +68,7 @@ function TranscodingStreams.test_roundtrip_seekstart(encoder, decoder)
         data = rand(alpha, n)
         file = IOBuffer(data)
         stream = decoder(encoder(file))
-        for m in vcat(0:min(n,20), sort!(rand(0:n, 10)))
+        for m in vcat(0:min(n,20), rand(0:n, 10))
             Test.@test read(stream, m) == @view(data[1:m])
             seekstart(stream)
         end
