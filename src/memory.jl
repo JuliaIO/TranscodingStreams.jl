@@ -11,6 +11,10 @@ struct Memory
     size::UInt
 end
 
+function Memory(data::Vector{UInt8})
+    return Memory(pointer(data), sizeof(data))
+end
+
 @inline function Base.length(mem::Memory)
     return mem.size
 end

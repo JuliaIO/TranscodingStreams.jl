@@ -94,7 +94,7 @@ end
     end
 
     data = Vector{UInt8}(b"foobar")
-    GC.@preserve data let mem = TranscodingStreams.Memory(pointer(data), sizeof(data))
+    GC.@preserve data let mem = TranscodingStreams.Memory(data)
         @test mem isa TranscodingStreams.Memory
         @test mem.ptr == pointer(data)
         @test mem.size == sizeof(data)
