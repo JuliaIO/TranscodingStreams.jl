@@ -7,6 +7,7 @@ using TranscodingStreams:
     test_roundtrip_read,
     test_roundtrip_write,
     test_roundtrip_lines,
+    test_roundtrip_seekstart,
     test_roundtrip_transcode,
     test_roundtrip_fileio,
     test_chunked_read,
@@ -305,6 +306,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_write(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_lines(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
+    test_roundtrip_seekstart(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_transcode(DoubleFrameEncoder, DoubleFrameDecoder)
     test_roundtrip_fileio(DoubleFrameEncoder, DoubleFrameDecoder)
     test_chunked_read(DoubleFrameEncoder, DoubleFrameDecoder)

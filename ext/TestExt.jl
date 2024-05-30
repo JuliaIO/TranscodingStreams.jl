@@ -62,6 +62,24 @@ function TranscodingStreams.test_roundtrip_lines(encoder, decoder)
     Test.@test hash(lines) == hash(readlines(decoder(buf)))
 end
 
+function TranscodingStreams.test_roundtrip_seekstart(encoder, decoder)
+    seed!(TEST_RANDOM_SEED)
+    for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
+        data = rand(alpha, n)
+        file = IOBuffer(data)
+        stream = decoder(encoder(file))
+        for m in vcat(0:min(n,20), rand(0:n, 10))
+            Test.@test read(stream, m) == @view(data[1:m])
+            seekstart(stream)
+        end
+        seekstart(stream)
+        Test.@test read(stream) == data
+        seekstart(stream)
+        Test.@test read(stream) == data
+        close(stream)
+    end
+end
+
 function TranscodingStreams.test_roundtrip_fileio(Encoder, Decoder)
     data = b"""
     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla sit amet tempus felis. Etiam molestie urna placerat iaculis pellentesque. Maecenas porttitor et dolor vitae posuere. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc eget nibh quam. Nullam aliquet interdum fringilla. Duis facilisis, lectus in consectetur varius, lorem sem tempor diam, nec auctor tellus nibh sit amet sapien. In ex nunc, elementum eget facilisis ut, luctus eu orci. Sed sapien urna, accumsan et elit non, auctor pretium massa. Phasellus consectetur nisi suscipit blandit aliquam. Nulla facilisi. Mauris pellentesque sem sit amet mi vestibulum eleifend. Nulla faucibus orci ac lorem efficitur, et blandit orci interdum. Aenean posuere ultrices ex sed rhoncus. Donec malesuada mollis sem, sed varius nunc sodales sed. Curabitur lobortis non justo non tristique.
