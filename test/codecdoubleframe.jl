@@ -324,8 +324,8 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
             @test stat.out == 0
             read(stream)
             stat = TranscodingStreams.stats(stream)
-            @test_broken stat.in == 16
-            @test_broken stat.transcoded_in == 16
+            @test stat.in == 16
+            @test stat.transcoded_in == 16
             @test stat.transcoded_out == 6
             @test stat.out == 6
             close(stream)
@@ -373,7 +373,7 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
             @test stat.transcoded_in == 16
             @test stat.transcoded_out == 6
             @test stat.out == 6
-            @test_broken position(stream.stream) == 6
+            @test position(stream.stream) == 6
             close(stream)
         end
     end

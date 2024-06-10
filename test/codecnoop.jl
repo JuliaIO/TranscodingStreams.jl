@@ -193,7 +193,7 @@ using FillArrays: Zeros
         @test stat.out === Int64(0)
         eof(stream)
         stat = TranscodingStreams.stats(stream)
-        @test_broken stat.in === Int64(0)
+        @test stat.in === Int64(0)
         @test stat.out === Int64(0)
         read(stream)
         stat = TranscodingStreams.stats(stream)

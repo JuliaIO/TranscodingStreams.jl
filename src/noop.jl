@@ -155,8 +155,12 @@ function stats(stream::NoopStream)
     if mode === :idle
         in = out = 0
     elseif mode === :read
-        in = buffer.transcoded
-        out = in - buffersize(buffer)
+        out = buffer.transcoded - buffersize(buffer)
+        if has_sharedbuf(stream)
+            in = out
+        else
+            in = buffer.transcoded
+        end
     elseif mode === :write
         out = stream.state.bytes_written_out
         in = out
