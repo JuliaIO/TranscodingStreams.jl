@@ -335,16 +335,18 @@ function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=fals
     local ret::Vector{UInt8}
     filled = 0
     while !eof(stream)
-        p = findbyte(buffer1, delim)
-        found = false
-        if p < marginptr(buffer1)
-            found = true
-            sz = Int(p + 1 - bufferptr(buffer1))
-            if !keep
-                sz -= 1
+        GC.@preserve buffer1 begin
+            p = findbyte(buffer1, delim)
+            found = false
+            if p < marginptr(buffer1)
+                found = true
+                sz = Int(p + 1 - bufferptr(buffer1))
+                if !keep
+                    sz -= 1
+                end
+            else
+                sz = buffersize(buffer1)
             end
-        else
-            sz = buffersize(buffer1)
         end
         if @isdefined(ret)
             resize!(ret, filled + sz)
@@ -690,9 +692,11 @@ end
 # Call `process` with prologue and epilogue.
 function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
     state = stream.state
-    input = buffermem(inbuf)
-    GC.@preserve inbuf makemargin!(outbuf, minoutsize(stream.codec, input))
-    Δin::Int, Δout::Int, state.code = GC.@preserve inbuf outbuf process(stream.codec, input, marginmem(outbuf), state.error)
+    makemargin!(
+        outbuf,
+        GC.@preserve(inbuf, minoutsize(stream.codec, buffermem(inbuf))),
+    )
+    Δin::Int, Δout::Int, state.code = GC.@preserve inbuf outbuf process(stream.codec, buffermem(inbuf), marginmem(outbuf), state.error)
     @debug(
         "called process()",
         code = state.code,
