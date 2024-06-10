@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · TranscodingStreams.jl</title><meta name="title" content="Home · TranscodingStreams.jl"/><meta property="og:title" content="Home · TranscodingStreams.jl"/><meta property="twitter:title" content="Home · TranscodingStreams.jl"/><meta name="description" content="Documentation for TranscodingStreams.jl."/><meta property="og:description" content="Documentation for TranscodingStreams.jl."/><meta property="twitter:description" content="Documentation for TranscodingStreams.jl."/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>TranscodingStreams.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Overview"><span>Overview</span></a></li><li><a class="tocitem" href="#Introduction"><span>Introduction</span></a></li><li><a class="tocitem" href="#Notes"><span>Notes</span></a></li></ul></li><li><a class="tocitem" href="examples/">Examples</a></li><li><a class="tocitem" href="reference/">Reference</a></li><li><a class="tocitem" href="devnotes/">Developer&#39;s notes</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaIO/TranscodingStreams.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaIO/TranscodingStreams.jl/blob/master/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Home"><a class="docs-heading-anchor" href="#Home">Home</a><a id="Home-1"></a><a class="docs-heading-anchor-permalink" href="#Home" title="Permalink"></a></h1><p><img src="assets/transcodingstream.png" alt="TranscodingStream"/></p><h2 id="Overview"><a class="docs-heading-anchor" href="#Overview">Overview</a><a id="Overview-1"></a><a class="docs-heading-anchor-permalink" href="#Overview" title="Permalink"></a></h2><p>TranscodingStreams.jl is a package for transcoding data streams. Transcoding may be compression, decompression, ASCII encoding, and any other codec.  The package exports a data type <code>TranscodingStream</code>, which is a subtype of <code>IO</code> and wraps other <code>IO</code> object to transcode data read from or written to the wrapped stream.</p><p>In this page, we introduce the basic concepts of TranscodingStreams.jl and currently available packages. The <a href="examples/#Examples">Examples</a> page demonstrates common usage. The <a href="reference/#Reference">Reference</a> page offers a comprehensive API document.</p><h2 id="Introduction"><a class="docs-heading-anchor" href="#Introduction">Introduction</a><a id="Introduction-1"></a><a class="docs-heading-anchor-permalink" href="#Introduction" title="Permalink"></a></h2><p><code>TranscodingStream</code> has two type parameters, <code>C&lt;:Codec</code> and <code>S&lt;:IO</code>, and hence the concrete data type is written as <code>TranscodingStream{C&lt;:Codec,S&lt;:IO}</code>. This type wraps an underlying I/O stream <code>S</code> by a transcoding codec <code>C</code>. <code>C</code> and <code>S</code> are orthogonal and hence you can use any combination of these two types.  The underlying stream may be any stream that supports I/O operations defined by the <code>Base</code> module. For example, it may be <code>IOStream</code>, <code>TTY</code>, <code>IOBuffer</code>, or <code>TranscodingStream</code>. The codec <code>C</code> must define the transcoding protocol defined in this package.  We already have various codecs in packages listed below.  Of course, you can define your own codec by implementing the transcoding protocol described in <a href="reference/#TranscodingStreams.Codec"><code>TranscodingStreams.Codec</code></a>.</p><p>You can install codec packages using the standard package manager. These codec packages are independent of each other and can be installed separately. You won&#39;t need to explicitly install the TranscodingStreams.jl package unless you will use lower-level interfaces of it. Each codec package defines some codec types, which is a subtype of <code>TranscodingStreams.Codec</code>, and their corresponding transcoding stream aliases.  These aliases are partially instantiated by a codec type; for example, <code>GzipDecompressionStream{S}</code> is an alias of <code>TranscodingStream{GzipDecompressor,S}</code>, where <code>S</code> is a subtype of <code>IO</code>.</p><table>
+    <tr>
+        <th>Package</th>
+        <th>Library</th>
+        <th>Format</th>
+        <th>Codec</th>
+        <th>Stream alias</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td rowspan="6"><a href="https://github.com/bicycle1885/CodecZlib.jl">CodecZlib.jl</a></td>
+        <td rowspan="6"><a href="http://zlib.net/">zlib</a></td>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1952">RFC1952</a></td>
+        <td><code>GzipCompressor</code></td>
+        <td><code>GzipCompressorStream</code></td>
+        <td>Compress data in gzip (.gz) format.</td>
+    </tr>
+    <tr>
+        <td><code>GzipDecompressor</code></td>
+        <td><code>GzipDecompressorStream</code></td>
+        <td>Decompress data in gzip (.gz) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1950">RFC1950</a></td>
+        <td><code>ZlibCompressor</code></td>
+        <td><code>ZlibCompressorStream</code></td>
+        <td>Compress data in zlib format.</td>
+    </tr>
+    <tr>
+        <td><code>ZlibDecompressor</code></td>
+        <td><code>ZlibDecompressorStream</code></td>
+        <td>Decompress data in zlib format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://tools.ietf.org/html/rfc1951">RFC1951</a></td>
+        <td><code>DeflateCompressor</code></td>
+        <td><code>DeflateCompressorStream</code></td>
+        <td>Compress data in deflate format.</td>
+    </tr>
+    <tr>
+        <td><code>DeflateDecompressor</code></td>
+        <td><code>DeflateDecompressorStream</code></td>
+        <td>Decompress data in deflate format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecXz.jl">CodecXz.jl</a></td>
+        <td rowspan="2"><a href="https://tukaani.org/xz/">xz</a></td>
+        <td rowspan="2"><a href="https://tukaani.org/xz/xz-file-format.txt">The .xz File Format</a></td>
+        <td><code>XzCompressor</code></td>
+        <td><code>XzCompressorStream</code></td>
+        <td>Compress data in xz (.xz) format.</td>
+    </tr>
+    <tr>
+        <td><code>XzDecompressor</code></td>
+        <td><code>XzDecompressorStream</code></td>
+        <td>Decompress data in xz (.xz) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecZstd.jl">CodecZstd.jl</a></td>
+        <td rowspan="2"><a href="http://facebook.github.io/zstd/">zstd</a></td>
+        <td rowspan="2"><a href="https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md">Zstandard Compression Format</a></td>
+        <td><code>ZstdCompressor</code></td>
+        <td><code>ZstdCompressorStream</code></td>
+        <td>Compress data in zstd (.zst) format.</td>
+    </tr>
+    <tr>
+        <td><code>ZstdDecompressor</code></td>
+        <td><code>ZstdDecompressorStream</code></td>
+        <td>Decompress data in zstd (.zst) format.</td>
+    </tr>
+    <tr>
+        <td rowspan="6"><a href="https://github.com/bicycle1885/CodecBase.jl">CodecBase.jl</a></td>
+        <td rowspan="6">native</td>
+        <td rowspan="6"><a href="https://tools.ietf.org/html/rfc4648">RFC4648</a></td>
+        <td><code>Base16Encoder</code></td>
+        <td><code>Base16EncoderStream</code></td>
+        <td>Encode binary in base16 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base16Decoder</code></td>
+        <td><code>Base16DecoderStream</code></td>
+        <td>Decode binary in base16 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base32Encoder</code></td>
+        <td><code>Base32EncoderStream</code></td>
+        <td>Encode binary in base32 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base32Decoder</code></td>
+        <td><code>Base32DecoderStream</code></td>
+        <td>Decode binary in base32 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base64Encoder</code></td>
+        <td><code>Base64EncoderStream</code></td>
+        <td>Encode binary in base64 format.</td>
+    </tr>
+    <tr>
+        <td><code>Base64Decoder</code></td>
+        <td><code>Base64DecoderStream</code></td>
+        <td>Decode binary in base64 format.</td>
+    </tr>
+    <tr>
+        <td rowspan="2"><a href="https://github.com/bicycle1885/CodecBzip2.jl">CodecBzip2.jl</a></td>
+        <td rowspan="2"><a href="http://www.bzip.org/">bzip2</a></td>
+        <td rowspan="2"></td>
+        <td><code>Bzip2Compressor</code></td>
+        <td><code>Bzip2CompressorStream</code></td>
+        <td>Compress data in bzip2 (.bz2) format.</td>
+    </tr>
+    <tr>
+        <td><code>Bzip2Decompressor</code></td>
+        <td><code>Bzip2DecompressorStream</code></td>
+        <td>Decompress data in bzip2 (.bz2) format.</td>
+    </tr>
+</table><h2 id="Notes"><a class="docs-heading-anchor" href="#Notes">Notes</a><a id="Notes-1"></a><a class="docs-heading-anchor-permalink" href="#Notes" title="Permalink"></a></h2><h3 id="Wrapped-streams"><a class="docs-heading-anchor" href="#Wrapped-streams">Wrapped streams</a><a id="Wrapped-streams-1"></a><a class="docs-heading-anchor-permalink" href="#Wrapped-streams" title="Permalink"></a></h3><p>The wrapper stream takes care of the wrapped stream. Reading or writing data from or to the wrapped stream outside the management will result in unexpected behaviors. When you close the wrapped stream, you must call the <code>close</code> method of the wrapper stream, which releases allocated resources and closes the wrapped stream.</p><h3 id="Error-handling"><a class="docs-heading-anchor" href="#Error-handling">Error handling</a><a id="Error-handling-1"></a><a class="docs-heading-anchor-permalink" href="#Error-handling" title="Permalink"></a></h3><p>You may encounter an error while processing data with this package. For example, your compressed data may be corrupted or truncated for some reason, and the decompressor cannot recover the original data. In such a case, the codec informs the stream of the error, and the stream goes to an unrecoverable mode.  In this mode, the only possible operations are <code>isopen</code> and <code>close</code>. Other operations, such as <code>read</code> or <code>write</code>, will result in an argument error exception. Resources allocated by the codec will be released by the stream, and hence you must not call the finalizer of the codec.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="examples/">Examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.4.1 on <span class="colophon-date" title="Monday 10 June 2024 17:48">Monday 10 June 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
