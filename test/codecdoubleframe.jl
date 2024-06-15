@@ -386,6 +386,16 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         @test_throws ErrorException("short write") flush(stream)
     end
 
+    @testset "peek" begin
+        stream = DoubleFrameDecoderStream(DoubleFrameEncoderStream(IOBuffer(
+            codeunits("こんにちは")
+        )))
+        @test peek(stream) == 0xe3
+        @test peek(stream, Char) == 'こ'
+        @test peek(stream, Int32) == -476872221
+        close(stream)
+    end
+
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_write(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_lines(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
