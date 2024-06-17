@@ -314,6 +314,7 @@ end
 # Read Functions
 # --------------
 
+# needed for `peek(stream, Char)` to work
 function Base.peek(stream::TranscodingStream, ::Type{UInt8})::UInt8
     # eof and ready_to_read! are inlined here because ready_to_read! is very slow and eof is broken
     eof = buffersize(stream.buffer1) == 0
