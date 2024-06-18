@@ -541,4 +541,12 @@ using FillArrays: Zeros
         @test take!(sink) == b"abcd"
     end
 
+    @testset "peek" begin
+        stream = NoopStream(IOBuffer(codeunits("こんにちは")))
+        @test peek(stream) == 0xe3
+        @test peek(stream, Char) == 'こ'
+        @test peek(stream, Int32) == -476872221
+        close(stream)
+    end
+
 end

@@ -314,7 +314,8 @@ end
 # Read Functions
 # --------------
 
-function Base.read(stream::TranscodingStream, ::Type{UInt8})
+# needed for `peek(stream, Char)` to work
+function Base.peek(stream::TranscodingStream, ::Type{UInt8})::UInt8
     # eof and ready_to_read! are inlined here because ready_to_read! is very slow and eof is broken
     eof = buffersize(stream.buffer1) == 0
     state = stream.state
@@ -325,7 +326,14 @@ function Base.read(stream::TranscodingStream, ::Type{UInt8})
     if eof && sloweof(stream)
         throw(EOFError())
     end
-    return readbyte!(stream.buffer1)
+    buf = stream.buffer1
+    return buf.data[buf.bufferpos]
+end
+
+function Base.read(stream::TranscodingStream, ::Type{UInt8})::UInt8
+    x = peek(stream)
+    consumed!(stream.buffer1, 1)
+    x
 end
 
 function Base.readuntil(stream::TranscodingStream, delim::UInt8; keep::Bool=false)
