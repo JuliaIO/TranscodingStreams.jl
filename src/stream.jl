@@ -605,10 +605,15 @@ function stats(stream::TranscodingStream)
     if mode === :idle
         transcoded_in = transcoded_out = in = out = 0
     elseif mode === :read || mode === :stop
-        transcoded_in = buffer2.transcoded
         transcoded_out = buffer1.transcoded
-        in = transcoded_in + buffersize(buffer2)
         out = transcoded_out - buffersize(buffer1)
+        if has_sharedbuf(stream)
+            transcoded_in = stats(stream.stream).out
+            in = transcoded_in
+        else
+            transcoded_in = buffer2.transcoded
+            in = transcoded_in + buffersize(buffer2)
+        end
     elseif mode === :write
         transcoded_in = buffer1.transcoded
         out = state.bytes_written_out
@@ -709,8 +714,12 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
         input_delta = Δin,
         output_delta = Δout,
     )
-    consumed!(inbuf, Δin, transcode = true)
-    supplied!(outbuf, Δout, transcode = true)
+    consumed!(inbuf, Δin;
+        transcode = !has_sharedbuf(stream) || stream.state.mode === :write,
+    ) # inbuf is buffer1 if mode is :write
+    supplied!(outbuf, Δout;
+        transcode = !has_sharedbuf(stream) || stream.state.mode !== :write,
+    ) # outbuf is buffer1 if mode is not :write
     if has_sharedbuf(stream)
         if stream.state.mode === :write
             # this must be updated before throwing any error if outbuf is shared.
