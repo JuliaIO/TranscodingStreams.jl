@@ -115,42 +115,44 @@ function is_stats_consistent(stream)
     true
 end
 
-@check function read_byte_data(
-        kws=read_codecs_kws,
-        data=datas,
-    )
-    stream = wrap_stream(kws, IOBuffer(data))
-    for i in 1:length(data)
-        position(stream) == i-1 || return false
+@testset "read" begin
+    @check function read_byte_data(
+            kws=read_codecs_kws,
+            data=datas,
+        )
+        stream = wrap_stream(kws, IOBuffer(data))
+        for i in 1:length(data)
+            position(stream) == i-1 || return false
+            is_stats_consistent(stream) || return false
+            read(stream, UInt8) == data[i] || return false
+        end
         is_stats_consistent(stream) || return false
-        read(stream, UInt8) == data[i] || return false
+        eof(stream)
     end
-    is_stats_consistent(stream) || return false
-    eof(stream)
-end
-@check function read_data(
-        kws=read_codecs_kws,
-        data=datas,
-    )
-    stream = wrap_stream(kws, IOBuffer(data))
-    read(stream) == data || return false
-    is_stats_consistent(stream) || return false
-    eof(stream)
-end
-@check function read_data_methods(
-        kws=read_codecs_kws,
-        data=datas,
-        rs=Data.Vectors(read_methods),
-    )
-    stream = wrap_stream(kws, IOBuffer(data))
-    x = UInt8[]
-    for r in rs
-        d = r(stream)
-        append!(x, d)
-        length(x) == position(stream) || return false
+    @check function read_data(
+            kws=read_codecs_kws,
+            data=datas,
+        )
+        stream = wrap_stream(kws, IOBuffer(data))
+        read(stream) == data || return false
+        is_stats_consistent(stream) || return false
+        eof(stream)
     end
-    is_stats_consistent(stream) || return false
-    x == data[eachindex(x)]
+    @check function read_data_methods(
+            kws=read_codecs_kws,
+            data=datas,
+            rs=Data.Vectors(read_methods),
+        )
+        stream = wrap_stream(kws, IOBuffer(data))
+        x = UInt8[]
+        for r in rs
+            d = r(stream)
+            append!(x, d)
+            length(x) == position(stream) || return false
+        end
+        is_stats_consistent(stream) || return false
+        x == data[eachindex(x)]
+    end
 end
 
 # flush all nested streams and return final data
@@ -167,27 +169,29 @@ end
 
 const write_codecs_kws = map(reverse, read_codecs_kws)
 
-@check function write_data(
-        kws=write_codecs_kws,
-        data=datas,
-    )
-    stream = wrap_stream(kws, IOBuffer())
-    write(stream, data) == length(data) || return false
-    take_all(stream) == data || return false
-    is_stats_consistent(stream) || return false
-    true
-end
-@check function write_byte_data(
-        kws=write_codecs_kws,
-        data=datas,
-    )
-    stream = wrap_stream(kws, IOBuffer())
-    for i in 1:length(data)
-        position(stream) == i-1 || return false
+@testset "write" begin
+    @check function write_data(
+            kws=write_codecs_kws,
+            data=datas,
+        )
+        stream = wrap_stream(kws, IOBuffer())
+        write(stream, data) == length(data) || return false
+        take_all(stream) == data || return false
         is_stats_consistent(stream) || return false
-        write(stream, data[i]) == 1 || return false
+        true
     end
-    take_all(stream) == data || return false
-    is_stats_consistent(stream) || return false
-    true
+    @check function write_byte_data(
+            kws=write_codecs_kws,
+            data=datas,
+        )
+        stream = wrap_stream(kws, IOBuffer())
+        for i in 1:length(data)
+            position(stream) == i-1 || return false
+            is_stats_consistent(stream) || return false
+            write(stream, data[i]) == 1 || return false
+        end
+        take_all(stream) == data || return false
+        is_stats_consistent(stream) || return false
+        true
+    end
 end
