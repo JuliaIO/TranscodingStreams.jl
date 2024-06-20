@@ -178,7 +178,7 @@ using CodecZlib
 
 function decompress(input, output)
     buffer = Vector{UInt8}(undef, 16 * 1024)
-    while !eof(input)
+    GC.@preserve buffer while !eof(input)
         n = min(bytesavailable(input), length(buffer))
         unsafe_read(input, pointer(buffer), n)
         unsafe_write(output, pointer(buffer), n)

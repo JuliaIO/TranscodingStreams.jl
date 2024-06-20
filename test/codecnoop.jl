@@ -24,13 +24,14 @@ using FillArrays: Zeros
 
     stream = TranscodingStream(Noop(), IOBuffer())
     @test_throws EOFError read(stream, UInt8)
-    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(undef, 3)), 3)
+    data = Vector{UInt8}(undef, 3)
+    @test_throws EOFError GC.@preserve data unsafe_read(stream, pointer(data), 3)
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer("foobar"), bufsize=1)
     @test read(stream, UInt8) === UInt8('f')
     data = Vector{UInt8}(undef, 5)
-    unsafe_read(stream, pointer(data), 5) === nothing
+    GC.@preserve data unsafe_read(stream, pointer(data), 5) === nothing
     @test data == b"oobar"
     close(stream)
 
@@ -122,7 +123,7 @@ using FillArrays: Zeros
     stream = TranscodingStream(Noop(), IOBuffer("foo"))
     out = zeros(UInt8, 3)
     @test bytesavailable(stream) == 0
-    @test TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
+    @test GC.@preserve out TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
     @test out == b"foo"
     close(stream)
 
@@ -384,7 +385,8 @@ using FillArrays: Zeros
         @test eof(stream)
 
         stream = NoopStream(IOBuffer("foobar"))
-        @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
+        data = b"foo"
+        @test_throws ArgumentError GC.@preserve data TranscodingStreams.unsafe_unread(stream, pointer(data), -1)
         close(stream)
 
         stream = NoopStream(IOBuffer("foo"))
