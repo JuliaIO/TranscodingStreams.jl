@@ -26,13 +26,15 @@ using TranscodingStreams:
 
     data = Vector{UInt8}(b"foobar")
     buf = Buffer(data)
-    @test buf isa Buffer
-    @test bufferptr(buf) === pointer(data)
-    @test buffersize(buf) === 6
-    @test buffermem(buf) === Memory(pointer(data), 6)
-    @test marginptr(buf) === pointer(data) + 6
-    @test marginsize(buf) === 0
-    @test marginmem(buf) === Memory(pointer(data)+6, 0)
+    GC.@preserve data buf begin
+        @test buf isa Buffer
+        @test bufferptr(buf) === pointer(data)
+        @test buffersize(buf) === 6
+        @test buffermem(buf) === Memory(pointer(data), 6)
+        @test marginptr(buf) === pointer(data) + 6
+        @test marginsize(buf) === 0
+        @test marginmem(buf) === Memory(pointer(data)+6, 0)
+    end
 
     buf = Buffer(2)
     writebyte!(buf, 0x34)
@@ -94,7 +96,7 @@ end
     end
 
     data = Vector{UInt8}(b"foobar")
-    GC.@preserve data let mem = TranscodingStreams.Memory(data)
+    GC.@preserve data let mem = TranscodingStreams.Memory(pointer(data), sizeof(data))
         @test mem isa TranscodingStreams.Memory
         @test mem.ptr == pointer(data)
         @test mem.size == sizeof(data)

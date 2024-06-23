@@ -46,10 +46,10 @@ function Base.transcode(codec::Type{C}, src::String) where {C<:Codec}
 end
 
 _default_output_buffer(codec, input) = Buffer(
-    initial_output_size(
+    GC.@preserve(input, initial_output_size(
         codec,
         buffermem(input)
-    )
+    ))
 )
 
 """
@@ -125,8 +125,7 @@ function transcode!(
     Base.mightalias(input.data, output.data) && error(
         "input and outbut buffers must be independent"
     )
-    # GC.@preserve since unsafe_transcode! may convert to raw pointers
-    GC.@preserve input output codec unsafe_transcode!(output, codec, input)
+    unsafe_transcode!(output, codec, input)
 end
 
 """
@@ -148,10 +147,10 @@ function unsafe_transcode!(
     if code === :error
         @goto error
     end
-    n = minoutsize(codec, buffermem(input))
+    n = GC.@preserve input minoutsize(codec, buffermem(input))
     @label process
     makemargin!(output, n)
-    Δin, Δout, code = process(codec, buffermem(input), marginmem(output), error)
+    Δin, Δout, code = GC.@preserve input output process(codec, buffermem(input), marginmem(output), error)
     @debug(
         "called process()",
         code = code,
@@ -169,13 +168,13 @@ function unsafe_transcode!(
             if startproc(codec, :write, error) === :error
                 @goto error
             end
-            n = minoutsize(codec, buffermem(input))
+            n = GC.@preserve input minoutsize(codec, buffermem(input))
             @goto process
         end
         resize!(output.data, output.marginpos - 1)
         return output.data
     else
-        n = max(Δout, minoutsize(codec, buffermem(input)))
+        n = GC.@preserve input max(Δout, minoutsize(codec, buffermem(input)))
         @goto process
     end
     @label error

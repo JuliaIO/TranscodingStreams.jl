@@ -24,13 +24,14 @@ using FillArrays: Zeros
 
     stream = TranscodingStream(Noop(), IOBuffer())
     @test_throws EOFError read(stream, UInt8)
-    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(undef, 3)), 3)
+    data = Vector{UInt8}(undef, 3)
+    @test_throws EOFError GC.@preserve data unsafe_read(stream, pointer(data), 3)
     close(stream)
 
     stream = TranscodingStream(Noop(), IOBuffer("foobar"), bufsize=1)
     @test read(stream, UInt8) === UInt8('f')
     data = Vector{UInt8}(undef, 5)
-    unsafe_read(stream, pointer(data), 5) === nothing
+    GC.@preserve data unsafe_read(stream, pointer(data), 5) === nothing
     @test data == b"oobar"
     close(stream)
 
@@ -122,7 +123,7 @@ using FillArrays: Zeros
     stream = TranscodingStream(Noop(), IOBuffer("foo"))
     out = zeros(UInt8, 3)
     @test bytesavailable(stream) == 0
-    @test TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
+    @test GC.@preserve out TranscodingStreams.unsafe_read(stream, pointer(out), 10) == 3
     @test out == b"foo"
     close(stream)
 
@@ -171,22 +172,65 @@ using FillArrays: Zeros
     @test s1.buffer1 === s2.buffer1 === s3.buffer1 ===
           s1.buffer2 === s2.buffer2 === s3.buffer2
 
-    stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
-    @test TranscodingStreams.stats(stream).in === Int64(0)
-    @test TranscodingStreams.stats(stream).out === Int64(0)
-    read(stream)
-    @test TranscodingStreams.stats(stream).in === Int64(6)
-    @test TranscodingStreams.stats(stream).out === Int64(6)
-    close(stream)
+    @testset "stats" begin
+        stream = TranscodingStream(Noop(), IOBuffer(b"foobar"))
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(0)
+        @test stat.out === Int64(0)
+        eof(stream)
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(6)
+        @test stat.out === Int64(0)
+        read(stream)
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(6)
+        @test stat.out === Int64(6)
+        close(stream)
 
-    stream = TranscodingStream(Noop(), IOBuffer())
-    @test TranscodingStreams.stats(stream).in === Int64(0)
-    @test TranscodingStreams.stats(stream).out === Int64(0)
-    write(stream, b"foobar")
-    flush(stream)
-    @test TranscodingStreams.stats(stream).in === Int64(6)
-    @test TranscodingStreams.stats(stream).out === Int64(6)
-    close(stream)
+        #nested NoopStreams
+        stream = NoopStream(NoopStream(IOBuffer(b"foobar")))
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(0)
+        @test stat.out === Int64(0)
+        eof(stream)
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(0)
+        @test stat.out === Int64(0)
+        read(stream)
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(6)
+        @test stat.out === Int64(6)
+        close(stream)
+
+        stream = TranscodingStream(Noop(), IOBuffer())
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(0)
+        @test stat.out === Int64(0)
+        write(stream, b"foobar")
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(6)
+        @test stat.out === Int64(0)
+        flush(stream)
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(6)
+        @test stat.out === Int64(6)
+        close(stream)
+
+        #nested NoopStreams
+        stream = NoopStream(NoopStream(IOBuffer()))
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(0)
+        @test stat.out === Int64(0)
+        write(stream, b"foobar")
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(6)
+        @test stat.out === Int64(6)
+        flush(stream)
+        stat = TranscodingStreams.stats(stream)
+        @test stat.in === Int64(6)
+        @test stat.out === Int64(6)
+        close(stream)
+    end
 
     stream = TranscodingStream(Noop(), IOBuffer())
     @test stream.state.mode == :idle
@@ -341,7 +385,8 @@ using FillArrays: Zeros
         @test eof(stream)
 
         stream = NoopStream(IOBuffer("foobar"))
-        @test_throws ArgumentError TranscodingStreams.unsafe_unread(stream, pointer(b"foo"), -1)
+        data = b"foo"
+        @test_throws ArgumentError GC.@preserve data TranscodingStreams.unsafe_unread(stream, pointer(data), -1)
         close(stream)
 
         stream = NoopStream(IOBuffer("foo"))
@@ -496,6 +541,14 @@ using FillArrays: Zeros
         close(stream)
         @test isopen(sink)
         @test take!(sink) == b"abcd"
+    end
+
+    @testset "peek" begin
+        stream = NoopStream(IOBuffer(codeunits("こんにちは")))
+        @test peek(stream) == 0xe3
+        @test peek(stream, Char) == 'こ'
+        @test peek(stream, Int32) == -476872221
+        close(stream)
     end
 
 end

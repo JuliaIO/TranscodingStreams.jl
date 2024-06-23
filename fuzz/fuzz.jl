@@ -91,44 +91,75 @@ read_methods = Data.SampledFrom([
     end
 ])
 
+# Return true if the stats of a stream are self consistent
+# This function assumes stream was never seeked.
+function is_stats_consistent(stream)
+    if stream isa TranscodingStream
+        s = TranscodingStreams.stats(stream)
+        inner_pos = position(stream.stream)
+        pos = position(stream)
+        # event!("stats(stream)", s)
+        # event!("position(stream.stream)", inner_pos)
+        # event!("position(stream)", pos)
+        if isreadable(stream)
+            s.out == pos || return false
+            s.in == inner_pos || return false
+        else
+            iswritable(stream) || return false
+            s.in == pos || return false
+            s.out == inner_pos || return false
+        end
+        s.transcoded_in ≤ s.in || return false
+        s.transcoded_out ≥ s.out || return false
+    end
+    true
+end
 
-@check function read_byte_data(
-        kws=read_codecs_kws,
-        data=datas,
-    )
-    stream = wrap_stream(kws, IOBuffer(data))
-    for i in eachindex(data)
-        read(stream, UInt8) == data[i] || return false
+@testset "read" begin
+    @check function read_byte_data(
+            kws=read_codecs_kws,
+            data=datas,
+        )
+        stream = wrap_stream(kws, IOBuffer(data))
+        for i in 1:length(data)
+            position(stream) == i-1 || return false
+            is_stats_consistent(stream) || return false
+            read(stream, UInt8) == data[i] || return false
+        end
+        is_stats_consistent(stream) || return false
+        eof(stream)
     end
-    eof(stream)
-end
-@check function read_data(
-        kws=read_codecs_kws,
-        data=datas,
-    )
-    stream = wrap_stream(kws, IOBuffer(data))
-    read(stream) == data || return false
-    eof(stream)
-end
-@check function read_data_methods(
-        kws=read_codecs_kws,
-        data=datas,
-        rs=Data.Vectors(read_methods),
-    )
-    stream = wrap_stream(kws, IOBuffer(data))
-    x = UInt8[]
-    for r in rs
-        d = r(stream)
-        append!(x, d)
-        length(x) == position(stream) || return false
+    @check function read_data(
+            kws=read_codecs_kws,
+            data=datas,
+        )
+        stream = wrap_stream(kws, IOBuffer(data))
+        read(stream) == data || return false
+        is_stats_consistent(stream) || return false
+        eof(stream)
     end
-    x == data[eachindex(x)]
+    @check function read_data_methods(
+            kws=read_codecs_kws,
+            data=datas,
+            rs=Data.Vectors(read_methods),
+        )
+        stream = wrap_stream(kws, IOBuffer(data))
+        x = UInt8[]
+        for r in rs
+            d = r(stream)
+            append!(x, d)
+            length(x) == position(stream) || return false
+        end
+        is_stats_consistent(stream) || return false
+        x == data[eachindex(x)]
+    end
 end
 
 # flush all nested streams and return final data
 function take_all(stream)
     if stream isa Base.GenericIOBuffer
-        take!(stream)
+        seekstart(stream)
+        read(stream)
     else
         write(stream, TranscodingStreams.TOKEN_END)
         flush(stream)
@@ -138,21 +169,29 @@ end
 
 const write_codecs_kws = map(reverse, read_codecs_kws)
 
-@check function write_data(
-        kws=write_codecs_kws,
-        data=datas,
-    )
-    stream = wrap_stream(kws, IOBuffer())
-    write(stream, data) == length(data) || return false
-    take_all(stream) == data
-end
-@check function write_byte_data(
-        kws=write_codecs_kws,
-        data=datas,
-    )
-    stream = wrap_stream(kws, IOBuffer())
-    for i in 1:length(data)
-        write(stream, data[i]) == 1 || return false
+@testset "write" begin
+    @check function write_data(
+            kws=write_codecs_kws,
+            data=datas,
+        )
+        stream = wrap_stream(kws, IOBuffer())
+        write(stream, data) == length(data) || return false
+        take_all(stream) == data || return false
+        is_stats_consistent(stream) || return false
+        true
     end
-    take_all(stream) == data
+    @check function write_byte_data(
+            kws=write_codecs_kws,
+            data=datas,
+        )
+        stream = wrap_stream(kws, IOBuffer())
+        for i in 1:length(data)
+            position(stream) == i-1 || return false
+            is_stats_consistent(stream) || return false
+            write(stream, data[i]) == 1 || return false
+        end
+        take_all(stream) == data || return false
+        is_stats_consistent(stream) || return false
+        true
+    end
 end

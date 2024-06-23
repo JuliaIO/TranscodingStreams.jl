@@ -81,7 +81,8 @@ end
     close(stream2)
 
     stream = TranscodingStream(QuadrupleCodec(), IOBuffer("foo"))
-    @test_throws EOFError unsafe_read(stream, pointer(Vector{UInt8}(undef, 13)), 13)
+    data = Vector{UInt8}(undef, 13)
+    @test_throws EOFError GC.@preserve data unsafe_read(stream, pointer(data), 13)
     close(stream)
 
     @testset "position" begin
