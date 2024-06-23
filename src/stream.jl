@@ -286,8 +286,8 @@ function Base.seekstart(stream::TranscodingStream)
     mode = stream.state.mode
     if mode === :read
         callstartproc(stream, mode)
-        emptybuffer!(stream.buffer1)
-        emptybuffer!(stream.buffer2)
+        initbuffer!(stream.buffer1)
+        initbuffer!(stream.buffer2)
     elseif mode === :idle
     else
         throw_invalid_mode(mode)
