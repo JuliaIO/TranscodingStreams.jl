@@ -325,13 +325,20 @@ using FillArrays: Zeros
     @testset "unread" begin
         stream = NoopStream(IOBuffer(""))
         @test TranscodingStreams.unread(stream, b"foo") === nothing
+        @test position(stream) == -3
         @test read(stream, 3) == b"foo"
+        @test position(stream) == 0
+        @test eof(stream)
         close(stream)
 
         stream = NoopStream(IOBuffer("foo"))
         @test read(stream, 3) == b"foo"
+        @test position(stream) == 3
         @test TranscodingStreams.unread(stream, b"bar") === nothing
+        @test position(stream) == 0
         @test read(stream, 3) == b"bar"
+        @test position(stream) == 3
+        @test eof(stream)
         close(stream)
 
         stream = NoopStream(IOBuffer("foobar"))
@@ -351,24 +358,36 @@ using FillArrays: Zeros
         close(stream)
 
         stream = NoopStream(IOBuffer("foobar"))
+        @test position(stream) == 0
         @test read(stream, 3) == b"foo"
+        @test position(stream) == 3
         @test read(stream, 3) == b"bar"
+        @test position(stream) == 6
         @test TranscodingStreams.unread(stream, b"baz") === nothing
+        @test position(stream) == 3
         @test read(stream, 3) == b"baz"
+        @test position(stream) == 6
         @test eof(stream)
+        @test position(stream) == 6
         close(stream)
 
         for bufsize in (1, 2, 3, 4, 100)
             for n in (1, 100)
                 stream = NoopStream(IOBuffer("foo"^n*"bar"^n); bufsize)
                 @test mark(stream) == 0
+                @test position(stream) == 0
                 @test read(stream, 3n) == codeunits("foo"^n)
                 @test read(stream, 3n) == codeunits("bar"^n)
+                @test position(stream) == 6n
                 TranscodingStreams.unread(stream, codeunits("baz"^n))
+                @test position(stream) == 3n
                 @test reset(stream) == 0
+                @test position(stream) == 0
                 @test read(stream, 3n) == codeunits("foo"^n)
                 @test read(stream, 3n) == codeunits("baz"^n)
+                @test position(stream) == 6n
                 @test eof(stream)
+                @test position(stream) == 6n
                 close(stream)
             end
         end
@@ -413,6 +432,11 @@ using FillArrays: Zeros
             @test TranscodingStreams.unsafe_unread(stream, pointer(d), 3) === nothing
         end
         @test read(stream, 3) == b"bar"
+        close(stream)
+
+        stream = NoopStream(IOBuffer())
+        write(stream, b"foo")
+        @test_throws ArgumentError TranscodingStreams.unread(stream, b"bar")
         close(stream)
     end
 
