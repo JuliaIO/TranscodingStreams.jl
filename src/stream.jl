@@ -431,7 +431,7 @@ function Base.readbytes!(stream::TranscodingStream, b::DenseArray{UInt8}, nb=len
             resize!(b, min(max(length(b) * 2, 8), nb))
             resized = true
         end
-        filled += GC.@preserve b unsafe_read(stream, pointer(b, filled+1), min(length(b), nb)-filled)
+        filled += GC.@preserve b unsafe_read(stream, pointer(b, filled+firstindex(b)), min(length(b), nb)-filled)
     end
     if resized
         resize!(b, filled)
