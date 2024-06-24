@@ -118,13 +118,6 @@ function initbuffer!(buf::Buffer)
     return buf
 end
 
-# Remove all buffered data.
-function emptybuffer!(buf::Buffer)
-    buf.markpos = 0
-    buf.bufferpos = buf.marginpos = 1
-    return buf
-end
-
 # Make margin with ≥`minsize` and return the size of it.
 # If eager is true, it tries to move data even when the buffer has enough margin.
 function makemargin!(buf::Buffer, minsize::Int; eager::Bool = false)

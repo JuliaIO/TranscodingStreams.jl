@@ -296,20 +296,6 @@ function Base.seekstart(stream::TranscodingStream)
     return stream
 end
 
-function Base.seekend(stream::TranscodingStream)
-    mode = stream.state.mode
-    if mode == :read
-        callstartproc(stream, mode)
-        emptybuffer!(stream.buffer1)
-        emptybuffer!(stream.buffer2)
-    elseif mode === :idle
-    else
-        throw_invalid_mode(mode)
-    end
-    seekend(stream.stream)
-    return stream
-end
-
 
 # Read Functions
 # --------------
