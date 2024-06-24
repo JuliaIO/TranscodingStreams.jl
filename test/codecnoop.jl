@@ -418,9 +418,9 @@ using FillArrays: Zeros
 
     stream = NoopStream(IOBuffer(""))
     unsafe_write(stream, C_NULL, 0)
-    @test eof(stream)  # write
+    @test_throws ArgumentError eof(stream)  # write
     close(stream)
-    @test eof(stream)  # close
+    @test_throws ArgumentError eof(stream)  # close
 
     @testset "readuntil" begin
         stream = NoopStream(IOBuffer(""))

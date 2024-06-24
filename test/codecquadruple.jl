@@ -205,21 +205,21 @@ end
         end
     end
 
-    @testset "eof is true after write" begin
+    @testset "eof throws ArgumentError after write" begin
         sink = IOBuffer()
         stream = TranscodingStream(QuadrupleCodec(), sink, bufsize=16)
         write(stream, "x")
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         @test_throws ArgumentError read(stream, UInt8)
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         write(stream, "y")
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         write(stream, TranscodingStreams.TOKEN_END)
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         flush(stream)
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
         @test take!(sink) == b"xxxxyyyy"
         close(stream)
-        @test eof(stream)
+        @test_throws ArgumentError eof(stream)
     end
 end
