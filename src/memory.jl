@@ -11,11 +11,6 @@ struct Memory
     size::UInt
 end
 
-# TODO remove this method
-function Memory(data::ByteData)
-    return Memory(pointer(data), sizeof(data))
-end
-
 @inline function Base.length(mem::Memory)
     return mem.size
 end
