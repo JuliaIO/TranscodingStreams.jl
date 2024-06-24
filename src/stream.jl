@@ -462,6 +462,7 @@ inserted.
 `data` must not alias any internal buffers in `stream`
 """
 function unread(stream::TranscodingStream, data::AbstractVector{UInt8})
+    ready_to_read!(stream)
     insertdata!(stream.buffer1, data)
     return nothing
 end
