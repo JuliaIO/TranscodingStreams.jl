@@ -14,7 +14,8 @@ Use `Memory(pointer(data), sizeof(data))` instead.
 ### `seekend(stream::TranscodingStream)`
 
 Generic `seekend` for `TranscodingStream` was removed.
-Use `skip(stream, typemax(Int64))` instead.
+If the objective is to discard all remaining data in the stream, use `skip(stream, typemax(Int64))` instead where `typemax(Int64)` is meant to be a large number to exhaust the stream.
+Ideally, specific implementations of `TranscodingStream` will implement `seekend` only if efficient means exist to avoid fully processing the stream.
 `NoopStream` still supports `seekend`.
 
 The previous behavior of the generic `seekend` was something like 
