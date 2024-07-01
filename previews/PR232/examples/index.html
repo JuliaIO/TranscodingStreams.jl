@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · TranscodingStreams.jl</title><meta name="title" content="Examples · TranscodingStreams.jl"/><meta property="og:title" content="Examples · TranscodingStreams.jl"/><meta property="twitter:title" content="Examples · TranscodingStreams.jl"/><meta name="description" content="Documentation for TranscodingStreams.jl."/><meta property="og:description" content="Documentation for TranscodingStreams.jl."/><meta property="twitter:description" content="Documentation for TranscodingStreams.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">TranscodingStreams.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#Read-lines-from-a-gzip-compressed-file"><span>Read lines from a gzip-compressed file</span></a></li><li><a class="tocitem" href="#Read-compressed-data-from-a-pipe"><span>Read compressed data from a pipe</span></a></li><li><a class="tocitem" href="#Save-a-data-matrix-with-Zstd-compression"><span>Save a data matrix with Zstd compression</span></a></li><li><a class="tocitem" href="#Explicitly-finish-transcoding-by-writing-TOKEN_END"><span>Explicitly finish transcoding by writing <code>TOKEN_END</code></span></a></li><li><a class="tocitem" href="#Use-a-noop-codec"><span>Use a noop codec</span></a></li><li><a class="tocitem" href="#Change-the-codec-of-a-file"><span>Change the codec of a file</span></a></li><li><a class="tocitem" href="#Stop-decoding-on-the-end-of-a-block"><span>Stop decoding on the end of a block</span></a></li><li><a class="tocitem" href="#Check-I/O-statistics"><span>Check I/O statistics</span></a></li><li><a class="tocitem" href="#Transcode-data-in-one-shot"><span>Transcode data in one shot</span></a></li><li><a class="tocitem" href="#Transcode-lots-of-strings"><span>Transcode lots of strings</span></a></li><li><a class="tocitem" href="#Unread-data"><span>Unread data</span></a></li></ul></li><li><a class="tocitem" href="../reference/">Reference</a></li><li><a class="tocitem" href="../migrating/">Migration</a></li><li><a class="tocitem" href="../devnotes/">Developer&#39;s notes</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaIO/TranscodingStreams.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaIO/TranscodingStreams.jl/blob/master/docs/src/examples.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><h2 id="Read-lines-from-a-gzip-compressed-file"><a class="docs-heading-anchor" href="#Read-lines-from-a-gzip-compressed-file">Read lines from a gzip-compressed file</a><a id="Read-lines-from-a-gzip-compressed-file-1"></a><a class="docs-heading-anchor-permalink" href="#Read-lines-from-a-gzip-compressed-file" title="Permalink"></a></h2><p>The following snippet is an example of using CodecZlib.jl, which exports <code>GzipDecompressorStream{S}</code> as an alias of <code>TranscodingStream{GzipDecompressor,S}</code>, where <code>S</code> is a subtype of <code>IO</code>:</p><pre><code class="language-julia hljs">using CodecZlib
+stream = GzipDecompressorStream(open(&quot;data.txt.gz&quot;))
+for line in eachline(stream)
+    # do something...
+end
+close(stream)</code></pre><p>Note that the last <code>close</code> call closes the wrapped file as well. Alternatively, <code>open(&lt;stream type&gt;, &lt;filepath&gt;) do ... end</code> syntax closes the file at the end:</p><pre><code class="language-julia hljs">using CodecZlib
+open(GzipDecompressorStream, &quot;data.txt.gz&quot;) do stream
+    for line in eachline(stream)
+        # do something...
+    end
+end</code></pre><h2 id="Read-compressed-data-from-a-pipe"><a class="docs-heading-anchor" href="#Read-compressed-data-from-a-pipe">Read compressed data from a pipe</a><a id="Read-compressed-data-from-a-pipe-1"></a><a class="docs-heading-anchor-permalink" href="#Read-compressed-data-from-a-pipe" title="Permalink"></a></h2><p>The input is not limited to usual files. You can read data from a pipe (actually, any <code>IO</code> object that implements standard I/O methods) as follows:</p><pre><code class="language-julia hljs">using CodecZlib
+proc = open(`cat some.data.gz`)
+stream = GzipDecompressorStream(proc)
+for line in eachline(stream)
+    # do something...
+end
+close(stream)  # This will finish the process as well.</code></pre><h2 id="Save-a-data-matrix-with-Zstd-compression"><a class="docs-heading-anchor" href="#Save-a-data-matrix-with-Zstd-compression">Save a data matrix with Zstd compression</a><a id="Save-a-data-matrix-with-Zstd-compression-1"></a><a class="docs-heading-anchor-permalink" href="#Save-a-data-matrix-with-Zstd-compression" title="Permalink"></a></h2><p>Writing compressed data is easy. One thing you need to keep in mind is to call <code>close</code> after writing data; otherwise, the output file will be incomplete:</p><pre><code class="language-julia hljs">using CodecZstd
+using DelimitedFiles
+mat = randn(100, 100)
+stream = ZstdCompressorStream(open(&quot;data.mat.zst&quot;, &quot;w&quot;))
+writedlm(stream, mat)
+close(stream)</code></pre><p>Of course, <code>open(&lt;stream type&gt;, ...) do ... end</code> just works:</p><pre><code class="language-julia hljs">using CodecZstd
+using DelimitedFiles
+mat = randn(100, 100)
+open(ZstdCompressorStream, &quot;data.mat.zst&quot;, &quot;w&quot;) do stream
+    writedlm(stream, mat)
+end</code></pre><h2 id="Explicitly-finish-transcoding-by-writing-TOKEN_END"><a class="docs-heading-anchor" href="#Explicitly-finish-transcoding-by-writing-TOKEN_END">Explicitly finish transcoding by writing <code>TOKEN_END</code></a><a id="Explicitly-finish-transcoding-by-writing-TOKEN_END-1"></a><a class="docs-heading-anchor-permalink" href="#Explicitly-finish-transcoding-by-writing-TOKEN_END" title="Permalink"></a></h2><p>When writing data, the end of a data stream is indicated by calling <code>close</code>, which writes an epilogue if necessary and flushes all buffered data to the underlying I/O stream. If you want to explicitly specify the end of a data chunk for some reason, you can write <code>TranscodingStreams.TOKEN_END</code> to the transcoding stream, which finishes the current transcoding process without closing the underlying stream:</p><pre><code class="language-julia hljs">using CodecZstd
+using TranscodingStreams
+buf = IOBuffer()
+stream = ZstdCompressorStream(buf)
+write(stream, &quot;foobarbaz&quot;^100, TranscodingStreams.TOKEN_END)
+flush(stream)
+compressed = take!(buf)
+close(stream)</code></pre><h2 id="Use-a-noop-codec"><a class="docs-heading-anchor" href="#Use-a-noop-codec">Use a noop codec</a><a id="Use-a-noop-codec-1"></a><a class="docs-heading-anchor-permalink" href="#Use-a-noop-codec" title="Permalink"></a></h2><p>The <code>Noop</code> codec does nothing (i.e., buffering data without transformation). <code>NoopStream</code> is an alias of <code>TranscodingStream{Noop}</code>.  The following example creates a decompressor stream based on the extension of a filepath:</p><pre><code class="language-julia hljs">using CodecZlib
+using CodecXz
+using TranscodingStreams
+
+function makestream(filepath)
+    if endswith(filepath, &quot;.gz&quot;)
+        codec = GzipDecompressor()
+    elseif endswith(filepath, &quot;.xz&quot;)
+        codec = XzDecompressor()
+    else
+        codec = Noop()
+    end
+    return TranscodingStream(codec, open(filepath))
+end
+
+makestream(&quot;data.txt.gz&quot;)
+makestream(&quot;data.txt.xz&quot;)
+makestream(&quot;data.txt&quot;)</code></pre><h2 id="Change-the-codec-of-a-file"><a class="docs-heading-anchor" href="#Change-the-codec-of-a-file">Change the codec of a file</a><a id="Change-the-codec-of-a-file-1"></a><a class="docs-heading-anchor-permalink" href="#Change-the-codec-of-a-file" title="Permalink"></a></h2><p><code>TranscodingStream</code>s are composable: a stream can be an input/output of another stream. You can use this to change the format of a file by composing different codecs as below:</p><pre><code class="language-julia hljs">using CodecZlib
+using CodecZstd
+
+input  = open(&quot;data.txt.gz&quot;,  &quot;r&quot;)
+output = open(&quot;data.txt.zst&quot;, &quot;w&quot;)
+
+stream = GzipDecompressorStream(ZstdCompressorStream(output))
+write(stream, input)
+close(stream)</code></pre><p>Effectively, this is equivalent to the following pipeline:</p><pre><code class="nohighlight hljs">cat data.txt.gz | gzip -d | zstd &gt;data.txt.zst</code></pre><h2 id="Stop-decoding-on-the-end-of-a-block"><a class="docs-heading-anchor" href="#Stop-decoding-on-the-end-of-a-block">Stop decoding on the end of a block</a><a id="Stop-decoding-on-the-end-of-a-block-1"></a><a class="docs-heading-anchor-permalink" href="#Stop-decoding-on-the-end-of-a-block" title="Permalink"></a></h2><p>Many codecs support decoding concatenated data blocks (or chunks). For example, if you concatenate two gzip files into a single file and read it using <code>GzipDecompressorStream</code>, you will see the byte stream of concatenation of the two files. If you need the part corresponding the first file, you can set <code>stop_on_end</code> to <code>true</code> to stop transcoding at the end of the first block. Note that setting <code>stop_on_end</code> to <code>true</code> does not close the wrapped stream because you will often want to reuse it.</p><pre><code class="language-julia hljs">using CodecZlib
+# cat foo.txt.gz bar.txt.gz &gt; foobar.txt.gz
+stream = GzipDecompressorStream(open(&quot;foobar.txt.gz&quot;), stop_on_end=true)
+read(stream)  #&gt; the content of foo.txt
+eof(stream)   #&gt; true</code></pre><p>In the case where you need to reuse the wrapped stream, the code above must be slightly modified because the transcoding stream may read more bytes than necessary from the wrapped stream. Wrapping the stream with <code>NoopStream</code> solves the problem because any extra data read after the end of the chunk will be  stored back in the internal buffer of the wrapped transcoding stream.</p><pre><code class="language-julia hljs">using CodecZlib
+using TranscodingStreams
+stream = NoopStream(open(&quot;foobar.txt.gz&quot;))
+read(GzipDecompressorStream(stream, stop_on_end=true))  #&gt; the content of foo.txt
+read(GzipDecompressorStream(stream, stop_on_end=true))  #&gt; the content of bar.txt</code></pre><h2 id="Check-I/O-statistics"><a class="docs-heading-anchor" href="#Check-I/O-statistics">Check I/O statistics</a><a id="Check-I/O-statistics-1"></a><a class="docs-heading-anchor-permalink" href="#Check-I/O-statistics" title="Permalink"></a></h2><p><code>TranscodingStreams.stats</code> returns a snapshot of the I/O statistics. For example, the following function shows progress of decompression to the standard error:</p><pre><code class="language-julia hljs">using CodecZlib
+
+function decompress(input, output)
+    buffer = Vector{UInt8}(undef, 16 * 1024)
+    GC.@preserve buffer while !eof(input)
+        n = min(bytesavailable(input), length(buffer))
+        unsafe_read(input, pointer(buffer), n)
+        unsafe_write(output, pointer(buffer), n)
+        stats = TranscodingStreams.stats(input)
+        print(STDERR, &quot;\rin: $(stats.in), out: $(stats.out)&quot;)
+    end
+    println(STDERR)
+end
+
+input = GzipDecompressorStream(open(&quot;foobar.txt.gz&quot;))
+output = IOBuffer()
+decompress(input, output)</code></pre><p><code>stats.in</code> is the number of bytes supplied to the stream and <code>stats.out</code> is the number of bytes consumed out of the stream.</p><h2 id="Transcode-data-in-one-shot"><a class="docs-heading-anchor" href="#Transcode-data-in-one-shot">Transcode data in one shot</a><a id="Transcode-data-in-one-shot-1"></a><a class="docs-heading-anchor-permalink" href="#Transcode-data-in-one-shot" title="Permalink"></a></h2><p>TranscodingStreams.jl extends the <code>transcode</code> function to transcode a data in one shot. <code>transcode</code> takes a codec object as its first argument and a data vector as its second argument:</p><pre><code class="language-julia hljs">using CodecZlib
+decompressed = transcode(ZlibDecompressor, b&quot;x\x9cKL*JLNLI\x04R\x00\x19\xf2\x04U&quot;)
+String(decompressed)</code></pre><h2 id="Transcode-lots-of-strings"><a class="docs-heading-anchor" href="#Transcode-lots-of-strings">Transcode lots of strings</a><a id="Transcode-lots-of-strings-1"></a><a class="docs-heading-anchor-permalink" href="#Transcode-lots-of-strings" title="Permalink"></a></h2><p><code>transcode(&lt;codec type&gt;, data)</code> method is convenient but suboptimal when transcoding a number of objects. This is because the method reallocates a new codec object for every call. Instead, you can use <code>transcode(&lt;codec object&gt;, data)</code> method that reuses the allocated object as follows. In this usage, you need to explicitly allocate and free resources by calling <code>TranscodingStreams.initialize</code> and <code>TranscodingStreams.finalize</code>, respectively.</p><pre><code class="language-julia hljs">using CodecZstd
+using TranscodingStreams
+strings = [&quot;foo&quot;, &quot;bar&quot;, &quot;baz&quot;]
+codec = ZstdCompressor()
+TranscodingStreams.initialize(codec)  # allocate resources
+try
+    for s in strings
+        data = transcode(codec, s)
+        # do something...
+    end
+catch
+    rethrow()
+finally
+    TranscodingStreams.finalize(codec)  # free resources
+end</code></pre><h2 id="Unread-data"><a class="docs-heading-anchor" href="#Unread-data">Unread data</a><a id="Unread-data-1"></a><a class="docs-heading-anchor-permalink" href="#Unread-data" title="Permalink"></a></h2><p><code>TranscodingStream</code> supports <em>unread</em> operation, which inserts data into the current reading position. This is useful when you want to peek from the stream. <code>TranscodingStreams.unread</code> and <code>TranscodingStreams.unsafe_unread</code> functions are provided:</p><pre><code class="language-julia hljs">using TranscodingStreams
+stream = NoopStream(open(&quot;data.txt&quot;))
+data1 = read(stream, 8)
+TranscodingStreams.unread(stream, data1)
+data2 = read(stream, 8)
+@assert data1 == data2</code></pre><p>The unread operation is different from the write operation in that the unreaded data are not written to the wrapped stream. The unreaded data are stored in the internal buffer of a transcoding stream.</p><p>Unfortunately, <em>unwrite</em> operation is not provided because there is no way to cancel write operations that are already committed to the wrapped stream.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Monday 1 July 2024 14:24">Monday 1 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
