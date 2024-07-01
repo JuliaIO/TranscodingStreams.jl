@@ -206,31 +206,24 @@ function Base.eof(stream::TranscodingStream)
     eof = buffersize(stream.buffer1) == 0
     state = stream.state
     mode = state.mode
-    if !(mode == :read || mode == :stop) || eof
+    if !(mode === :read || mode === :stop)
+        changemode!(stream, :read)
+    end
+    if eof
         eof = sloweof(stream)
     end
     return eof
 end
 @noinline function sloweof(stream::TranscodingStream)
-    while true
-        state = stream.state
-        mode = state.mode
-        if mode == :read
-            return (buffersize(stream.buffer1) == 0 && fillbuffer(stream) == 0)
-        elseif mode == :idle
-            changemode!(stream, :read)
-            continue
-        elseif mode == :write
-            return eof(stream.stream)
-        elseif mode == :close
-            return true
-        elseif mode == :stop
-            return buffersize(stream.buffer1) == 0
-        elseif mode == :panic
-            throw_panic_error()
-        end
-        @assert false
+    state = stream.state
+    mode = state.mode
+    @assert mode == :read || mode == :stop
+    if mode == :read
+        return (buffersize(stream.buffer1) == 0 && fillbuffer(stream) == 0)
+    elseif mode == :stop
+        return buffersize(stream.buffer1) == 0
     end
+    @assert false
 end
 
 function Base.ismarked(stream::TranscodingStream)::Bool
@@ -302,14 +295,7 @@ end
 
 # needed for `peek(stream, Char)` to work
 function Base.peek(stream::TranscodingStream, ::Type{UInt8})::UInt8
-    # eof and ready_to_read! are inlined here because ready_to_read! is very slow and eof is broken
-    eof = buffersize(stream.buffer1) == 0
-    state = stream.state
-    mode = state.mode
-    if !(mode == :read || mode == :stop)
-        changemode!(stream, :read)
-    end
-    if eof && sloweof(stream)
+    if eof(stream)
         throw(EOFError())
     end
     buf = stream.buffer1
@@ -448,6 +434,7 @@ inserted.
 `data` must not alias any internal buffers in `stream`
 """
 function unread(stream::TranscodingStream, data::AbstractVector{UInt8})
+    ready_to_read!(stream)
     insertdata!(stream.buffer1, data)
     return nothing
 end

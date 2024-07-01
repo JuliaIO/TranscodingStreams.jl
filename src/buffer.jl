@@ -196,7 +196,7 @@ end
 
 # Insert data to the current buffer.
 # `data` must not alias `buf`
-function insertdata!(buf::Buffer, data::Union{AbstractArray{UInt8}, Memory})
+function insertdata!(buf::Buffer, data::Union{AbstractVector{UInt8}, Memory})
     nbytes = Int(length(data))
     makemargin!(buf, nbytes)
     datapos = if iszero(buf.markpos)

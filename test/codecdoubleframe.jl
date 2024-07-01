@@ -396,6 +396,22 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         close(stream)
     end
 
+    @testset "unread" begin
+        stream = DoubleFrameDecoderStream(IOBuffer("[ ffoooobbaarr ]"))
+        @test position(stream) == 0
+        @test read(stream, 3) == b"foo"
+        @test position(stream) == 3
+        @test read(stream, 3) == b"bar"
+        @test position(stream) == 6
+        @test TranscodingStreams.unread(stream, b"baz") === nothing
+        @test position(stream) == 3
+        @test read(stream, 3) == b"baz"
+        @test position(stream) == 6
+        @test eof(stream)
+        @test position(stream) == 6
+        close(stream)
+    end
+
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_write(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
     test_roundtrip_lines(DoubleFrameEncoderStream, DoubleFrameDecoderStream)
