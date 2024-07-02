@@ -1,1 +1,0 @@
-Base.@deprecate Memory(data::ByteData) Memory(pointer(data), sizeof(data)) false
