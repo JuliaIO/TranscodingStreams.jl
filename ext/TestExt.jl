@@ -19,14 +19,25 @@ function TranscodingStreams.test_roundtrip_read(encoder, decoder)
     end
 end
 
+# flush all nested streams and return final data
+function take_all(stream)
+    if stream isa Base.GenericIOBuffer
+        seekstart(stream)
+        read(stream)
+    else
+        write(stream, TranscodingStreams.TOKEN_END)
+        flush(stream)
+        take_all(stream.stream)
+    end
+end
+
 function TranscodingStreams.test_roundtrip_write(encoder, decoder)
     seed!(TEST_RANDOM_SEED)
     for n in vcat(0:30, sort!(rand(500:100_000, 30))), alpha in (0x00:0xff, 0x00:0x0f)
         data = rand(alpha, n)
-        file = IOBuffer()
-        stream = encoder(decoder(file))
-        write(stream, data, TOKEN_END); flush(stream)
-        Test.@test hash(take!(file)) == hash(data)
+        stream = encoder(decoder(IOBuffer()))
+        write(stream, data)
+        Test.@test take_all(stream) == data
         close(stream)
     end
 end
