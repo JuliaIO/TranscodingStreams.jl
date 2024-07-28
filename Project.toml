@@ -4,18 +4,5 @@ license = "MIT"
 authors = ["Kenta Sato <bicycle1885@gmail.com>"]
 version = "0.11.1"
 
-[deps]
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[weakdeps]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-
-[extensions]
-TestExt = ["Test", "Random"]
-
 [compat]
-Random = "1"
-Test = "1"
 julia = "1.6"
