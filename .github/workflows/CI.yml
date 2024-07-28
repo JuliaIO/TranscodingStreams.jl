@@ -46,11 +46,16 @@ jobs:
             using Pkg
             Pkg.Registry.update()
             Pkg.develop([
+                PackageSpec(path="."),
                 PackageSpec(path="./lib/TestsForCodecPackages"),
             ])
             Pkg.instantiate()
-        shell: julia --project=. --color=yes --check-bounds=yes {0}
-      - uses: julia-actions/julia-runtest@v1
+        shell: julia --project=test --color=yes --check-bounds=yes {0}
+      - name: Run tests
+        env:
+          JULIA_LOAD_PATH: "@"
+        run: |
+          julia --project=test --color=yes --depwarn=yes --warn-overwrite=yes --check-bounds=yes --startup-file=no --code-coverage=user runtests.jl
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:
