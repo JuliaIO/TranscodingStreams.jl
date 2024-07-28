@@ -4,15 +4,16 @@ using Test
 using TranscodingStreams:
     TranscodingStreams,
     TranscodingStream,
+    Error
+using TestsForCodecPackages:
     test_roundtrip_read,
     test_roundtrip_write,
+    test_roundtrip_transcode,
     test_roundtrip_lines,
     test_roundtrip_seekstart,
-    test_roundtrip_transcode,
     test_roundtrip_fileio,
     test_chunked_read,
-    test_chunked_write,
-    Error
+    test_chunked_write
 
 # An insane codec for testing the codec APIs.
 struct DoubleFrameEncoder <: TranscodingStreams.Codec 

@@ -1,5 +1,14 @@
 using OffsetArrays: OffsetArray
 using FillArrays: Zeros
+using TestsForCodecPackages:
+    test_roundtrip_read,
+    test_roundtrip_write,
+    test_roundtrip_transcode,
+    test_roundtrip_lines,
+    test_roundtrip_seekstart,
+    test_roundtrip_fileio,
+    test_chunked_read,
+    test_chunked_write
 
 @testset "Noop Codec" begin
     source = IOBuffer("")
@@ -294,11 +303,11 @@ using FillArrays: Zeros
     data = "foo"
     @test String(transcode(Noop, data)) == data
 
-    TranscodingStreams.test_roundtrip_transcode(Noop, Noop)
-    TranscodingStreams.test_roundtrip_read(NoopStream, NoopStream)
-    TranscodingStreams.test_roundtrip_write(NoopStream, NoopStream)
-    TranscodingStreams.test_roundtrip_lines(NoopStream, NoopStream)
-    TranscodingStreams.test_roundtrip_seekstart(NoopStream, NoopStream)
+    test_roundtrip_transcode(Noop, Noop)
+    test_roundtrip_read(NoopStream, NoopStream)
+    test_roundtrip_write(NoopStream, NoopStream)
+    test_roundtrip_lines(NoopStream, NoopStream)
+    test_roundtrip_seekstart(NoopStream, NoopStream)
 
     @testset "switch write => read" begin
         stream = NoopStream(IOBuffer(collect(b"foobar"), read=true, write=true))

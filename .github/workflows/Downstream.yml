@@ -48,8 +48,12 @@ jobs:
         run: |
           using Pkg
           try
-            # force it to use this PR's version of the package
-            Pkg.develop(PackageSpec(path="."))  # resolver may fail with main deps
+            # force it to use this PR's version of the package and test package
+            Pkg.develop([
+              PackageSpec(path="."),
+              PackageSpec(path="./lib/TestsForCodecPackages")
+            ])
+            # resolver may fail with main deps
             Pkg.update()
             Pkg.test()  # resolver may fail with test time deps
           catch err
