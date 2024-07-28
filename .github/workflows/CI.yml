@@ -49,7 +49,9 @@ jobs:
                 PackageSpec(path="."),
                 PackageSpec(path="./lib/TestsForCodecPackages"),
             ])
-            Pkg.instantiate()
+            Pkg.update()
+            Pkg.status(;mode=Pkg.PKGMODE_PROJECT)
+            Pkg.status(;mode=Pkg.PKGMODE_MANIFEST)
         shell: julia --project=test --color=yes --check-bounds=yes {0}
       - name: Run tests
         env:

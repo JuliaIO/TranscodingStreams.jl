@@ -37,25 +37,31 @@ jobs:
         with:
           version: ${{ matrix.julia-version }}
           arch: x64
-      - uses: julia-actions/julia-buildpkg@latest
       - name: Clone Downstream
         uses: actions/checkout@v4
         with:
           repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
           path: downstream
       - name: Load this and run the downstream tests
-        shell: julia --color=yes --project=downstream {0}
+        shell: julia --color=yes {0}
         run: |
           using Pkg
+          using TOML
+          Pkg.Registry.update()
+          Pkg.activate(;temp=true)
           try
             # force it to use this PR's version of the package and test package
             Pkg.develop([
+              PackageSpec(path="downstream"),
               PackageSpec(path="."),
-              PackageSpec(path="./lib/TestsForCodecPackages")
+              PackageSpec(path="./lib/TestsForCodecPackages"),
             ])
             # resolver may fail with main deps
             Pkg.update()
-            Pkg.test()  # resolver may fail with test time deps
+            p1 = joinpath("downstream", "JuliaProject.toml")
+            p2 = joinpath("downstream", "Project.toml")
+            proj_toml = isfile(p1) ? p1 : p2
+            Pkg.test(TOML.parsefile(proj_toml)["name"])  # resolver may fail with test time deps
           catch err
             err isa Pkg.Resolve.ResolverError || rethrow()
             # If we can't resolve that means this is incompatible by SemVer and this is fine.
