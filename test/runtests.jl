@@ -1,9 +1,11 @@
 using TranscodingStreams
+using TestsForCodecPackages: TestsForCodecPackages
 using Random
 using Test
 using Aqua: Aqua
 
 Aqua.test_all(TranscodingStreams)
+Aqua.test_all(TestsForCodecPackages)
 
 @test isempty(detect_unbound_args(TranscodingStreams; recursive=true))
 @test isempty(detect_ambiguities(TranscodingStreams; recursive=true))
