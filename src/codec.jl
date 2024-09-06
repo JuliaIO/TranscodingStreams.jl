@@ -43,12 +43,13 @@ in better performance.
 ### `pledgeinsize`
 
 The `pledgeinsize(codec::C, insize::Int64, error::Error)::Symbol` method is used
-when `transcode` is called to tell the `codec` the total input size. Some 
+when `transcode` is called to tell the `codec` the total input size.
+This is called after `startproc` and before `process`. Some
 compressors can add this total input size to a header, making `expectedsize`
 accurate during later decompression. By default this just returns `:ok`.
 If there is an error, the return code must be `:error` and the `error` argument
 must be set to an exception object. Setting an inaccurate `insize` may cause the
-codec to error later on while streaming data. A negative `insize` means unknown
+codec to error later on while processing data. A negative `insize` means unknown
 content size.
 
 ### `minoutsize`
