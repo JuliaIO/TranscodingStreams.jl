@@ -42,6 +42,7 @@ Base.position(::NoopStream)
 ```@docs
 TranscodingStreams.Codec
 TranscodingStreams.expectedsize
+TranscodingStreams.pledgeinsize
 TranscodingStreams.minoutsize
 TranscodingStreams.initialize
 TranscodingStreams.finalize
