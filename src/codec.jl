@@ -84,10 +84,11 @@ the stream will become the close mode for safety.
 ### `startproc`
 
 The `startproc(codec::C, mode::Symbol, error::Error)::Symbol` method takes
-`codec`, `mode` and `error`, and returns a status code. This is called just
-before the stream starts reading or writing data. `mode` is either `:read` or
-`:write` and then the stream starts reading or writing, respectively.  The
-return code must be `:ok` if `codec` is ready to read or write data.  Otherwise,
+`codec`, `mode`, and `error`, and returns a status code. This resets the state
+of the codec and is called before the stream starts processing data.
+After a call to `startproc`, `pledgeinsize` can be optionally called.
+`mode` is either `:read` or `:write`. The
+return code must be `:ok` if `codec` is ready to process data.  Otherwise,
 it must be `:error` and the `error` argument must be set to an exception object.
 
 ### `process`
