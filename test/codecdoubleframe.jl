@@ -20,9 +20,11 @@ struct DoubleFrameEncoder <: TranscodingStreams.Codec
     opened::Base.RefValue{Bool}
     stopped::Base.RefValue{Bool}
     got_stop_msg::Base.RefValue{Bool}
+    pledged_in_size::Base.RefValue{Int64}
+    in_size_count::Base.RefValue{Int64}
 end
 
-DoubleFrameEncoder() = DoubleFrameEncoder(Ref(false), Ref(false), Ref(false))
+DoubleFrameEncoder() = DoubleFrameEncoder(Ref(false), Ref(false), Ref(false), Ref(Int64(-1)), Ref(Int64(0)))
 
 function TranscodingStreams.process(
         codec     :: DoubleFrameEncoder,
@@ -30,6 +32,7 @@ function TranscodingStreams.process(
         output    :: TranscodingStreams.Memory,
         error_ref :: TranscodingStreams.Error,
     )
+    pledged = codec.pledged_in_size[]
     if input.size == 0
         codec.got_stop_msg[] = true
     end
@@ -45,23 +48,56 @@ function TranscodingStreams.process(
         return 0, 0, :error
     elseif !codec.opened[]
         output[1] = UInt8('[')
-        output[2] = UInt8(' ')
+        if pledged ∈ (0:9)
+            output[2] = UInt8('0'+pledged)
+        else
+            output[2] = UInt8(' ')
+        end
         codec.opened[] = true
         return 0, 2, :ok
     elseif codec.got_stop_msg[]
+        # check in_size_count against pledged
+        if pledged ∈ (0:9)
+            if pledged > codec.in_size_count[]
+                error_ref[] = ErrorException("pledged in size was too big")
+                return 0, 0, :error
+            end
+        end
         output[1] = UInt8(' ')
         output[2] = UInt8(']')
         codec.stopped[] = true
         return 0, 2, :end
     else
         i = j = 0
+        # check input.size against pledged
+        if pledged ∈ (0:9)
+            if input.size > pledged || pledged - input.size < codec.in_size_count[]
+                error_ref[] = ErrorException("pledged in size was too small")
+                return 0, 0, :error
+            end
+        end
         while i + 1 ≤ lastindex(input) && j + 2 ≤ lastindex(output)
             b = input[i+1]
             i += 1
             output[j+1] = output[j+2] = b
             j += 2
         end
+        codec.in_size_count[] += i
         return i, j, :ok
+    end
+end
+
+function TranscodingStreams.pledgeinsize(
+        codec::DoubleFrameEncoder,
+        insize::Int64,
+        error::Error,
+    )::Symbol
+    if codec.opened[]
+        error[] = ErrorException("pledgeinsize called after opening")
+        return :error
+    else
+        codec.pledged_in_size[] = insize
+        return :ok
     end
 end
 
@@ -81,6 +117,8 @@ function TranscodingStreams.startproc(codec::DoubleFrameEncoder, ::Symbol, error
     codec.opened[] = false
     codec.got_stop_msg[] = false
     codec.stopped[] = false
+    codec.pledged_in_size[] = -1
+    codec.in_size_count[] = 0
     return :ok
 end
 
@@ -149,7 +187,7 @@ function TranscodingStreams.process(
         codec.a[] != UInt8('[') && error("expected [")
         @label state2
         do_read(codec.a) || return (codec.state[]=2; (Δin, Δout, :ok))
-        codec.a[] != UInt8(' ') && error("expected space")
+        codec.a[] ∉ (UInt8(' '), UInt8('0'):UInt8('9')...) && error("expected space or size")
         while true
             @label state3
             do_read(codec.a) || return (codec.state[]=3; (Δin, Δout, :ok))
@@ -189,12 +227,14 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
 
 
 @testset "DoubleFrame Codecs" begin
-    @test transcode(DoubleFrameEncoder, b"") == b"[  ]"
-    @test transcode(DoubleFrameEncoder, b"a") == b"[ aa ]"
-    @test transcode(DoubleFrameEncoder, b"ab") == b"[ aabb ]"
-    @test transcode(DoubleFrameEncoder(), b"") == b"[  ]"
-    @test transcode(DoubleFrameEncoder(), b"a") == b"[ aa ]"
-    @test transcode(DoubleFrameEncoder(), b"ab") == b"[ aabb ]"
+    @test transcode(DoubleFrameEncoder, b"") == b"[0 ]"
+    @test transcode(DoubleFrameEncoder, b"a") == b"[1aa ]"
+    @test transcode(DoubleFrameEncoder, b"ab") == b"[2aabb ]"
+    @test transcode(DoubleFrameEncoder(), b"") == b"[0 ]"
+    @test transcode(DoubleFrameEncoder(), b"a") == b"[1aa ]"
+    @test transcode(DoubleFrameEncoder(), b"ab") == b"[2aabb ]"
+    @test transcode(DoubleFrameEncoder(), ones(UInt8,9)) == [b"[9"; ones(UInt8,18); b" ]";]
+    @test transcode(DoubleFrameEncoder(), ones(UInt8,10)) == [b"[ "; ones(UInt8,20); b" ]";]
 
     @test_throws Exception transcode(DoubleFrameDecoder, b"")
     @test_throws Exception transcode(DoubleFrameDecoder, b" [")

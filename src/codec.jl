@@ -14,6 +14,7 @@ Transcoding proceeds by calling some functions in a specific way. We call this
 
 There are six functions for a codec to implement:
 - `expectedsize`: return the expected size of transcoded data
+- `pledgeinsize`: tell the codec the total input size
 - `minoutsize`: return the minimum output size of `process`
 - `initialize`: initialize the codec
 - `finalize`: finalize the codec
@@ -22,7 +23,7 @@ There are six functions for a codec to implement:
 
 These are defined in the `TranscodingStreams` and a new codec type must extend
 these methods if necessary.  Implementing a `process` method is mandatory but
-others are optional.  `expectedsize`, `minoutsize`, `initialize`, `finalize`,
+others are optional.  `expectedsize`, `minoutsize`, `pledgeinsize`, `initialize`, `finalize`,
 and `startproc` have a default implementation.
 
 Your codec type is denoted by `C` and its object by `codec`.
@@ -38,6 +39,18 @@ The `expectedsize(codec::C, input::Memory)::Int` method takes `codec` and
 used as a hint to determine the size of a data buffer when `transcode` is
 called. A good hint will reduce the number of buffer resizing and hence result
 in better performance.
+
+### `pledgeinsize`
+
+The `pledgeinsize(codec::C, insize::Int64, error::Error)::Symbol` method is used
+when `transcode` is called to tell the `codec` the total input size.
+This is called after `startproc` and before `process`. Some
+compressors can add this total input size to a header, making `expectedsize`
+accurate during later decompression. By default this just returns `:ok`.
+If there is an error, the return code must be `:error` and the `error` argument
+must be set to an exception object. Setting an inaccurate `insize` may cause the
+codec to error later on while processing data. A negative `insize` means unknown
+content size.
 
 ### `minoutsize`
 
@@ -71,10 +84,11 @@ the stream will become the close mode for safety.
 ### `startproc`
 
 The `startproc(codec::C, mode::Symbol, error::Error)::Symbol` method takes
-`codec`, `mode` and `error`, and returns a status code. This is called just
-before the stream starts reading or writing data. `mode` is either `:read` or
-`:write` and then the stream starts reading or writing, respectively.  The
-return code must be `:ok` if `codec` is ready to read or write data.  Otherwise,
+`codec`, `mode`, and `error`, and returns a status code. This resets the state
+of the codec and is called before the stream starts processing data.
+After a call to `startproc`, `pledgeinsize` can be optionally called.
+`mode` is either `:read` or `:write`. The
+return code must be `:ok` if `codec` is ready to process data.  Otherwise,
 it must be `:error` and the `error` argument must be set to an exception object.
 
 ### `process`
@@ -110,6 +124,17 @@ The default method returns `input.size`.
 """
 function expectedsize(codec::Codec, input::Memory)::Int
     return input.size
+end
+
+"""
+    pledgeinsize(codec::Codec, insize::Int64, error::Error)::Symbol
+
+Tell the codec the total input size.
+
+The default method does nothing and returns `:ok`.
+"""
+function pledgeinsize(codec::Codec, insize::Int64, error::Error)::Symbol
+    return :ok
 end
 
 """

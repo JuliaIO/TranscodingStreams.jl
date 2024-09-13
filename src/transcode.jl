@@ -147,6 +147,9 @@ function unsafe_transcode!(
     if code === :error
         @goto error
     end
+    if pledgeinsize(codec, Int64(buffersize(input)), error) === :error
+        @goto error
+    end
     n = GC.@preserve input minoutsize(codec, buffermem(input))
     @label process
     makemargin!(output, n)
@@ -166,6 +169,9 @@ function unsafe_transcode!(
     elseif code === :end
         if buffersize(input) > 0
             if startproc(codec, :write, error) === :error
+                @goto error
+            end
+            if pledgeinsize(codec, Int64(buffersize(input)), error) === :error
                 @goto error
             end
             n = GC.@preserve input minoutsize(codec, buffermem(input))
