@@ -1,7 +1,7 @@
 name = "TestsForCodecPackages"
 uuid = "c2e61002-3542-480d-8b3c-5f05cc4f8554"
 authors = ["nhz2 <nhz2@cornell.edu>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
