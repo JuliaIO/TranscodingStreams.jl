@@ -13,7 +13,8 @@ using TestsForCodecPackages:
     test_roundtrip_seekstart,
     test_roundtrip_fileio,
     test_chunked_read,
-    test_chunked_write
+    test_chunked_write,
+    test_reuse_encoder
 
 # An insane codec for testing the codec APIs.
 struct DoubleFrameEncoder <: TranscodingStreams.Codec 
@@ -461,4 +462,5 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
     test_roundtrip_fileio(DoubleFrameEncoder, DoubleFrameDecoder)
     test_chunked_read(DoubleFrameEncoder, DoubleFrameDecoder)
     test_chunked_write(DoubleFrameEncoder, DoubleFrameDecoder)
+    test_reuse_encoder(DoubleFrameEncoder, DoubleFrameDecoder)
 end

@@ -16,7 +16,8 @@ export
     test_roundtrip_seekstart,
     test_roundtrip_fileio,
     test_chunked_read,
-    test_chunked_write
+    test_chunked_write,
+    test_reuse_encoder
 
 function test_roundtrip_read(encoder, decoder)
     seed!(TEST_RANDOM_SEED)
@@ -155,6 +156,36 @@ function test_chunked_write(Encoder, Decoder)
         Test.@test ok
     end
     finalize(encoder)
+end
+
+function test_reuse_encoder(Encoder, Decoder)
+    seed!(TEST_RANDOM_SEED)
+    compressor = Encoder()
+    x = rand(UInt8, 1000)
+    TranscodingStreams.initialize(compressor)
+    ret1 = transcode(compressor, x)
+    TranscodingStreams.finalize(compressor)
+
+    # compress again using the same compressor
+    TranscodingStreams.initialize(compressor)
+    ret2 = transcode(compressor, x)
+    ret3 = transcode(compressor, x)
+    TranscodingStreams.finalize(compressor)
+
+    Test.@test transcode(Decoder, ret1) == x
+    Test.@test transcode(Decoder, ret2) == x
+    Test.@test transcode(Decoder, ret3) == x
+    Test.@test ret1 == ret2
+    Test.@test ret1 == ret3
+
+    decompressor = Decoder()
+    TranscodingStreams.initialize(decompressor)
+    Test.@test transcode(decompressor, ret1) == x
+    TranscodingStreams.finalize(decompressor)
+
+    TranscodingStreams.initialize(decompressor)
+    Test.@test transcode(decompressor, ret1) == x
+    TranscodingStreams.finalize(decompressor)
 end
 
 end # module TestsForCodecPackages
