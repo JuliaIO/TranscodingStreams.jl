@@ -7,61 +7,50 @@ on:
 
 jobs:
   test:
-    name: ${{ matrix.package.repo }}/${{ matrix.package.group }}
-    runs-on: ${{ matrix.os }}
-    env:
-      GROUP: ${{ matrix.package.group }}
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        julia-version: [1]
-        os: [ubuntu-latest]
         package:
-          - {user: JuliaIO, repo: CodecZlib.jl, group: TranscodingStreams}
-          - {user: JuliaIO, repo: CodecLz4.jl, group: TranscodingStreams}
-          - {user: JuliaIO, repo: CodecZstd.jl, group: TranscodingStreams}
-          - {user: JuliaIO, repo: CodecBase.jl, group: TranscodingStreams}
-          - {user: JuliaIO, repo: CodecXz.jl, group: TranscodingStreams}
-          - {user: JuliaIO, repo: CodecBzip2.jl, group: TranscodingStreams}
-          - {user: JuliaIO, repo: ZipArchives.jl, group: TranscodingStreams}
-          - {user: JuliaIO, repo: JLD2.jl, group: TranscodingStreams}
-          - {user: BioJulia, repo: Automa.jl, group: TranscodingStreams}
-          - {user: BioJulia, repo: FASTX.jl, group: TranscodingStreams}
-          - {user: JuliaVTK, repo: WriteVTK.jl, group: TranscodingStreams}
-          - {user: JuliaData, repo: RData.jl, group: TranscodingStreams}
-          - {user: JuliaWeb, repo: HTTP.jl, group: TranscodingStreams}
-          - {user: reallyasi9, repo: ZipStreams.jl, group: TranscodingStreams}
+          - 'CodecZlib'
+          - 'CodecLz4'
+          - 'CodecZstd'
+          - 'CodecBase'
+          - 'CodecXz'
+          - 'CodecBzip2'
+          - 'ZipArchives'
+          - 'JLD2'
+          - 'Automa'
+          - 'FASTX'
+          - 'WriteVTK'
+          - 'RData'
+          - 'HTTP'
+          - 'ZipStreams'
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: ${{ matrix.julia-version }}
+          version: 1
           arch: x64
-      - name: Clone Downstream
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
-          path: downstream
+          show-versioninfo: true
       - name: Load this and run the downstream tests
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          using TOML
           Pkg.Registry.update()
           Pkg.activate(;temp=true)
           try
             # force it to use this PR's version of the package and test package
+            ENV["JULIA_PKG_DEVDIR"]= mktempdir()
             Pkg.develop([
-              PackageSpec(path="downstream"),
+              PackageSpec(name="${{ matrix.package }}"),
               PackageSpec(path="."),
               PackageSpec(path="./lib/TestsForCodecPackages"),
             ])
             # resolver may fail with main deps
             Pkg.update()
-            p1 = joinpath("downstream", "JuliaProject.toml")
-            p2 = joinpath("downstream", "Project.toml")
-            proj_toml = isfile(p1) ? p1 : p2
-            Pkg.test(TOML.parsefile(proj_toml)["name"])  # resolver may fail with test time deps
+            Pkg.test("${{ matrix.package }}") # resolver may fail with test time deps
           catch err
             err isa Pkg.Resolve.ResolverError || rethrow()
             # If we can't resolve that means this is incompatible by SemVer and this is fine.
