@@ -33,7 +33,7 @@ won't need to explicitly install the TranscodingStreams.jl package unless you
 will use lower-level interfaces of it. Each codec package defines some codec
 types, which is a subtype of `TranscodingStreams.Codec`, and their
 corresponding transcoding stream aliases.  These aliases are partially
-instantiated by a codec type; for example, `GzipDecompressionStream{S}` is an
+instantiated by a codec type; for example, `GzipDecompressorStream{S}` is an
 alias of `TranscodingStream{GzipDecompressor,S}`, where `S` is a subtype of
 `IO`.
 
