@@ -12,7 +12,7 @@ Transcoding protocol
 Transcoding proceeds by calling some functions in a specific way. We call this
 "transcoding protocol" and any codec must implement it as described below.
 
-There are six functions for a codec to implement:
+There are seven functions for a codec to implement:
 - `expectedsize`: return the expected size of transcoded data
 - `pledgeinsize`: tell the codec the total input size
 - `minoutsize`: return the minimum output size of `process`
