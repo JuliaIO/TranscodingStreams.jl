@@ -154,14 +154,6 @@ function unsafe_transcode!(
     @label process
     makemargin!(output, n)
     Δin, Δout, code = GC.@preserve input output process(codec, buffermem(input), marginmem(output), error)
-    @debug(
-        "called process()",
-        code = code,
-        input_size = buffersize(input),
-        output_size = marginsize(output),
-        input_delta = Δin,
-        output_delta = Δout,
-    )
     consumed!(input, Δin)
     supplied!(output, Δout)
     if code === :error
