@@ -683,14 +683,6 @@ function callprocess(stream::TranscodingStream, inbuf::Buffer, outbuf::Buffer)
         GC.@preserve(inbuf, minoutsize(stream.codec, buffermem(inbuf))),
     )
     Δin::Int, Δout::Int, state.code = GC.@preserve inbuf outbuf process(stream.codec, buffermem(inbuf), marginmem(outbuf), state.error)
-    @debug(
-        "called process()",
-        code = state.code,
-        input_size = buffersize(inbuf),
-        output_size = marginsize(outbuf),
-        input_delta = Δin,
-        output_delta = Δout,
-    )
     consumed!(inbuf, Δin;
         transcode = !has_sharedbuf(stream) || stream.state.mode === :write,
     ) # inbuf is buffer1 if mode is :write
