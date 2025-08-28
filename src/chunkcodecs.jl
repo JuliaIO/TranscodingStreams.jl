@@ -1,5 +1,4 @@
 # Allow a `TranscodingStreams.Codec` to be used as a decoder.
-# Specific `TranscodingStreams.Codec` types may want to specialize `try_find_decoded_size`
 
 using ChunkCodecCore:
     check_in_range,
@@ -12,6 +11,7 @@ import ChunkCodecCore:
     try_resize_decode!,
     try_find_decoded_size
 
+# `Codec` subtypes may want to specialize `try_find_decoded_size`
 function try_find_decoded_size(::Codec, src::AbstractVector{UInt8})::Nothing
     nothing
 end
@@ -47,7 +47,7 @@ function try_resize_decode!(codec::Codec, dst::AbstractVector{UInt8}, src::Abstr
                 while dst_space_needed > dst_left
                     local next_size = grow_dst!(dst, max_size)
                     if isnothing(next_size)
-                        break
+                        break # reached max_size limit
                     end
                     dst_left += next_size - dst_size
                     dst_size = next_size
@@ -59,6 +59,8 @@ function try_resize_decode!(codec::Codec, dst::AbstractVector{UInt8}, src::Abstr
                     if dst_space_needed > dst_left
                         # Try to do the decoding into a scratch buffer
                         # The scratch buffer should typically be just a few bytes.
+                        # This enables handling the `return NOT_SIZE` case
+                        # while respecting the `minoutsize` restrictions.
                         local scratch_dst = zeros(UInt8, dst_space_needed)
                         local cconv_scratch_dst = Base.cconvert(Ptr{UInt8}, scratch_dst)
                         GC.@preserve cconv_scratch_dst let
