@@ -23,11 +23,23 @@ end
 function try_resize_decode!(codec::Codec, dst::AbstractVector{UInt8}, src::AbstractVector{UInt8}, max_size::Int64; kwargs...)::MaybeSize
     dst_size::Int64 = length(dst)
     src_size::Int64 = length(src)
-    src_left::Int64 = src_size
-    dst_left::Int64 = dst_size
     check_contiguous(dst)
     check_contiguous(src)
     cconv_src = Base.cconvert(Ptr{UInt8}, src)
+    if dst_size < max_size
+        # Do the equivalent of `_default_output_buffer(codec, input)` in `transcode`
+        # by resizing `dst`
+        expected_dst_size::Int64 = GC.@preserve(cconv_src, min(initial_output_size(
+                codec,
+                Memory(Base.unsafe_convert(Ptr{UInt8}, cconv_src), src_size),
+        ), max_size))
+        if expected_dst_size > dst_size
+            resize!(dst, expected_dst_size)
+            dst_size = expected_dst_size
+        end
+    end
+    src_left::Int64 = src_size
+    dst_left::Int64 = dst_size
     err = Error()
     # Outer loop to decode a concatenation of multiple compressed streams.
     while true
