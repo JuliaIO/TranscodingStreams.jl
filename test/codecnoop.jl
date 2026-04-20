@@ -1,5 +1,10 @@
 using OffsetArrays: OffsetArray
 using FillArrays: Zeros
+using TranscodingStreams:
+    TranscodingStreams,
+    TranscodingStream,
+    Noop,
+    NoopStream
 using TestsForCodecPackages:
     test_roundtrip_read,
     test_roundtrip_write,
@@ -9,6 +14,11 @@ using TestsForCodecPackages:
     test_roundtrip_fileio,
     test_chunked_read,
     test_chunked_write
+import ChunkCodecCore
+using ChunkCodecTests:
+    ChunkCodecTests,
+    test_encoder_decoder
+using Test
 
 @testset "Noop Codec" begin
     source = IOBuffer("")
@@ -584,4 +594,12 @@ using TestsForCodecPackages:
         close(stream)
     end
 
+    @testset "chunk codec tests" begin
+        # create a encoder
+        encoder = ChunkCodecCore.NoopEncodeOptions()
+        decoder = Noop()
+        TranscodingStreams.initialize(decoder)
+        test_encoder_decoder(encoder, decoder; trials=100)
+        TranscodingStreams.finalize(decoder)
+    end
 end

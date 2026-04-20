@@ -15,6 +15,10 @@ using TestsForCodecPackages:
     test_chunked_read,
     test_chunked_write,
     test_reuse_encoder
+import ChunkCodecCore
+using ChunkCodecTests:
+    ChunkCodecTests,
+    test_encoder_decoder
 
 # An insane codec for testing the codec APIs.
 struct DoubleFrameEncoder <: TranscodingStreams.Codec 
@@ -452,6 +456,27 @@ DoubleFrameDecoderStream(stream::IO; kwargs...) = TranscodingStream(DoubleFrameD
         @test eof(stream)
         @test position(stream) == 6
         close(stream)
+    end
+
+    @testset "chunk codec tests" begin
+        # create a encoder
+        function ChunkCodecCore.try_encode!(e::DoubleFrameEncoder, dst::AbstractVector{UInt8}, src::AbstractVector{UInt8}; kwargs...)
+            ChunkCodecCore.try_decode!(e, dst, src)
+        end
+        function ChunkCodecCore.decoded_size_range(e::DoubleFrameEncoder)
+            Int64(0):Int64(1):typemax(Int64)-Int64(1)
+        end
+        function ChunkCodecCore.encode_bound(e::DoubleFrameEncoder, src_size::Int64)::Int64
+            clamp(widen(clamp(widemul(src_size, Int64(2)), Int64)) + widen(Int64(4)), Int64)
+        end
+        ChunkCodecCore.can_concatenate(::DoubleFrameDecoder) = true
+        encoder = DoubleFrameEncoder()
+        TranscodingStreams.initialize(encoder)
+        decoder = DoubleFrameDecoder()
+        TranscodingStreams.initialize(decoder)
+        test_encoder_decoder(encoder, decoder; trials=10)
+        TranscodingStreams.finalize(encoder)
+        TranscodingStreams.finalize(decoder)
     end
 
     test_roundtrip_read(DoubleFrameEncoderStream, DoubleFrameDecoderStream)

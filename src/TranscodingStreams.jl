@@ -16,5 +16,6 @@ include("stream.jl")
 include("io.jl")
 include("noop.jl")
 include("transcode.jl")
+include("chunkcodecs.jl")
 
 end # module
