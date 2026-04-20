@@ -41,7 +41,7 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
           show-versioninfo: true
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - name: Develop packages
         run: |
             using Pkg
