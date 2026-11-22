@@ -458,6 +458,84 @@ function unsafe_unread(stream::TranscodingStream, data::Ptr, nbytes::Integer)
     return nothing
 end
 
+"""
+    TranscodingStreams.peekavailable(stream::TranscodingStream)::AbstractVector{UInt8}
+
+Return the bytes of `stream` that are buffered and not yet read, as a view of its buffer, without reading or consuming them.
+
+These are the bytes that `bytesavailable(stream)` counts and `readavailable(stream)` would copy.
+The view is valid until the next operation on `stream`, and must not be mutated.
+To consume `n` of them, call [`TranscodingStreams.consume!`](@ref), and to buffer more, [`TranscodingStreams.fillavailable!`](@ref).
+Together, these let a parser read the decoded bytes where the codec wrote them, rather than copying them out first.
+
+# Examples
+```jldoctest
+julia> using TranscodingStreams
+
+julia> stream = NoopStream(IOBuffer("foo,bar"));
+
+julia> TranscodingStreams.fillavailable!(stream)
+7
+
+julia> String(copy(TranscodingStreams.peekavailable(stream)))
+"foo,bar"
+
+julia> TranscodingStreams.consume!(stream, 4)
+
+julia> String(copy(TranscodingStreams.peekavailable(stream)))
+"bar"
+```
+"""
+function peekavailable(stream::TranscodingStream)::AbstractVector{UInt8}
+    ready_to_read!(stream)
+    buffer1 = stream.buffer1
+    return view(buffer1.data, buffer1.bufferpos:buffer1.marginpos-1)
+end
+
+"""
+    TranscodingStreams.fillavailable!(stream::TranscodingStream)::Int
+
+Read and transcode more of `stream`, appending at least one byte to the bytes that [`TranscodingStreams.peekavailable`](@ref) returns, and return the number of bytes added, which is zero only at the end of `stream`.
+
+The bytes already buffered are kept, at the start of the new view, so a parser that needs more bytes to finish a record keeps the bytes it has read.
+The buffer grows when they fill it, so it can hold a record of any length.
+It may move the buffered bytes, invalidating views from before the call.
+"""
+function fillavailable!(stream::TranscodingStream)::Int
+    ready_to_read!(stream)
+    buffer1 = stream.buffer1
+    nbuffered = buffersize(buffer1)
+    stream.state.mode === :read || return 0
+    # Room for at least half the buffer, so that each fill reads a buffer's worth rather than what is left at its end:
+    # this moves the buffered bytes to its start, or grows it when they fill more than half.
+    makemargin!(buffer1, max(1, length(buffer1) >> 1))
+    fillbuffer(stream; minsize = nbuffered + 1)
+    return buffersize(stream.buffer1) - nbuffered
+end
+
+"""
+    TranscodingStreams.consume!(stream::TranscodingStream, n::Integer)::Nothing
+
+Consume the first `n` bytes that [`TranscodingStreams.peekavailable`](@ref) returns, as reading them would, without copying them or doing any I/O.
+
+`n` must be at most `bytesavailable(stream)`; to read past the buffered bytes, use `skip`.
+"""
+@inline function consume!(stream::TranscodingStream, n::Integer)::Nothing
+    buffer1 = stream.buffer1
+    mode = stream.state.mode
+    if !((mode === :read || mode === :stop) && 0 ≤ n ≤ buffersize(buffer1))
+        throw_consume_error(stream, n)
+    end
+    consumed!(buffer1, Int(n))
+    return nothing
+end
+
+@noinline function throw_consume_error(stream::TranscodingStream, n::Integer)
+    mode = stream.state.mode
+    mode === :read || mode === :stop || throw(ArgumentError("cannot consume the bytes of a stream in mode $(mode)"))
+    throw(ArgumentError("cannot consume $(n) bytes of the $(buffersize(stream.buffer1)) that are buffered"))
+end
+
 # Ready to read data from the stream.
 function ready_to_read!(stream::TranscodingStream)
     mode = stream.state.mode
@@ -607,12 +685,13 @@ end
 # Buffering
 # ---------
 
-function fillbuffer(stream::TranscodingStream; eager::Bool = false)
+# Without `eager`, fill until at least `minsize` bytes are buffered, keeping the bytes already buffered.
+function fillbuffer(stream::TranscodingStream; eager::Bool = false, minsize::Int = 1)
     changemode!(stream, :read)
     buffer1 = stream.buffer1
     buffer2 = stream.buffer2
     nfilled::Int = 0
-    while ((!eager && buffersize(buffer1) == 0) || (eager && makemargin!(buffer1, 0, eager = true) > 0)) && stream.state.mode != :stop
+    while ((!eager && buffersize(buffer1) < minsize) || (eager && makemargin!(buffer1, 0, eager = true) > 0)) && stream.state.mode != :stop
         if stream.state.code == :end
             if buffersize(buffer2) == 0 && eof(stream.stream)
                 break

@@ -134,3 +134,78 @@ include("codecnoop.jl")
 include("codecinvalid.jl")
 include("codecquadruple.jl")
 include("codecdoubleframe.jl")
+
+# Buffer interface
+# ----------------
+
+using TranscodingStreams: peekavailable, fillavailable!, consume!
+
+# Read `stream` as a parser would: buffer more until the chunk ends at a newline, and take whole lines from the buffer.
+function read_lines_in_place(stream)
+    lines = String[]
+    while true
+        available = peekavailable(stream)
+        newline = findfirst(==(UInt8('\n')), available)
+        if newline === nothing
+            fillavailable!(stream) == 0 || continue
+            isempty(available) || push!(lines, String(copy(available)))
+            break
+        end
+        push!(lines, String(copy(available[1:newline-1])))
+        consume!(stream, newline)
+    end
+    return lines
+end
+
+@testset "Buffer interface" begin
+    lines = [repeat(string(i), i) for i in 1:200]
+    lines[50] = repeat("x", 100_000) # longer than any buffer
+    text = join(lines, '\n')
+
+    for bufsize in (1, 16, 2^16)
+        @test read_lines_in_place(NoopStream(IOBuffer(text); bufsize)) == lines
+        # Nested noop streams share one buffer.
+        @test read_lines_in_place(NoopStream(NoopStream(IOBuffer(text); bufsize); bufsize)) == lines
+        # A codec with buffers of its own, which writes four bytes for each, newlines included.
+        stream = TranscodingStream(QuadrupleCodec(), IOBuffer(text); bufsize)
+        @test read_lines_in_place(stream) == split(String(transcode(QuadrupleCodec, Vector{UInt8}(text))), '\n')
+    end
+
+    # Filling keeps the bytes that are buffered, and appends to them.
+    stream = NoopStream(IOBuffer("foobar"); bufsize = 2)
+    @test isempty(peekavailable(stream))
+    @test fillavailable!(stream) == 2
+    @test peekavailable(stream) == b"fo"
+    @test fillavailable!(stream) > 0
+    @test startswith(String(copy(peekavailable(stream))), "foo")
+    # Consuming moves on in the buffer, and `position` follows.
+    consume!(stream, 1)
+    @test position(stream) == 1
+    @test bytesavailable(stream) == length(peekavailable(stream))
+    while fillavailable!(stream) > 0 end
+    @test peekavailable(stream) == b"oobar"
+    @test fillavailable!(stream) == 0
+    @test read(stream) == b"oobar"
+    @test eof(stream) && isempty(peekavailable(stream)) && fillavailable!(stream) == 0
+    # Only the bytes that are buffered can be consumed, and only by a reading stream.
+    @test_throws ArgumentError consume!(stream, 1)
+    @test_throws ArgumentError consume!(stream, -1)
+    consume!(stream, 0)
+    close(stream)
+    writing = NoopStream(IOBuffer())
+    write(writing, "abc")
+    @test_throws ArgumentError consume!(writing, 1)
+    close(writing)
+
+    # An empty stream.
+    stream = NoopStream(IOBuffer(""))
+    @test fillavailable!(stream) == 0 && isempty(peekavailable(stream))
+    close(stream)
+
+    # A codec stops at its end, after which nothing is filled.
+    stream = TranscodingStream(QuadrupleCodec(), IOBuffer("ab"); stop_on_end = true)
+    while fillavailable!(stream) > 0 end
+    @test peekavailable(stream) == b"aaaabbbb"
+    @test fillavailable!(stream) == 0
+    close(stream)
+end
