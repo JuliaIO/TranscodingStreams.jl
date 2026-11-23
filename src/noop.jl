@@ -180,7 +180,7 @@ end
 # These methods are overloaded for the `Noop` codec because it has only one
 # buffer for efficiency.
 
-function fillbuffer(stream::NoopStream; eager::Bool = false)::Int
+function fillbuffer(stream::NoopStream; eager::Bool = false, minsize::Int = 1)::Int
     changemode!(stream, :read)
     buffer = stream.buffer1
     @assert buffer === stream.buffer2
@@ -188,13 +188,13 @@ function fillbuffer(stream::NoopStream; eager::Bool = false)::Int
         # Delegate the operation when buffers are shared.
         underlying_mode::Symbol = stream.stream.state.mode
         if underlying_mode === :idle || underlying_mode === :read
-            return fillbuffer(stream.stream, eager = eager)
+            return fillbuffer(stream.stream, eager = eager, minsize = minsize)
         else
             return 0
         end
     end
     nfilled::Int = 0
-    while ((!eager && buffersize(buffer) == 0) || (eager && makemargin!(buffer, 0, eager = true) > 0)) && !eof(stream.stream)
+    while ((!eager && buffersize(buffer) < minsize) || (eager && makemargin!(buffer, 0, eager = true) > 0)) && !eof(stream.stream)
         makemargin!(buffer, 1)
         nfilled += readdata!(stream.stream, buffer)
     end

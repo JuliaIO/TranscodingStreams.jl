@@ -18,6 +18,9 @@ TranscodingStreams.TOKEN_END
 TranscodingStreams.unsafe_read
 TranscodingStreams.unread
 TranscodingStreams.unsafe_unread
+TranscodingStreams.peekavailable
+TranscodingStreams.fillavailable!
+TranscodingStreams.consume!
 Base.position(stream::TranscodingStream)
 Base.skip
 ```
